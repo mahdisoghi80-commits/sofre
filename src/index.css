@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Peyda", system-ui, -apple-system, sans-serif;
+  --font-display: "Abar", "Peyda", system-ui, sans-serif;
+  --color-sofreh-red: #F04438;
+  --color-sofreh-red-dark: #C42F26;
+  --color-sofreh-ink: #292B25;
+  --color-sofreh-muted: #75746E;
+  --color-sofreh-bg: #FBF5EF;
+  --color-sofreh-card: #FFFFFF;
+  --color-sofreh-terracotta: #C87955;
+  --color-sofreh-olive: #68734E;
+  --color-sofreh-cream: #F3E9DE;
+}
+
+@layer base {
+  html,
+  body {
+    font-family: "Peyda", system-ui, -apple-system, sans-serif;
+    background-color: #FBF5EF;
+    color: #292B25;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Abar", "Peyda", system-ui, sans-serif;
+  }
+}
+
+/* Warm ambient canvas so liquid glass elements genuinely refract soft warmth */
+.ambient-canvas {
+  background-color: #FBF5EF;
+  background-image:
+    radial-gradient(ellipse 68% 44% at 88% 4%, rgba(240, 68, 56, 0.085), transparent 62%),
+    radial-gradient(ellipse 56% 42% at 10% 18%, rgba(200, 121, 85, 0.09), transparent 60%),
+    radial-gradient(ellipse 60% 45% at 50% 96%, rgba(104, 115, 78, 0.07), transparent 64%);
+  background-attachment: fixed;
+}
+
+/* Signature Liquid Glass (.gl from Sofreh UI v3) */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(22px) saturate(1.75);
+  -webkit-backdrop-filter: blur(22px) saturate(1.75);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 12px 32px rgba(120, 60, 30, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+/* Slightly more transparent liquid glass specifically for the floating bottom navigation footer */
+.liquid-glass-nav {
+  background: rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(28px) saturate(1.9);
+  -webkit-backdrop-filter: blur(28px) saturate(1.9);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 14px 36px rgba(95, 52, 28, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+.liquid-glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 8px 26px rgba(95, 52, 28, 0.075),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.liquid-glass-dark {
+  background: rgba(26, 28, 24, 0.62);
+  backdrop-filter: blur(22px) saturate(1.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+@keyframes splash-col-drift {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.splash-col-up {
+  animation: splash-col-drift 6.2s ease-in-out infinite;
+}
+
+.splash-col-down {
+  animation: splash-col-drift 6.8s ease-in-out 1.2s infinite reverse;
+}
+
+/* Active coral liquid pill (floating bottom bar & active day chips) */
+.coral-glass-pill {
+  background: linear-gradient(155deg, #FF6A5C 0%, #F04438 68%, #D93327 100%);
+  box-shadow:
+    0 8px 22px rgba(240, 68, 56, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+/* Shimmering CTA button (.go from Sofreh UI v3) */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(155deg, #FF6A5C 0%, #F04438 62%, #D42F24 100%);
+  box-shadow:
+    0 14px 32px rgba(240, 68, 56, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.btn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.34) 48%,
+    transparent 76%
+  );
+  transform: translateX(-125%);
+  animation: sofreh-shine 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sofreh-shine {
+  0%, 58% {
+    transform: translateX(-125%);
+  }
+  100% {
+    transform: translateX(135%);
+  }
+}
+
+/* Gently floating 3D hero badges */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.5deg);
+  }
+}
+.animate-float-slow {
+  animation: float-gentle 4.2s ease-in-out infinite;
+}
+.animate-float-delayed {
+  animation: float-gentle 4.8s ease-in-out 1.4s infinite;
+}
+
+/* Laser sweep inside AI Fridge Scanner */
+@keyframes scan-beam {
+  0% {
+    top: 8%;
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: 88%;
+    opacity: 0.25;
+  }
+}
+.scan-laser {
+  animation: scan-beam 2.1s ease-in-out infinite alternate;
+}
+
+/* Pulsing ring for Interactive 3D Kitchen Scene hotspots */
+@keyframes hotspot-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+.hotspot-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid #F04438;
+  animation: hotspot-ring 2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  pointer-events: none;
+}
+
+/* Cook mode coral highlight chips (.big b) */
+.cook-qty-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.55rem;
+  margin: 0 0.18rem;
+  border-radius: 0.75rem;
+  background: rgba(240, 68, 56, 0.14);
+  color: #D42F24;
+  border: 1px solid rgba(240, 68, 56, 0.25);
+  font-weight: 800;
+}
+
+/* Smooth melt from high-res web dish photograph into #FBF5EF */
+.hero-fade-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(24, 25, 22, 0.34) 0%,
+    rgba(24, 25, 22, 0.04) 28%,
+    rgba(251, 245, 239, 0.18) 54%,
+    rgba(251, 245, 239, 0.84) 80%,
+    #FBF5EF 100%
+  );
+}
+
+.tabular-nums-fa {
+  font-variant-numeric: tabular-nums;
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 14px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Blend studio-lit 3D icons seamlessly into warm surfaces */
+.icon-3d-blend {
+  mix-blend-mode: multiply;
+}

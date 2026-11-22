@@ -1,0 +1,6 @@
+{
+  "name": "سفره — برنامه‌ریز هوشمند غذا و بودجه",
+  "description": "اپلیکیشن هوشمند برنامه‌ریزی وعده‌های غذایی ایرانی، مدیریت بودجه و لیست خرید خودکار با قابلیت اجرای بومی روی اندروید و آی‌او‌اس.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
