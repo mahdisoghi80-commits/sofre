@@ -15,7 +15,7 @@
     "cap:sync": "npm run build && npx cap sync",
     "android:init": "npx cap add android && npm run cap:sync",
     "android:open": "npx cap open android",
-    "android:apk": "npm run build && npx cap sync android && ./android/gradlew -p android assembleDebug",
+    "android:apk": "npm run build && npx cap sync android && chmod +x android/gradlew && ./android/gradlew -p android assembleDebug",
     "ios:init": "npx cap add ios && npm run cap:sync",
     "ios:open": "npx cap open ios"
   },
