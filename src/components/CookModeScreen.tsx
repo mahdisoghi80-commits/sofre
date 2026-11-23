@@ -12,6 +12,7 @@ import {
   IconClose,
   IconPause,
   IconPlay,
+  IconPlus,
   IconTimer,
   IconUndo,
 } from './icons/SofrehIcons';
@@ -32,6 +33,7 @@ export const CookModeScreen: React.FC = () => {
 
   const [stepIdx, setStepIdx] = useState(0);
   const [remainingSec, setRemainingSec] = useState<number>(0);
+  const [totalTimerSec, setTotalTimerSec] = useState<number>(0);
   const [timerRunning, setTimerRunning] = useState(false);
 
   const currentStep = recipe?.steps[stepIdx];
@@ -39,6 +41,7 @@ export const CookModeScreen: React.FC = () => {
 
   useEffect(() => {
     setRemainingSec(initialTimerSec);
+    setTotalTimerSec(initialTimerSec);
     setTimerRunning(false);
   }, [stepIdx, initialTimerSec]);
 
@@ -61,129 +64,247 @@ export const CookModeScreen: React.FC = () => {
 
   const segments = formatScaledStepSegments(recipe, stepIdx, cookModeServings);
   const isLast = stepIdx === recipe.steps.length - 1;
-  const progressPct = ((stepIdx + 1) / recipe.steps.length) * 100;
+  const timerProgress =
+    totalTimerSec > 0 ? Math.max(0, Math.min(1, remainingSec / totalTimerSec)) : 0;
+  const ringRadius = 32;
+  const ringCirc = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCirc * (1 - timerProgress);
+  const timerDone = initialTimerSec > 0 && remainingSec === 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 24 }}
-      className="fixed inset-0 z-50 ambient-canvas flex flex-col"
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      data-testid="cook-mode-screen"
+      className="fixed inset-0 z-50 bg-[#FBF5EF] flex flex-col overflow-hidden"
     >
-      {/* LOCKED TOP HEADER */}
-      <header className="shrink-0 px-4 pt-3 pb-3 safe-top liquid-glass border-b border-white/70">
-        <div className="max-w-2xl mx-auto space-y-2.5">
+      {/* LOCKED COMPACT TOP HEADER */}
+      <header className="shrink-0 px-4 pt-3 pb-3 safe-top bg-[#FBF5EF]/95 border-b border-[#EFE4D8]">
+        <div className="max-w-xl mx-auto space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <Icon3D
                 src={recipe.icon}
                 alt={recipe.title}
                 sizeClass="w-10 h-10"
                 roundedClass="rounded-[12px]"
+                loading="eager"
               />
-              <div className="min-w-0">
-                <div className="font-display font-black text-base text-[#292B25] truncate">
+              <div className="min-w-0 flex-1">
+                <div className="font-display font-black text-base text-[#292B25] truncate leading-tight">
                   {recipe.title}
                 </div>
-                <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa">
-                  مرحله {toFaDigits(stepIdx + 1)} از {toFaDigits(recipe.steps.length)} •{' '}
-                  {toFaDigits(cookModeServings)} نفر
+                <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa mt-0.5 flex items-center gap-1.5">
+                  <span>
+                    مرحله {toFaDigits(stepIdx + 1)} از {toFaDigits(recipe.steps.length)}
+                  </span>
+                  <span className="opacity-45" aria-hidden="true">•</span>
+                  <span>{toFaDigits(cookModeServings)} نفر</span>
                 </div>
               </div>
             </div>
+
             <button
               type="button"
               onClick={closeCookMode}
-              aria-label="خروج"
-              className="w-10 h-10 rounded-full bg-white/90 text-[#292B25] flex items-center justify-center shadow-sm active:scale-90"
+              aria-label="خروج از حالت پخت"
+              data-testid="cook-mode-close-btn"
+              className="w-10 h-10 rounded-full bg-white text-[#292B25] border border-[#EAE0D5] flex items-center justify-center shrink-0 active:scale-90 transition"
             >
-              <IconClose size={19} />
+              <IconClose size={18} />
             </button>
           </div>
 
-          <div className="h-2 bg-[#E9DFD4] rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-gradient-to-l from-[#FF6A5C] to-[#F04438]"
-              animate={{ width: `${progressPct}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            />
+          {/* Clickable Segmented Step Progress Bar */}
+          <div className="flex items-center gap-1.5">
+            {recipe.steps.map((_, idx) => {
+              const passed = idx <= stepIdx;
+              const isCurrent = idx === stepIdx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    hapticLight();
+                    setStepIdx(idx);
+                  }}
+                  aria-label={`رفتن به مرحله ${toFaDigits(idx + 1)}`}
+                  className="flex-1 py-1 group"
+                >
+                  <span
+                    className={`block h-2 rounded-full transition-all duration-300 ${
+                      isCurrent
+                        ? 'bg-gradient-to-l from-[#FF6A5C] to-[#F04438]'
+                        : passed
+                          ? 'bg-[#68734E]'
+                          : 'bg-[#E9DFD4]'
+                    }`}
+                  />
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>
 
-      {/* MAIN STEP STAGE */}
-      <div className="flex-1 overflow-y-auto px-5 py-8 flex items-center justify-center">
-        <div className="max-w-2xl w-full space-y-6">
+      {/* MAIN SCROLLABLE STAGE — Safe centering via my-auto (ZERO top clipping on mobile!) */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 flex flex-col">
+        <div className="max-w-xl w-full mx-auto my-auto space-y-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={stepIdx}
-              initial={{ opacity: 0, x: -24 }}
+              initial={{ opacity: 0, x: -18 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
-              className="liquid-glass-card rounded-[32px] p-6 sm:p-8 space-y-6"
+              exit={{ opacity: 0, x: 18 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="space-y-4"
             >
-              <div className="inline-flex items-center px-3.5 py-1.5 rounded-full coral-glass-pill text-white text-xs font-extrabold">
-                گام {toFaDigits(stepIdx + 1)}
+              {/* STEP INSTRUCTION CARD */}
+              <div className="liquid-glass-card rounded-[28px] p-5 sm:p-7 space-y-5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full coral-glass-pill text-white text-xs font-extrabold">
+                    <span>گام {toFaDigits(stepIdx + 1)}</span>
+                  </span>
+                  {initialTimerSec > 0 && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#F3E9DE] text-[#5C5952] text-[11px] font-extrabold tabular-nums-fa">
+                      <IconTimer size={14} className="text-[#F04438]" />
+                      <span>{toFaDigits(Math.max(1, Math.round(initialTimerSec / 60)))} دقیقه</span>
+                    </span>
+                  )}
+                </div>
+
+                <p className="font-display font-bold text-[20px] sm:text-[24px] leading-[1.9] text-[#292B25] break-words">
+                  {segments.map((seg, i) =>
+                    seg.isHighlight ? (
+                      <span key={i} className="cook-qty-pill">
+                        {toFaDigits(seg.text)}
+                      </span>
+                    ) : (
+                      <React.Fragment key={i}>{toFaDigits(seg.text)}</React.Fragment>
+                    )
+                  )}
+                </p>
+
+                {currentStep.tip && (
+                  <div className="rounded-2xl bg-[#EEF2E6] border border-[#68734E]/20 px-4 py-3 text-[13px] font-bold text-[#3F4A2B] leading-relaxed">
+                    {currentStep.tip}
+                  </div>
+                )}
               </div>
 
-              <p className="font-display font-bold text-2xl sm:text-3xl leading-[1.7] text-[#292B25]">
-                {segments.map((seg, i) =>
-                  seg.isHighlight ? (
-                    <span key={i} className="cook-qty-pill">
-                      {toFaDigits(seg.text)}
-                    </span>
-                  ) : (
-                    <React.Fragment key={i}>{toFaDigits(seg.text)}</React.Fragment>
-                  )
-                )}
-              </p>
-
+              {/* SELF-CONTAINED CIRCULAR COUNTDOWN TIMER CARD (ZERO overflow on 360px-390px) */}
               {initialTimerSec > 0 && (
-                <div className="rounded-[26px] bg-[#292B25] text-white p-4 sm:p-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full coral-glass-pill flex items-center justify-center shrink-0">
-                      <IconTimer size={22} className="text-white" />
-                    </div>
-                    <div>
-                      <div className="text-[11px] font-bold text-white/70">تایمر</div>
-                      <div className="font-display font-black text-3xl tabular-nums-fa">
-                        {formatTimer(remainingSec)}
+                <div
+                  data-testid="cook-mode-timer-card"
+                  className="rounded-[28px] bg-[#232520] text-white p-5 shadow-[0_14px_30px_rgba(35,37,32,0.22)] space-y-4"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* Circular SVG Progress Ring */}
+                      <div className="relative w-[76px] h-[76px] shrink-0 flex items-center justify-center">
+                        <svg viewBox="0 0 76 76" className="w-full h-full -rotate-90">
+                          <circle
+                            cx="38"
+                            cy="38"
+                            r={ringRadius}
+                            fill="none"
+                            stroke="rgba(255,255,255,0.14)"
+                            strokeWidth="6"
+                          />
+                          <circle
+                            cx="38"
+                            cy="38"
+                            r={ringRadius}
+                            fill="none"
+                            stroke={timerDone ? '#82A663' : '#FF6A5C'}
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            strokeDasharray={ringCirc}
+                            strokeDashoffset={ringOffset}
+                            style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+                          />
+                        </svg>
+                        <IconTimer
+                          size={22}
+                          className={`absolute ${timerDone ? 'text-[#9CD173]' : 'text-[#FF7A6D]'}`}
+                        />
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold text-white/65">
+                          {timerDone
+                            ? 'زمان تمام شد!'
+                            : timerRunning
+                              ? 'تایمر در حال شمارش'
+                              : 'تایمر این مرحله'}
+                        </div>
+                        <div
+                          dir="ltr"
+                          className="font-display font-black text-3xl sm:text-4xl tracking-tight tabular-nums-fa text-right mt-0.5"
+                        >
+                          {formatTimer(remainingSec)}
+                        </div>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        hapticLight();
+                        setRemainingSec((s) => s + 60);
+                        setTotalTimerSec((t) => Math.max(t, remainingSec + 60));
+                      }}
+                      className="h-9 px-3 rounded-full bg-white/12 hover:bg-white/20 text-white text-xs font-extrabold inline-flex items-center gap-1 shrink-0 active:scale-95 transition"
+                    >
+                      <IconPlus size={13} />
+                      <span>۱ دقیقه</span>
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  {/* Properly Contained Action Row */}
+                  <div className="grid grid-cols-12 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        hapticMedium();
+                        if (remainingSec === 0) {
+                          setRemainingSec(initialTimerSec);
+                          setTotalTimerSec(initialTimerSec);
+                        }
+                        setTimerRunning((r) => !r);
+                      }}
+                      className={`col-span-9 h-12 rounded-full font-display font-black text-sm flex items-center justify-center gap-2 active:scale-95 transition ${
+                        timerRunning
+                          ? 'bg-white text-[#232520]'
+                          : 'coral-glass-pill text-white'
+                      }`}
+                    >
+                      {timerRunning ? <IconPause size={17} /> : <IconPlay size={17} />}
+                      <span>
+                        {timerRunning
+                          ? 'توقف تایمر'
+                          : timerDone
+                            ? 'شروع مجدد'
+                            : 'شروع تایمر'}
+                      </span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
                         hapticLight();
                         setRemainingSec(initialTimerSec);
+                        setTotalTimerSec(initialTimerSec);
                         setTimerRunning(false);
                       }}
-                      aria-label="بازنشانی"
-                      className="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center"
+                      aria-label="بازنشانی تایمر"
+                      className="col-span-3 h-12 rounded-full bg-white/14 hover:bg-white/22 text-white flex items-center justify-center active:scale-95 transition"
                     >
-                      <IconUndo size={18} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        hapticMedium();
-                        if (remainingSec === 0) setRemainingSec(initialTimerSec);
-                        setTimerRunning((r) => !r);
-                      }}
-                      className="h-11 px-5 rounded-full coral-glass-pill text-white font-extrabold text-sm flex items-center gap-1.5"
-                    >
-                      {timerRunning ? <IconPause size={16} /> : <IconPlay size={16} />}
-                      <span>{timerRunning ? 'توقف' : 'شروع'}</span>
+                      <IconUndo size={19} />
                     </button>
                   </div>
-                </div>
-              )}
-
-              {currentStep.tip && (
-                <div className="rounded-2xl bg-[#EEF2E6] border border-[#68734E]/25 p-4 text-sm font-bold text-[#3F4A2B] leading-relaxed">
-                  {currentStep.tip}
                 </div>
               )}
             </motion.div>
@@ -192,8 +313,8 @@ export const CookModeScreen: React.FC = () => {
       </div>
 
       {/* LOCKED CIRCULAR NAVIGATION FOOTER */}
-      <footer className="shrink-0 p-4 safe-bottom liquid-glass-nav border-t border-white/70">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+      <footer className="shrink-0 px-4 py-3.5 safe-bottom bg-[#FBF5EF]/95 border-t border-[#EFE4D8]">
+        <div className="max-w-xl mx-auto flex items-center gap-3">
           <button
             type="button"
             disabled={stepIdx === 0}
@@ -202,7 +323,7 @@ export const CookModeScreen: React.FC = () => {
               setStepIdx((i) => Math.max(0, i - 1));
             }}
             aria-label="مرحله قبل"
-            className="w-14 h-14 rounded-full bg-white text-[#292B25] flex items-center justify-center disabled:opacity-40 shadow-sm shrink-0"
+            className="w-14 h-14 rounded-full bg-white border border-[#E6DACD] text-[#292B25] flex items-center justify-center disabled:opacity-35 shrink-0 active:scale-90 transition"
           >
             <IconArrowRight size={22} />
           </button>
@@ -214,10 +335,10 @@ export const CookModeScreen: React.FC = () => {
                 markRecipeCooked(recipe.id);
                 closeCookMode();
               }}
-              className="flex-1 h-14 rounded-full bg-[#68734E] text-white font-display font-black text-base flex items-center justify-center gap-2 shadow-lg"
+              className="flex-1 h-14 rounded-full bg-[#68734E] text-white font-display font-black text-base flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
             >
               <IconCheck size={20} />
-              <span>پایان پخت</span>
+              <span>پایان پخت و ثبت</span>
             </button>
           ) : (
             <button
@@ -226,7 +347,7 @@ export const CookModeScreen: React.FC = () => {
                 hapticMedium();
                 setStepIdx((i) => Math.min(recipe.steps.length - 1, i + 1));
               }}
-              className="flex-1 h-14 rounded-full btn-shimmer text-white font-display font-black text-base flex items-center justify-center gap-2"
+              className="flex-1 h-14 rounded-full btn-shimmer text-white font-display font-black text-base flex items-center justify-center gap-2 active:scale-95 transition"
             >
               <span>مرحله بعد</span>
               <IconArrowLeft size={20} />

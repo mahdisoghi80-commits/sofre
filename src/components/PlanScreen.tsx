@@ -1,48 +1,104 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { DAY_NAMES_FULL, DAY_NAMES_SHORT, MEAL_SLOT_LABELS } from '../data/catalog';
+import {
+  APPLIANCE_SHORT_LABELS,
+  DAY_NAMES_FULL,
+  DAY_NAMES_SHORT,
+  MEAL_SLOT_LABELS,
+} from '../data/catalog';
+import { getIngredientIconPath } from '../data/database/ingredientIcons';
 import { useAppState } from '../context/AppStateContext';
 import type { PlannedMeal } from '../types/sofreh';
 import { formatToman, toFaDigits } from '../utils/format';
-import { getRecipeConsumptionCostForServings, getSwapCandidates } from '../utils/planner';
-import { MacroRing } from './MacroRing';
 import {
+  buildWeeklyPrepInsights,
+  getRecipeConsumptionCostForServings,
+  getSwapCandidates,
+} from '../utils/planner';
+import { hapticLight } from '../utils/native';
+import { ContextActionMenu, useLongPress, type ContextMenuAction } from './ContextActionMenu';
+import { MacroRing } from './MacroRing';
+import { PlanInsightSheets, type PlanInsightSheetType } from './PlanInsightSheets';
+import { PrepAlertModal, type PrepAlertItem } from './PrepAlertModal';
+import {
+  ApplianceIcon,
   getCuisineFlag,
   Icon3D,
+  IconBellRinging,
+  IconBookmark,
+  IconCaretLeft,
   IconCheck,
   IconClock,
   IconClose,
   IconCookingPot,
+  IconCrown,
   IconFlame,
-  IconLock,
+  IconMacroCarbs,
+  IconMacroFat,
+  IconMacroProtein,
+  IconMoon,
+  IconPiggyBank,
   IconPlus,
-  IconShuffle,
   IconSwap,
-  IconUnlock,
+  IconTrash,
+  IconWallet,
+  IngredientIcon3D,
+  MEAL_SLOT_THEMES,
   SofrehLogoMark,
 } from './icons/SofrehIcons';
 
 export const PlanScreen: React.FC<{
   onOpenAddMeal: (dayIndex: number) => void;
-}> = ({ onOpenAddMeal }) => {
+  onOpenSubscription: () => void;
+}> = ({ onOpenAddMeal, onOpenSubscription }) => {
   const {
     prefs,
     recipes,
     plan,
-    planLocked,
     pantry,
+    cookbooks,
     recipeFeedback,
     selectedDay,
     costSummary,
     setSelectedDay,
     openRecipe,
-    togglePlanLock,
-    regeneratePlan,
+    startCookMode,
     swapMeal,
-    setActiveTab,
+    markRecipeCooked,
+    removeMealFromPlan,
+    toggleRecipeInCookbook,
+    registerBackHandler,
   } = useAppState();
 
   const [swappingMeal, setSwappingMeal] = useState<PlannedMeal | null>(null);
+  const [contextMeal, setContextMeal] = useState<PlannedMeal | null>(null);
+  const [activeInsightSheet, setActiveInsightSheet] = useState<PlanInsightSheetType>(null);
+  const [swipeDir, setSwipeDir] = useState<number>(0);
+  const [activePrepPopup, setActivePrepPopup] = useState<PrepAlertItem | null>(null);
+  const [donePrepIds, setDonePrepIds] = useState<Record<string, boolean>>({});
+  const autoShownPrepRef = useRef<Set<string>>(new Set());
+  const userSwitchedDayRef = useRef(false);
+
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  useEffect(() => {
+    if (!swappingMeal && !activeInsightSheet && !contextMeal) return;
+    return registerBackHandler('plan-modals-sheet', () => {
+      if (contextMeal) {
+        setContextMeal(null);
+        return true;
+      }
+      if (swappingMeal) {
+        setSwappingMeal(null);
+        return true;
+      }
+      if (activeInsightSheet) {
+        setActiveInsightSheet(null);
+        return true;
+      }
+      return false;
+    });
+  }, [swappingMeal, activeInsightSheet, contextMeal, registerBackHandler]);
 
   const recipeMap = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes]);
 
@@ -69,6 +125,11 @@ export const PlanScreen: React.FC<{
     return { cal, protein, carbs, fat };
   }, [dayMeals, recipeMap]);
 
+  const weeklyInsights = useMemo(
+    () => buildWeeklyPrepInsights(plan, recipes),
+    [plan, recipes]
+  );
+
   const swapCandidates = useMemo(() => {
     if (!swappingMeal) return [];
     return getSwapCandidates(
@@ -81,18 +142,90 @@ export const PlanScreen: React.FC<{
     );
   }, [swappingMeal, plan, recipes, prefs, pantry, recipeFeedback]);
 
-  const totalTicks = 14;
-  const filledTicks = Math.min(
-    totalTicks,
-    Math.round((dayMacros.protein / Math.max(1, prefs.dailyProteinTarget)) * totalTicks)
+  const tomorrowIdx = (selectedDay + 1) % 7;
+  const tomorrowSoaking = useMemo(
+    () => weeklyInsights.soakingAlerts.find((a) => a.dayIndex === tomorrowIdx) ?? null,
+    [weeklyInsights.soakingAlerts, tomorrowIdx]
   );
+
+  // Trigger visual prep popup cleanly when user navigates to a day whose tomorrow needs soaking
+  useEffect(() => {
+    if (!userSwitchedDayRef.current) return;
+    if (!tomorrowSoaking) return;
+    if (donePrepIds[tomorrowSoaking.recipeId]) return;
+    if (autoShownPrepRef.current.has(tomorrowSoaking.recipeId)) return;
+    autoShownPrepRef.current.add(tomorrowSoaking.recipeId);
+    const timer = window.setTimeout(() => {
+      setActivePrepPopup(tomorrowSoaking);
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [tomorrowSoaking, donePrepIds]);
+
+  const switchDay = (nextIdx: number, dir: number) => {
+    const wrapped = ((nextIdx % 7) + 7) % 7;
+    if (wrapped === selectedDay) return;
+    userSwitchedDayRef.current = true;
+    hapticLight();
+    setSwipeDir(dir);
+    setSelectedDay(wrapped);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || e.changedTouches.length === 0) return;
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    const elapsed = Date.now() - start.time;
+
+    if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.35 && elapsed < 750) {
+      if (dx > 0) {
+        switchDay(selectedDay + 1, 1);
+      } else {
+        switchDay(selectedDay - 1, -1);
+      }
+    }
+  };
+
+  // Consistent Apple Fitness macro targets
+  const targetCarbs = Math.max(120, Math.round((prefs.dailyCalorieTarget * 0.45) / 4));
+  const targetFat = Math.max(45, Math.round((prefs.dailyCalorieTarget * 0.28) / 9));
+
+  // Clear weekly daily spend data for mini 7-day budget chart
+  const dailySpend = useMemo(() => {
+    return Array.from({ length: 7 }, (_, dayIdx) => {
+      let total = 0;
+      for (const m of plan) {
+        if (m.dayIndex !== dayIdx) continue;
+        const r = recipeMap.get(m.recipeId);
+        if (!r) continue;
+        total += getRecipeConsumptionCostForServings(r, m.servings);
+      }
+      return total;
+    });
+  }, [plan, recipeMap]);
+
+  const cookingDaysCount = Math.max(1, prefs.cookingDays?.length ?? 7);
+  const dailyBudgetGuide = Math.round(costSummary.weeklyBudgetToman / cookingDaysCount);
+  const maxDailySpend = Math.max(dailyBudgetGuide * 1.15, ...dailySpend, 1);
+
+  const budgetDiff = costSummary.weeklyBudgetToman - costSummary.consumptionCostToman;
+  const isOverBudget = budgetDiff < 0;
 
   return (
     <div className="space-y-4">
-      {/* MINIMAL LOCKED HEADER: Logo placeholder + App Name + Compact Circular Lock & Shuffle */}
+      {/* APPLE-CLEAN HEADER: Brand + Single Buy Subscription CTA */}
       <header
         data-testid="plan-sticky-header"
-        className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/82 backdrop-blur-xl border-b border-white/60 safe-top"
+        className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 backdrop-blur-md border-b border-white/60 safe-top"
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -102,30 +235,26 @@ export const PlanScreen: React.FC<{
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.9 }}
-              onClick={togglePlanLock}
-              aria-label={planLocked ? 'باز کردن قفل برنامه' : 'قفل کردن برنامه'}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition ${
-                planLocked
-                  ? 'bg-[#292B25] text-white shadow-md'
-                  : 'liquid-glass text-[#292B25]'
-              }`}
-            >
-              {planLocked ? <IconLock size={16} /> : <IconUnlock size={16} />}
-            </motion.button>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.9, rotate: -90 }}
-              onClick={() => regeneratePlan(false)}
-              aria-label="چیدمان مجدد هفته"
-              className="w-9 h-9 rounded-full liquid-glass text-[#F04438] flex items-center justify-center"
-            >
-              <IconShuffle size={16} />
-            </motion.button>
-          </div>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.94 }}
+            onClick={() => {
+              hapticLight();
+              onOpenSubscription();
+            }}
+            data-testid="plan-buy-subscription-btn"
+            className={`h-9 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-extrabold whitespace-nowrap shrink-0 transition shadow-sm ${
+              prefs.isPro
+                ? 'bg-[#EEF2E6] text-[#4C6E35] border border-[#5E8B42]/20'
+                : 'bg-[#292B25] text-white hover:bg-black'
+            }`}
+          >
+            <IconCrown
+              size={15}
+              className={prefs.isPro ? 'text-[#5E8B42]' : 'text-[#F8C146]'}
+            />
+            <span>{prefs.isPro ? 'سفره پلاس' : 'خرید اشتراک'}</span>
+          </motion.button>
         </div>
       </header>
 
@@ -138,13 +267,14 @@ export const PlanScreen: React.FC<{
             <button
               key={shortName}
               type="button"
-              onClick={() => setSelectedDay(idx)}
+              data-testid={`day-pill-${idx}`}
+              onClick={() => switchDay(idx, idx > selectedDay ? 1 : -1)}
               className="relative py-2 rounded-full flex flex-col items-center justify-center gap-1 transition-all"
             >
               {active && (
                 <motion.span
                   layoutId="activeDayPill"
-                  transition={{ type: 'spring', stiffness: 450, damping: 30 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
                   className="absolute inset-0 rounded-full coral-glass-pill"
                 />
               )}
@@ -171,9 +301,18 @@ export const PlanScreen: React.FC<{
 
       {/* MAIN GRID: MEALS + ANALYTICS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <div className="lg:col-span-7 space-y-3">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          data-testid="plan-swipe-area"
+          className="lg:col-span-7 space-y-3 touch-pan-y"
+        >
+          {/* Clean Day Title + Add Meal Button (Zero pointless swipe hint text) */}
           <div className="flex items-center justify-between">
-            <h2 className="font-display font-black text-lg text-[#292B25]">
+            <h2
+              data-testid="plan-active-day-title"
+              className="font-display font-black text-lg text-[#292B25]"
+            >
               {DAY_NAMES_FULL[selectedDay]}
             </h2>
             <motion.button
@@ -187,238 +326,351 @@ export const PlanScreen: React.FC<{
             </motion.button>
           </div>
 
-          <AnimatePresence mode="popLayout">
-            {dayMeals.length === 0 ? (
-              <div className="liquid-glass-card rounded-[28px] p-7 text-center space-y-3">
-                <p className="text-sm font-bold text-[#75746E]">
-                  برای {DAY_NAMES_FULL[selectedDay]} غذایی تنظیم نشده
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onOpenAddMeal(selectedDay)}
-                  className="px-5 py-2.5 rounded-full coral-glass-pill text-white text-xs font-extrabold"
-                >
-                  افزودن غذا
-                </button>
-              </div>
-            ) : (
-              dayMeals.map((meal, idx) => {
-                const recipe = recipeMap.get(meal.recipeId);
-                if (!recipe) return null;
-                const cost = getRecipeConsumptionCostForServings(recipe, meal.servings);
-                const totalMin = recipe.prepMinutes + recipe.cookMinutes;
-
-                return (
-                  <motion.article
-                    key={`${meal.id}-${meal.recipeId}`}
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ delay: idx * 0.04, type: 'spring', stiffness: 360, damping: 28 }}
-                    className="liquid-glass-card rounded-[28px] p-3.5 space-y-3"
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={selectedDay}
+              initial={{ opacity: 0, x: swipeDir === 0 ? 0 : swipeDir * -26 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: swipeDir === 0 ? 0 : swipeDir * 26 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
+              className="space-y-3"
+            >
+              {dayMeals.length === 0 ? (
+                <div className="liquid-glass-card rounded-[28px] p-7 text-center space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => onOpenAddMeal(selectedDay)}
+                    className="px-5 py-2.5 rounded-full coral-glass-pill text-white text-xs font-extrabold inline-flex items-center gap-1.5"
                   >
-                    <div className="flex items-center gap-3.5">
-                      <button
-                        type="button"
-                        onClick={() => openRecipe(recipe.id, meal.servings)}
-                        data-testid={`meal-card-${meal.slot}`}
-                        className="shrink-0 active:scale-95 transition-transform"
-                      >
-                        <Icon3D
-                          src={recipe.icon}
-                          alt={recipe.title}
-                          sizeClass="w-[74px] h-[74px]"
-                          roundedClass="rounded-[20px]"
-                        />
-                      </button>
-
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#F3E9DE] text-[#292B25]">
-                              {MEAL_SLOT_LABELS[meal.slot]}
-                            </span>
-                            <span
-                              className="text-base leading-none"
-                              title={recipe.cuisine}
-                              aria-label={recipe.cuisine}
-                            >
-                              {getCuisineFlag(recipe.cuisine)}
-                            </span>
-                            {meal.cooked && (
-                              <span className="w-5 h-5 rounded-full bg-[#68734E] text-white flex items-center justify-center">
-                                <IconCheck size={11} />
-                              </span>
-                            )}
-                          </div>
-
-                          <span className="text-xs font-extrabold text-[#292B25] tabular-nums-fa">
-                            {formatToman(cost)}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => openRecipe(recipe.id, meal.servings)}
-                          data-testid="meal-card"
-                          className="font-display font-black text-[17px] leading-snug text-[#292B25] hover:text-[#F04438] text-right block line-clamp-1 w-full transition-colors"
-                        >
-                          {recipe.title}
-                        </button>
-
-                        {/* Clean scannable icon metrics + compact circular swap & cook actions */}
-                        <div className="flex items-center justify-between gap-2 pt-0.5">
-                          <div className="flex items-center gap-3 text-xs font-bold text-[#75746E] tabular-nums-fa">
-                            <span className="inline-flex items-center gap-1">
-                              <IconClock size={14} className="text-[#C87955]" />
-                              {toFaDigits(totalMin)} دقیقه
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <IconFlame size={14} className="text-[#F04438]" />
-                              {toFaDigits(recipe.caloriesPerServing)}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <motion.button
-                              type="button"
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => setSwappingMeal(meal)}
-                              aria-label="تعویض غذا"
-                              className="w-9 h-9 rounded-full bg-[#F3E9DE] hover:bg-[#EAE0D5] text-[#292B25] flex items-center justify-center"
-                            >
-                              <IconSwap size={15} />
-                            </motion.button>
-                            <motion.button
-                              type="button"
-                              whileTap={{ scale: 0.92 }}
-                              onClick={() => openRecipe(recipe.id, meal.servings)}
-                              className="h-9 px-3.5 rounded-full coral-glass-pill text-white text-xs font-extrabold flex items-center gap-1.5"
-                            >
-                              <IconCookingPot size={15} />
-                              <span>پخت</span>
-                            </motion.button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.article>
-                );
-              })
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Analytics Column */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="liquid-glass-card rounded-[28px] p-5 space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-2.5 flex-1">
-                <div className="text-xs font-extrabold text-[#75746E]">
-                  تغذیهٔ {DAY_NAMES_FULL[selectedDay]}
+                    <IconPlus size={15} />
+                    <span>افزودن غذا</span>
+                  </button>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'پروتئین', val: `${toFaDigits(dayMacros.protein)}g`, color: 'text-[#68734E]' },
-                    { label: 'کربوهیدرات', val: `${toFaDigits(dayMacros.carbs)}g`, color: 'text-[#C87955]' },
-                    { label: 'چربی', val: `${toFaDigits(dayMacros.fat)}g`, color: 'text-[#F04438]' },
-                  ].map((m) => (
-                    <div key={m.label} className="rounded-2xl bg-[#FBF5EF] p-2 text-center">
-                      <div className={`font-display font-black text-base tabular-nums-fa ${m.color}`}>
-                        {m.val}
-                      </div>
-                      <div className="text-[10px] font-bold text-[#75746E]">{m.label}</div>
-                    </div>
+              ) : (
+                dayMeals.map((meal, idx) => {
+                  const recipe = recipeMap.get(meal.recipeId);
+                  if (!recipe) return null;
+                  return (
+                    <PlanMealCard
+                      key={`${meal.id}-${meal.recipeId}`}
+                      meal={meal}
+                      recipe={recipe}
+                      idx={idx}
+                      onOpen={() => openRecipe(recipe.id, meal.servings)}
+                      onSwap={() => setSwappingMeal(meal)}
+                      onLongPress={() => setContextMeal(meal)}
+                    />
+                  );
+                })
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* VISUAL DAY-BEFORE PREP CARD (Opens Interactive Popup + Push Notification) */}
+          {tomorrowSoaking && (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                hapticLight();
+                setActivePrepPopup(tomorrowSoaking);
+              }}
+              data-testid="plan-prep-alert-card"
+              className={`w-full rounded-[26px] p-3.5 flex items-center justify-between gap-3 text-right transition border ${
+                donePrepIds[tomorrowSoaking.recipeId]
+                  ? 'bg-[#EEF2E6]/70 border-[#5E8B42]/25'
+                  : 'bg-[#292B25] text-white border-[#292B25] shadow-[0_10px_24px_rgba(41,43,37,0.16)]'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="relative w-12 h-12 rounded-[16px] bg-white/12 flex items-center justify-center shrink-0">
+                  <IngredientIcon3D
+                    src={getIngredientIconPath(
+                      tomorrowSoaking.legumeCodes[0],
+                      tomorrowSoaking.legumes[0]
+                    )}
+                    alt={tomorrowSoaking.legumes[0] ?? 'حبوبات'}
+                    sizeClass="w-9 h-9"
+                  />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#F8C146] text-[#292B25] flex items-center justify-center">
+                    <IconMoon size={11} />
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div
+                    className={`text-[10px] font-extrabold ${
+                      donePrepIds[tomorrowSoaking.recipeId]
+                        ? 'text-[#5E8B42]'
+                        : 'text-[#FFD66B]'
+                    }`}
+                  >
+                    {donePrepIds[tomorrowSoaking.recipeId] ? 'انجام شد' : 'خیساندن امشب'}
+                  </div>
+                  <div
+                    className={`font-display font-black text-sm truncate ${
+                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#292B25]' : 'text-white'
+                    }`}
+                  >
+                    {tomorrowSoaking.legumes.join(' · ')}
+                  </div>
+                  <div
+                    className={`text-[11px] font-bold truncate ${
+                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#75746E]' : 'text-white/65'
+                    }`}
+                  >
+                    {DAY_NAMES_FULL[tomorrowSoaking.dayIndex]} · {tomorrowSoaking.recipeTitle}
+                  </div>
+                </div>
+              </div>
+
+              <span
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  donePrepIds[tomorrowSoaking.recipeId]
+                    ? 'bg-[#5E8B42] text-white'
+                    : 'bg-white/14 text-white'
+                }`}
+              >
+                {donePrepIds[tomorrowSoaking.recipeId] ? (
+                  <IconCheck size={17} />
+                ) : (
+                  <IconBellRinging size={17} />
+                )}
+              </span>
+            </motion.button>
+          )}
+
+          {/* CLICKABLE VISUAL WASTE-SAVINGS STAT WIDGET (Opens Savings Sheet) */}
+          {weeklyInsights.sharedPerishableCount > 0 && (
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setActiveInsightSheet('savings')}
+              data-testid="plan-savings-widget"
+              className="w-full liquid-glass-card rounded-[26px] px-4 py-3.5 flex items-center justify-between gap-3 text-right hover:border-[#5E8B42]/40 transition"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-11 h-11 rounded-[16px] bg-[#EEF2E6] text-[#5E8B42] flex items-center justify-center shrink-0">
+                  <IconPiggyBank size={22} />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-bold text-[#75746E]">صرفه‌جویی هفته</div>
+                  <div className="font-display font-black text-lg text-[#4C6E35] tabular-nums-fa leading-tight">
+                    {formatToman(weeklyInsights.estimatedWasteSavedToman)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Overlapping 3D Ingredient Avatar Cluster + Click Chevron */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center -space-x-2 space-x-reverse">
+                  {weeklyInsights.sharedPerishables.slice(0, 4).map((ing) => (
+                    <span
+                      key={ing.code}
+                      title={ing.name}
+                      className="w-9 h-9 rounded-full bg-[#FBF5EF] border-2 border-white shadow-sm flex items-center justify-center"
+                    >
+                      <IngredientIcon3D
+                        src={getIngredientIconPath(ing.code, ing.name)}
+                        alt={ing.name}
+                        sizeClass="w-7 h-7"
+                      />
+                    </span>
                   ))}
                 </div>
+                <IconCaretLeft size={16} className="text-[#9B958C]" />
               </div>
+            </motion.button>
+          )}
+        </div>
+
+        {/* ANALYTICS COLUMN — CLICKABLE MACROS + CREATIVE 7-DAY BUDGET CARD */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* CLICKABLE APPLE-FITNESS MACRO & PROTEIN CARD */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.985 }}
+            onClick={() => setActiveInsightSheet('macros')}
+            data-testid="plan-macro-card"
+            className="w-full text-right liquid-glass-card rounded-[28px] p-5 space-y-3 hover:border-[#5E8B42]/35 transition"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-[#75746E]">
+                ارزش غذایی {DAY_NAMES_FULL[selectedDay]}
+              </span>
+              <span className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#5E8B42]">
+                <span>نمودار هفته</span>
+                <IconCaretLeft size={14} />
+              </span>
+            </div>
+
+            <div className="flex items-center gap-5">
               <MacroRing
                 calories={dayMacros.cal}
                 targetCalories={prefs.dailyCalorieTarget}
-                proteinG={dayMacros.protein}
-                carbsG={dayMacros.carbs}
-                fatG={dayMacros.fat}
+                size={102}
+                strokeWidth={9.5}
               />
-            </div>
 
-            {/* Animated 14-Bar Protein Ticks */}
-            <div className="pt-2 border-t border-[#EFE4D8]">
-              <div className="flex items-center justify-between text-xs font-bold mb-2">
-                <span className="text-[#292B25]">پروتئین روزانه</span>
-                <span className="text-[#68734E] tabular-nums-fa">
-                  {toFaDigits(dayMacros.protein)} / {toFaDigits(prefs.dailyProteinTarget)} گرم
-                </span>
-              </div>
-              <div className="grid grid-cols-14 gap-1 h-4 items-end">
-                {Array.from({ length: totalTicks }).map((_, i) => {
-                  const active = i < filledTicks;
+              <div className="flex-1 min-w-0 space-y-3">
+                {[
+                  {
+                    label: 'پروتئین',
+                    val: dayMacros.protein,
+                    target: prefs.dailyProteinTarget,
+                    color: '#5E8B42',
+                    track: 'bg-[#E9EFE1]',
+                    icon: <IconMacroProtein size={14} className="text-[#5E8B42]" />,
+                  },
+                  {
+                    label: 'کربوهیدرات',
+                    val: dayMacros.carbs,
+                    target: targetCarbs,
+                    color: '#E59326',
+                    track: 'bg-[#F8EFE2]',
+                    icon: <IconMacroCarbs size={14} className="text-[#E59326]" />,
+                  },
+                  {
+                    label: 'چربی',
+                    val: dayMacros.fat,
+                    target: targetFat,
+                    color: '#3B82F6',
+                    track: 'bg-[#E9F0FC]',
+                    icon: <IconMacroFat size={14} className="text-[#3B82F6]" />,
+                  },
+                ].map((m) => {
+                  const pct = Math.min(100, Math.round((m.val / Math.max(1, m.target)) * 100));
                   return (
-                    <motion.span
-                      key={i}
-                      initial={{ scaleY: 0.3 }}
-                      animate={{ scaleY: active ? 1 : 0.45 }}
-                      transition={{ delay: i * 0.02, type: 'spring', stiffness: 320 }}
-                      className={`w-full rounded-full origin-bottom ${
-                        active
-                          ? 'h-full bg-gradient-to-t from-[#68734E] to-[#98A677]'
-                          : 'h-2.5 bg-[#E9DFD4]'
-                      }`}
-                    />
+                    <div key={m.label} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="inline-flex items-center gap-1.5 font-extrabold text-[#292B25]">
+                          {m.icon}
+                          <span>{m.label}</span>
+                        </span>
+                        <span className="font-extrabold text-[#292B25] tabular-nums-fa">
+                          {toFaDigits(m.val)}
+                          <span className="text-[#8A847C] font-bold text-[10px]">
+                            {' '}از {toFaDigits(m.target)} گرم
+                          </span>
+                        </span>
+                      </div>
+                      <div className={`h-2 rounded-full overflow-hidden ${m.track}`}>
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: m.color }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+                        />
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             </div>
-          </div>
+          </motion.button>
 
-          {/* Weekly Budget Card */}
-          <div className="liquid-glass-card rounded-[28px] p-5 space-y-3.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold text-[#75746E]">هزینهٔ هفته</div>
-                <div className="font-display font-black text-2xl text-[#292B25] tabular-nums-fa mt-0.5">
-                  {formatToman(costSummary.consumptionCostToman)}
+          {/* CRYSTAL-CLEAR, CLICKABLE 7-DAY BUDGET CARD (One Headline Number + Mini Daily Spend Bars) */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.985 }}
+            onClick={() => setActiveInsightSheet('budget')}
+            data-testid="plan-budget-card"
+            className="w-full text-right liquid-glass-card rounded-[28px] p-5 space-y-4 hover:border-[#F04438]/35 transition"
+          >
+            {/* Single Crystal-Clear Headline + Status Chip */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-11 h-11 rounded-[16px] bg-[#FFF0ED] text-[#F04438] flex items-center justify-center shrink-0">
+                  <IconWallet size={21} />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-bold text-[#75746E]">هزینهٔ غذای هفته</div>
+                  <div className="font-display font-black text-[22px] leading-tight text-[#292B25] tabular-nums-fa">
+                    {formatToman(costSummary.consumptionCostToman)}
+                  </div>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full bg-[#EEF2E6] text-[#4C5736] text-xs font-extrabold tabular-nums-fa">
-                {toFaDigits(costSummary.budgetPercent)}٪ بودجه
+
+              <span
+                className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold tabular-nums-fa shrink-0 ${
+                  isOverBudget
+                    ? 'bg-[#FFF0ED] text-[#C42F26]'
+                    : 'bg-[#EEF5E9] text-[#4C6E35]'
+                }`}
+              >
+                {isOverBudget
+                  ? `${toFaDigits(Math.round(Math.abs(budgetDiff) / 1000))} هزار بیشتر`
+                  : `${toFaDigits(Math.round(budgetDiff / 1000))} هزار زیر بودجه`}
               </span>
             </div>
 
-            <div className="h-2 bg-[#EFE4D8] rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-l from-[#FF6A5C] to-[#F04438]"
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, costSummary.budgetPercent)}%` }}
-                transition={{ type: 'spring', stiffness: 200, damping: 26 }}
+            {/* Visual 7-Day Daily Spend Mini Bar Chart */}
+            <div className="relative h-20 pt-2 px-1 flex items-end justify-between gap-2">
+              <div
+                className="absolute inset-x-1 border-t border-dashed border-[#C87955]/45 pointer-events-none"
+                style={{
+                  bottom: `${Math.min(86, Math.max(22, Math.round((dailyBudgetGuide / maxDailySpend) * 100)))}%`,
+                }}
               />
+              {dailySpend.map((amt, idx) => {
+                const pct = amt > 0 ? Math.max(14, Math.round((amt / maxDailySpend) * 100)) : 8;
+                const isSelected = idx === selectedDay;
+                return (
+                  <div key={idx} className="flex-1 h-full flex flex-col items-center justify-end gap-1.5">
+                    <div className="w-full max-w-[22px] flex-1 flex items-end">
+                      <div
+                        style={{ height: `${pct}%` }}
+                        className={`w-full rounded-t-lg transition-all duration-300 ${
+                          isSelected
+                            ? 'bg-gradient-to-t from-[#F04438] to-[#FF7666] shadow-[0_3px_10px_rgba(240,68,56,0.3)]'
+                            : amt > 0
+                              ? 'bg-[#E5D7C8]'
+                              : 'bg-[#F0E6DA]'
+                        }`}
+                      />
+                    </div>
+                    <span
+                      className={`text-[10px] font-black leading-none ${
+                        isSelected ? 'text-[#F04438]' : 'text-[#8C867E]'
+                      }`}
+                    >
+                      {DAY_NAMES_SHORT[idx]}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="rounded-2xl bg-[#FBF5EF] p-3">
-                <div className="text-[11px] text-[#75746E]">صندوق خرید</div>
-                <div className="font-extrabold text-sm text-[#292B25] mt-0.5 tabular-nums-fa">
-                  {formatToman(costSummary.shelfCheckoutCostToman)}
-                </div>
-              </div>
-              <div className="rounded-2xl bg-[#EEF2E6]/80 p-3">
-                <div className="text-[11px] text-[#55613E]">مانده برای بعد</div>
-                <div className="font-extrabold text-sm text-[#4C5736] mt-0.5 tabular-nums-fa">
-                  {formatToman(costSummary.leftoverFridgeValueToman)}
-                </div>
-              </div>
+            {/* Clean Footer Affordance */}
+            <div className="pt-2.5 border-t border-[#EFE4D8] flex items-center justify-between text-xs">
+              <span className="font-bold text-[#75746E] tabular-nums-fa">
+                سقف بودجه: <strong className="text-[#292B25]">{formatToman(costSummary.weeklyBudgetToman)}</strong>
+              </span>
+              <span className="inline-flex items-center gap-0.5 font-extrabold text-[#F04438]">
+                <span>جزئیات و تنظیم</span>
+                <IconCaretLeft size={14} />
+              </span>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('shop')}
-              className="w-full py-3 rounded-full bg-[#292B25] text-white font-extrabold text-xs hover:bg-black transition"
-            >
-              رفتن به لیست خرید
-            </button>
-          </div>
+          </motion.button>
         </div>
       </div>
+
+      {/* CLICKABLE INSIGHT SHEETS (Budget, Macros/Protein, Waste Savings) */}
+      <PlanInsightSheets
+        activeSheet={activeInsightSheet}
+        onClose={() => setActiveInsightSheet(null)}
+        weeklyInsights={weeklyInsights}
+      />
+
+      {/* VISUAL PREP POPUP + PUSH NOTIFICATION MODAL */}
+      <PrepAlertModal
+        alert={activePrepPopup}
+        done={Boolean(activePrepPopup && donePrepIds[activePrepPopup.recipeId])}
+        onMarkDone={(recipeId) =>
+          setDonePrepIds((prev) => ({ ...prev, [recipeId]: true }))
+        }
+        onClose={() => setActivePrepPopup(null)}
+      />
 
       {/* SWAP SHEET */}
       <AnimatePresence>
@@ -471,20 +723,25 @@ export const PlanScreen: React.FC<{
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{getCuisineFlag(cand.recipe.cuisine)}</span>
+                        <span className="inline-flex items-center">
+                          {getCuisineFlag(cand.recipe.cuisine)}
+                        </span>
                         <span className="font-extrabold text-sm text-[#292B25] truncate">
                           {cand.recipe.title}
                         </span>
                       </div>
                       <div className="flex items-center gap-2.5 mt-1 text-[11px] font-bold text-[#75746E] tabular-nums-fa">
-                        <span>{toFaDigits(cand.recipe.prepMinutes + cand.recipe.cookMinutes)} دقیقه</span>
+                        <span>{toFaDigits(cand.recipe.prepMinutes + cand.recipe.cookMinutes)}د</span>
                         <span>{toFaDigits(cand.recipe.caloriesPerServing)} کالری</span>
+                        {cand.recipe.requiredAppliances.slice(0, 2).map((app) => (
+                          <ApplianceIcon key={app} appliance={app} size={13} />
+                        ))}
                       </div>
                     </div>
                     <div
                       className={`text-xs font-extrabold tabular-nums-fa shrink-0 ${
                         cand.deltaConsumptionCostToman <= 0
-                          ? 'text-[#68734E]'
+                          ? 'text-[#5E8B42]'
                           : 'text-[#C87955]'
                       }`}
                     >
@@ -498,6 +755,223 @@ export const PlanScreen: React.FC<{
           </motion.div>
         )}
       </AnimatePresence>
+      {/* LONG-PRESS CONTEXT MENU FOR PLANNED MEALS */}
+      <ContextActionMenu
+        open={Boolean(contextMeal)}
+        preview={(() => {
+          if (!contextMeal) return null;
+          const r = recipeMap.get(contextMeal.recipeId);
+          if (!r) return null;
+          return {
+            title: r.title,
+            subtitle: `${MEAL_SLOT_LABELS[contextMeal.slot]} ${DAY_NAMES_FULL[contextMeal.dayIndex]} · ${formatToman(getRecipeConsumptionCostForServings(r, contextMeal.servings))}`,
+            iconSrc: r.icon,
+            iconKind: 'food3d',
+          };
+        })()}
+        actions={(() => {
+          if (!contextMeal) return [];
+          const r = recipeMap.get(contextMeal.recipeId);
+          if (!r) return [];
+          const targetBook = cookbooks[0]?.id ?? 'fav';
+          const isSaved = cookbooks.some((cb) => cb.recipeIds.includes(r.id));
+          const list: ContextMenuAction[] = [
+            {
+              id: 'cook-now',
+              label: 'شروع پخت مرحله‌به‌مرحله',
+              icon: <IconCookingPot size={18} />,
+              tone: 'accent',
+              onSelect: () => startCookMode(r.id, contextMeal.servings),
+            },
+            {
+              id: 'swap-meal',
+              label: 'تعویض با غذای جایگزین',
+              icon: <IconSwap size={18} />,
+              onSelect: () => setSwappingMeal(contextMeal),
+            },
+            ...(contextMeal.cooked
+              ? []
+              : [
+                  {
+                    id: 'mark-cooked',
+                    label: 'علامت به عنوان پخته‌شده',
+                    icon: <IconCheck size={18} />,
+                    tone: 'positive' as const,
+                    onSelect: () => markRecipeCooked(r.id),
+                  },
+                ]),
+            {
+              id: 'toggle-save',
+              label: isSaved ? 'حذف از ذخیره‌ها' : 'ذخیره در دفترچه',
+              icon: <IconBookmark size={18} filled={isSaved} />,
+              onSelect: () => toggleRecipeInCookbook(targetBook, r.id),
+            },
+            {
+              id: 'remove-meal',
+              label: 'حذف از برنامهٔ امروز',
+              icon: <IconTrash size={18} />,
+              tone: 'danger',
+              onSelect: () => removeMealFromPlan(contextMeal.id),
+            },
+          ];
+          return list;
+        })()}
+        onClose={() => setContextMeal(null)}
+      />
     </div>
+  );
+};
+
+/**
+ * Borderless Color-Filled Meal Card with Scroll-Safe Long-Press Support
+ */
+const PlanMealCard: React.FC<{
+  meal: PlannedMeal;
+  recipe: import('../types/sofreh').Recipe;
+  idx: number;
+  onOpen: () => void;
+  onSwap: () => void;
+  onLongPress: () => void;
+}> = ({ meal, recipe, idx, onOpen, onSwap, onLongPress }) => {
+  const cost = getRecipeConsumptionCostForServings(recipe, meal.servings);
+  const totalMin = recipe.prepMinutes + recipe.cookMinutes;
+  const slotTheme = MEAL_SLOT_THEMES[meal.slot];
+  const { handlers, consumeLongPress } = useLongPress(onLongPress);
+
+  const handleTapOpen = () => {
+    if (consumeLongPress()) return;
+    onOpen();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: idx * 0.03, duration: 0.18, ease: 'easeOut' }}
+      className="space-y-1.5"
+    >
+      <div
+        data-testid={`meal-slot-label-${meal.slot}`}
+        className={`px-1.5 text-xs font-extrabold ${slotTheme.badgeText}`}
+      >
+        {MEAL_SLOT_LABELS[meal.slot]}
+      </div>
+
+      <article
+        data-testid={`meal-article-${meal.slot}`}
+        {...handlers}
+        className={`relative overflow-hidden rounded-[28px] p-3.5 select-none ${slotTheme.cardBg}`}
+      >
+        <div className="flex items-center gap-3.5">
+          <button
+            type="button"
+            onClick={handleTapOpen}
+            data-testid={`meal-card-${meal.slot}`}
+            className="shrink-0 active:scale-95 transition-transform"
+          >
+            <Icon3D
+              src={recipe.icon}
+              alt={recipe.title}
+              sizeClass="w-[74px] h-[74px]"
+              roundedClass="rounded-[20px]"
+              loading="eager"
+            />
+          </button>
+
+          <div className="min-w-0 flex-1 space-y-1.5">
+            {/* Top Metadata Row: Flag + Quiet Kitchenware Icons + Price */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className="inline-flex items-center shrink-0"
+                  title={recipe.cuisine}
+                  aria-label={recipe.cuisine}
+                >
+                  {getCuisineFlag(recipe.cuisine)}
+                </span>
+
+                {recipe.requiredAppliances.length > 0 && (
+                  <div
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/75 text-[#6E6A63] shrink-0"
+                    data-testid={`meal-appliances-${meal.slot}`}
+                  >
+                    {recipe.requiredAppliances.slice(0, 2).map((app) => (
+                      <span
+                        key={app}
+                        title={APPLIANCE_SHORT_LABELS[app]}
+                        aria-label={APPLIANCE_SHORT_LABELS[app]}
+                        className="inline-flex items-center justify-center"
+                      >
+                        <ApplianceIcon appliance={app} size={12} />
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {meal.cooked && (
+                  <span className="w-4.5 h-4.5 rounded-full bg-[#5E8B42] text-white flex items-center justify-center shrink-0">
+                    <IconCheck size={10} />
+                  </span>
+                )}
+              </div>
+
+              <span className="text-xs font-extrabold text-[#292B25] tabular-nums-fa shrink-0">
+                {formatToman(cost)}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleTapOpen}
+              data-testid="meal-card"
+              className="font-display font-black text-[17px] leading-snug text-[#292B25] hover:text-[#F04438] text-right block line-clamp-1 w-full transition-colors"
+            >
+              {recipe.title}
+            </button>
+
+            {/* Clean, Spacious Bottom Row: Time + Calories on Right, Swap + Cook on Left */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <div className="flex items-center gap-3 text-xs font-bold text-[#75746E] tabular-nums-fa">
+                <span className="inline-flex items-center gap-1">
+                  <IconClock size={14} className={slotTheme.iconText} />
+                  {toFaDigits(totalMin)}د
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <IconFlame size={14} className="text-[#F04438]" />
+                  {toFaDigits(recipe.caloriesPerServing)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSwap();
+                  }}
+                  aria-label="تعویض غذا"
+                  className="w-9 h-9 rounded-full bg-white/85 hover:bg-white text-[#292B25] flex items-center justify-center shadow-xs"
+                >
+                  <IconSwap size={15} />
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.92 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpen();
+                  }}
+                  className="h-9 px-3.5 rounded-full coral-glass-pill text-white text-xs font-extrabold flex items-center gap-1.5"
+                >
+                  <IconCookingPot size={15} />
+                  <span>پخت</span>
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </motion.div>
   );
 };

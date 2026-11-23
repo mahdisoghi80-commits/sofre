@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { ChefHat } from '@phosphor-icons/react';
 import { AISLE_LABELS, DAY_NAMES_FULL, MEAL_SLOT_LABELS } from '../data/catalog';
 import { useAppState } from '../context/AppStateContext';
 import type {
@@ -9,7 +10,7 @@ import type {
   RecipeMasterRecord,
 } from '../types/sofreh';
 import { formatToman, toFaDigits } from '../utils/format';
-import { resolveApiUrl } from '../utils/api';
+import { postApiJson } from '../utils/api';
 import { searchRecipes } from '../utils/planner';
 import {
   getCuisineFlag,
@@ -18,6 +19,7 @@ import {
   IconCalendarPlus,
   IconClose,
   IconCookbook,
+  IconCrown,
   IconFridgeLens,
   IconLinkMagic,
   IconMarketBasket,
@@ -27,6 +29,8 @@ import {
   IconSofrehPlan,
   IconSparkle,
   IconUndo,
+  MEAL_SLOT_THEMES,
+  MealSlotIcon,
   SofrehLogoMark,
 } from './icons/SofrehIcons';
 
@@ -51,8 +55,10 @@ const TABS: Array<{
 
 export const DesktopSidebar: React.FC<{
   onOpenSheet: (sheet: ActiveSheetType) => void;
-}> = ({ onOpenSheet }) => {
-  const { activeTab, setActiveTab, costSummary } = useAppState();
+  onOpenChefChat?: () => void;
+  onOpenSubscription?: () => void;
+}> = ({ onOpenSheet, onOpenChefChat, onOpenSubscription }) => {
+  const { activeTab, setActiveTab, costSummary, prefs } = useAppState();
 
   return (
     <aside className="hidden lg:flex flex-col w-[248px] shrink-0 sticky top-0 h-dvh p-4 border-l border-white/75 bg-white/48 backdrop-blur-2xl justify-between">
@@ -85,14 +91,42 @@ export const DesktopSidebar: React.FC<{
           })}
         </nav>
 
-        <button
-          type="button"
-          onClick={() => onOpenSheet({ type: 'quick_actions' })}
-          className="w-full h-12 rounded-full bg-[#292B25] text-white text-sm font-extrabold flex items-center justify-center gap-2 hover:bg-black transition shadow-lg"
-        >
-          <IconPlus size={18} />
-          <span>افزودن سریع</span>
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => onOpenSheet({ type: 'quick_actions' })}
+            className="w-full h-11 rounded-full bg-[#292B25] text-white text-sm font-extrabold flex items-center justify-center gap-2 hover:bg-black transition shadow-lg"
+          >
+            <IconPlus size={18} />
+            <span>افزودن سریع</span>
+          </button>
+          {onOpenChefChat && (
+            <button
+              type="button"
+              onClick={onOpenChefChat}
+              data-testid="sidebar-open-chef-chat"
+              className="w-full h-11 px-4 rounded-full liquid-glass text-[#292B25] text-xs font-extrabold flex items-center justify-center gap-2 hover:text-[#F04438] transition"
+            >
+              <ChefHat size={17} weight="fill" className="text-[#F04438]" />
+              <span>سرآشپز هوشمند</span>
+            </button>
+          )}
+          {onOpenSubscription && (
+            <button
+              type="button"
+              onClick={onOpenSubscription}
+              data-testid="sidebar-open-subscription"
+              className={`w-full h-11 px-4 rounded-full text-xs font-extrabold flex items-center justify-center gap-2 transition ${
+                prefs.isPro
+                  ? 'bg-[#292B25] text-[#F5C563]'
+                  : 'coral-glass-pill text-white'
+              }`}
+            >
+              <IconCrown size={16} />
+              <span>{prefs.isPro ? 'اشتراک ویژه فعال' : 'خرید اشتراک'}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="liquid-glass-card rounded-[24px] p-4 space-y-2">
@@ -165,8 +199,13 @@ export const MobileBottomNav: React.FC<{
         <motion.button
           type="button"
           whileTap={{ scale: 0.88, rotate: 90 }}
-          onClick={() => onOpenSheet({ type: 'quick_actions' })}
-          aria-label="افزودن سریع"
+          onClick={() =>
+            onOpenSheet(
+              activeTab === 'shop' ? { type: 'add_grocery' } : { type: 'quick_actions' }
+            )
+          }
+          aria-label={activeTab === 'shop' ? 'افزودن قلم خرید' : 'افزودن سریع'}
+          data-testid="mobile-dock-plus-btn"
           className="w-13 h-13 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0 border border-white/40"
         >
           <IconPlus size={22} />
@@ -179,7 +218,8 @@ export const MobileBottomNav: React.FC<{
 export const ActionSheetsAndToast: React.FC<{
   activeSheet: ActiveSheetType;
   setActiveSheet: (s: ActiveSheetType) => void;
-}> = ({ activeSheet, setActiveSheet }) => {
+  onOpenChefChat?: () => void;
+}> = ({ activeSheet, setActiveSheet, onOpenChefChat }) => {
   const {
     recipes,
     selectedDay,
@@ -221,31 +261,20 @@ export const ActionSheetsAndToast: React.FC<{
     setImportingAI(true);
     setImportError(null);
     try {
-      const resp = await fetch(resolveApiUrl('/api/import-recipe'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: importUrl.trim(),
-          notes: importNotes.trim(),
-        }),
-      });
-      const rawText = await resp.text();
-      let data: {
+      const resp = await postApiJson<{
         recipe?: RecipeMasterRecord;
         error?: string;
-      } = {};
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        // Non-JSON response
-      }
-      if (!resp.ok || !data.recipe) {
+      }>('/api/import-recipe', {
+        url: importUrl.trim(),
+        notes: importNotes.trim(),
+      });
+      if (!resp.ok || !resp.data.recipe) {
         throw new Error(
-          data.error ||
+          resp.data.error ||
             'اتصال به سرور هوش مصنوعی برقرار نشد. مطمئن شوید نسخه سرور اپ منتشر شده است.'
         );
       }
-      const created = addImportedRecipeRecord(data.recipe);
+      const created = addImportedRecipeRecord(resp.data.recipe);
       setImportUrl('');
       setImportNotes('');
       setActiveSheet(null);
@@ -375,6 +404,24 @@ export const ActionSheetsAndToast: React.FC<{
                         وارد کردن با لینک
                       </div>
                     </button>
+                    {onOpenChefChat && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSheet(null);
+                          onOpenChefChat();
+                        }}
+                        data-testid="quick-action-chef-chat"
+                        className="col-span-2 liquid-glass-card rounded-[24px] p-4 text-right flex items-center gap-3"
+                      >
+                        <span className="w-10 h-10 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
+                          <ChefHat size={19} weight="fill" />
+                        </span>
+                        <div className="font-display font-black text-sm text-[#292B25]">
+                          سرآشپز هوشمند
+                        </div>
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -397,20 +444,24 @@ export const ActionSheetsAndToast: React.FC<{
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    {(['breakfast', 'lunch', 'dinner'] as MealSlotType[]).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setMealSlot(s)}
-                        className={`py-2 rounded-full text-xs font-extrabold ${
-                          mealSlot === s
-                            ? 'coral-glass-pill text-white'
-                            : 'bg-white text-[#292B25]'
-                        }`}
-                      >
-                        {MEAL_SLOT_LABELS[s]}
-                      </button>
-                    ))}
+                    {(['breakfast', 'lunch', 'dinner'] as MealSlotType[]).map((s) => {
+                      const theme = MEAL_SLOT_THEMES[s];
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setMealSlot(s)}
+                          className={`py-2.5 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition ${
+                            mealSlot === s
+                              ? theme.activePill
+                              : `${theme.badgeBg} ${theme.badgeText}`
+                          }`}
+                        >
+                          <MealSlotIcon slot={s} size={14} filled={mealSlot === s} />
+                          <span>{MEAL_SLOT_LABELS[s]}</span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <div className="relative">
@@ -570,7 +621,7 @@ export const ActionSheetsAndToast: React.FC<{
                           : 'text-[#5C5952]'
                       }`}
                     >
-                      لینک سایت با هوش مصنوعی
+                      لینک هوشمند
                     </button>
                     <button
                       type="button"
@@ -581,7 +632,7 @@ export const ActionSheetsAndToast: React.FC<{
                           : 'text-[#5C5952]'
                       }`}
                     >
-                      نوشتن دستی
+                      دستی
                     </button>
                   </div>
 
@@ -600,7 +651,7 @@ export const ActionSheetsAndToast: React.FC<{
                         rows={2}
                         value={importNotes}
                         onChange={(e) => setImportNotes(e.target.value)}
-                        placeholder="یا متن دستور غذا را اینجا کپی کنید (اختیاری)…"
+                        placeholder="متن دستور (اختیاری)…"
                         className="w-full p-3.5 rounded-2xl bg-white border border-[#E6DACD] text-xs font-medium focus:outline-none focus:border-[#F04438]"
                       />
 
@@ -618,7 +669,7 @@ export const ActionSheetsAndToast: React.FC<{
                         className="w-full h-13 rounded-full btn-shimmer text-white font-display font-black text-base flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <IconSparkle size={18} className={importingAI ? 'animate-spin' : ''} />
-                        <span>{importingAI ? 'در حال استخراج دستور…' : 'استخراج و ذخیره دستور'}</span>
+                        <span>{importingAI ? 'در حال استخراج…' : 'استخراج دستور'}</span>
                       </button>
                     </form>
                   ) : (

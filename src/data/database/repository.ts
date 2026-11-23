@@ -11,6 +11,7 @@ import { RECIPES_PERSIAN_A } from './recipesPersianA';
 import { RECIPES_PERSIAN_B } from './recipesPersianB';
 import { RECIPES_WORLD_A } from './recipesWorldA';
 import { RECIPES_WORLD_B } from './recipesWorldB';
+import { resolveRecipeVisuals } from './visualResolver';
 
 export const BUILTIN_RECIPES_MASTER: RecipeMasterRecord[] = [
   ...RECIPES_PERSIAN_A,
@@ -62,12 +63,12 @@ export function computeRecipeLabels(
   const totalMinutes = master.prepMinutes + master.cookMinutes;
 
   // 1. Live Cost / Budget Tier labels (auto-recalculated when ING_* prices change!)
-  if (costPerServingToman <= 85000) {
+  if (costPerServingToman <= 130000) {
     labels.add('خیلی اقتصادی');
     labels.add('اقتصادی');
-  } else if (costPerServingToman <= 145000) {
+  } else if (costPerServingToman <= 220000) {
     labels.add('اقتصادی');
-  } else if (costPerServingToman >= 250000) {
+  } else if (costPerServingToman >= 420000) {
     labels.add('مجلسی');
   }
 
@@ -160,6 +161,7 @@ export function hydrateRecipe(
   const costPerServingToman = Math.round(totalConsumptionCost / Math.max(1, master.baseServings));
   const derivedAllergens = Array.from(allergenSet);
   const tags = computeRecipeLabels(master, costPerServingToman, derivedAllergens);
+  const visuals = resolveRecipeVisuals(master);
 
   return {
     id: master.id,
@@ -169,8 +171,8 @@ export function hydrateRecipe(
     cuisine: master.cuisine,
     category: master.category,
     mainProtein: master.mainProtein,
-    icon: master.icon,
-    photoUrl: master.photoUrl,
+    icon: visuals.icon,
+    photoUrl: visuals.photoUrl,
     mealTypes: master.mealTypes,
     baseServings: master.baseServings,
     prepMinutes: master.prepMinutes,

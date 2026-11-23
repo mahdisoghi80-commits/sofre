@@ -5,7 +5,7 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel, Type } from '@google/genai';
 import { INGREDIENTS_MASTER, INGREDIENTS_MAP } from './src/data/database/ingredients';
 import { DISH_PHOTOS } from './src/data/database/photos';
 import type {
@@ -229,15 +229,65 @@ async function startServer() {
     });
   });
 
-  // Direct Android Test APK download route
-  app.get('/downloads/sofreh-test-debug.apk', (_req, res) => {
+  // Live Iranian grocery market prices (updated automatically via npm run sync:prices / GitHub Actions)
+  app.get('/api/prices-live', (_req, res) => {
+    const livePath = path.resolve(__dirname, 'public/prices-live.json');
+    if (!fs.existsSync(livePath)) {
+      return res.status(404).json({ error: 'فایل قیمت‌های زنده هنوز ساخته نشده است.' });
+    }
+    res.setHeader('Cache-Control', 'public, max-age=1800');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    return res.sendFile(livePath);
+  });
+
+  // Android Test APK metadata for in-app chunked download inside authenticated preview
+  app.get('/api/apk-info', (_req, res) => {
+    const apkPath = path.resolve(__dirname, 'releases/sofreh-test-debug.apk');
+    if (!fs.existsSync(apkPath)) {
+      return res.json({ available: false, filename: 'sofreh-test-debug.apk', sizeBytes: 0 });
+    }
+    const stat = fs.statSync(apkPath);
+    return res.json({
+      available: true,
+      filename: 'sofreh-test-debug.apk',
+      sizeBytes: stat.size,
+    });
+  });
+
+  // Direct Android Test APK download route with explicit Range (206) support for Cloud Run chunking
+  app.get('/downloads/sofreh-test-debug.apk', (req, res) => {
     const apkPath = path.resolve(__dirname, 'releases/sofreh-test-debug.apk');
     if (!fs.existsSync(apkPath)) {
       return res.status(404).json({ error: 'فایل APK هنوز ساخته نشده است.' });
     }
+    const stat = fs.statSync(apkPath);
+    const total = stat.size;
+    const range = req.headers.range;
+
+    res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Type', 'application/vnd.android.package-archive');
     res.setHeader('Content-Disposition', 'attachment; filename="sofreh-test-debug.apk"');
-    return res.sendFile(apkPath);
+
+    if (range) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+      if (!match) {
+        res.setHeader('Content-Range', `bytes */${total}`);
+        return res.status(416).end();
+      }
+      const start = match[1] ? Number(match[1]) : 0;
+      const end = match[2] ? Math.min(total - 1, Number(match[2])) : total - 1;
+      if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= total) {
+        res.setHeader('Content-Range', `bytes */${total}`);
+        return res.status(416).end();
+      }
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
+      res.setHeader('Content-Length', String(end - start + 1));
+      return fs.createReadStream(apkPath, { start, end }).pipe(res);
+    }
+
+    res.setHeader('Content-Length', String(total));
+    return fs.createReadStream(apkPath).pipe(res);
   });
 
   // Real Gemini Vision Fridge Scanner using gemini-4-hydrogen (server-side only)
@@ -646,6 +696,166 @@ ${CANONICAL_GLOSSARY}`;
       return res.status(500).json({
         error: 'خطا در تحلیل لینک دستور غذا. لطفاً دوباره امتحان کنید.',
       });
+    }
+  });
+
+  // Multi-turn Gemini AI Chef Chatbot ("سرآشپز هوشمند سفره", server-side only)
+  app.post('/api/chef-chat', async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(503).json({
+          error: 'کلید هوش مصنوعی روی سرور تنظیم نشده است. در تنظیمات سرور کلید Gemini را بررسی کنید.',
+        });
+      }
+
+      const {
+        message,
+        history,
+        mode,
+        context,
+      } = req.body as {
+        message?: string;
+        history?: Array<{ role: 'user' | 'model'; text: string }>;
+        mode?: 'smart' | 'fast';
+        context?: {
+          householdSize?: number;
+          diet?: string;
+          allergies?: string[];
+          weeklyBudgetToman?: number;
+          appliances?: string[];
+          pantryNames?: string[];
+          todayMeals?: string[];
+          activeRecipe?: {
+            title: string;
+            cuisine: string;
+            servings: number;
+            ingredients: string[];
+            caloriesPerServing: number;
+            proteinG: number;
+          } | null;
+        };
+      };
+
+      const trimmedMessage = typeof message === 'string' ? message.trim().slice(0, 2000) : '';
+      if (!trimmedMessage) {
+        return res.status(400).json({
+          error: 'لطفاً سوال یا درخواست آشپزی خود را بنویسید.',
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
+
+      const ctx = context ?? {};
+      const allergyLine =
+        Array.isArray(ctx.allergies) && ctx.allergies.length > 0
+          ? ctx.allergies.join('، ')
+          : 'هیچ حساسیت ثبت‌شده‌ای ندارد';
+      const pantryLine =
+        Array.isArray(ctx.pantryNames) && ctx.pantryNames.length > 0
+          ? ctx.pantryNames.slice(0, 28).join('، ')
+          : 'مورد خاصی ثبت نشده';
+      const todayLine =
+        Array.isArray(ctx.todayMeals) && ctx.todayMeals.length > 0
+          ? ctx.todayMeals.join(' | ')
+          : 'هنوز وعده‌ای برای امروز باز نشده';
+      const activeRecipeBlock = ctx.activeRecipe
+        ? `\nغذای فعلی که کاربر دارد می‌بیند: «${ctx.activeRecipe.title}» (${ctx.activeRecipe.cuisine}، ${ctx.activeRecipe.servings} نفر، ${ctx.activeRecipe.caloriesPerServing} کالری، ${ctx.activeRecipe.proteinG} گرم پروتئین).\nمواد لازم این غذا: ${ctx.activeRecipe.ingredients.slice(0, 14).join('، ')}.`
+        : '';
+
+      const systemInstruction = `تو «سرآشپز سفره» هستی — یک سرآشپز حرفه‌ای ایرانی و بین‌المللی، متخصص تغذیه، مدیریت بودجه خانوار به تومان و جلوگیری از دورریز غذا در اپلیکیشن «سفره».
+قوانین پاسخ‌گویی تو:
+- همیشه به فارسی روان، صمیمی، کاربردی و ساختاریافته (با بولت‌های کوتاه و اعداد فارسی در صورت نیاز) پاسخ بده.
+- پاسخ‌ها را خلاصه، مستقیم و دقیق نگه دار (حداکثر ۶ تا ۱۰ خط مگر کاربر دستور کامل خواسته باشد).
+- هرگز ماده‌ای که کاربر به آن حساسیت دارد پیشنهاد نکن!
+- در پیشنهاد جایگزین مواد، حتماً به موجودی یخچال و ابزار آشپزخانه کاربر توجه کن.
+- از مارک‌داون سنگین یا جدول‌های شلوغ استفاده نکن؛ متن تمیز و خوانا بنویس.
+
+پروفایل فعلی کاربر:
+- تعداد نفرات: ${ctx.householdSize ?? 2} نفر
+- رژیم غذایی: ${ctx.diet ?? 'معمولی'}
+- حساسیت‌های غذایی (خط قرمز): ${allergyLine}
+- بودجه هفتگی: ${ctx.weeklyBudgetToman ? `${ctx.weeklyBudgetToman.toLocaleString('en-US')} تومان` : 'نامشخص'}
+- ابزارهای آشپزخانه: ${(ctx.appliances ?? ['اجاق گاز']).join('، ')}
+- موجودی فعلی یخچال: ${pantryLine}
+- برنامهٔ امروز: ${todayLine}${activeRecipeBlock}`;
+
+      const safeHistory = Array.isArray(history)
+        ? history
+            .filter(
+              (h) =>
+                h &&
+                (h.role === 'user' || h.role === 'model') &&
+                typeof h.text === 'string' &&
+                h.text.trim().length > 0
+            )
+            .slice(-16)
+            .map((h) => ({
+              role: h.role,
+              parts: [{ text: h.text.trim().slice(0, 2000) }],
+            }))
+        : [];
+
+      const primaryModel = mode === 'fast' ? 'gemini-3.1-flash-lite' : 'gemini-4-hydrogen';
+      const fallbackModel = mode === 'fast' ? 'gemini-4-hydrogen' : 'gemini-3.1-flash-lite';
+
+      let reply = '';
+      let usedModel = primaryModel;
+      let lastErr: unknown = null;
+
+      for (const candidateModel of [primaryModel, fallbackModel]) {
+        try {
+          const chat = ai.chats.create({
+            model: candidateModel,
+            history: safeHistory,
+            config: {
+              systemInstruction,
+              thinkingConfig: {
+                thinkingLevel:
+                  candidateModel === 'gemini-3.1-flash-lite'
+                    ? ThinkingLevel.MINIMAL
+                    : ThinkingLevel.LOW,
+              },
+            },
+          });
+          const response = await chat.sendMessage({
+            message: trimmedMessage,
+          });
+          const text = response.text?.trim();
+          if (text) {
+            reply = text;
+            usedModel = candidateModel;
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
+          console.warn(`[api/chef-chat] model ${candidateModel} failed, trying fallback:`, err);
+        }
+      }
+
+      if (!reply) {
+        if (lastErr) throw lastErr;
+        return res.status(502).json({
+          error: 'پاسخی از سرآشپز هوشمند دریافت نشد. لطفاً دوباره امتحان کنید.',
+        });
+      }
+
+      return res.json({
+        reply,
+        model: usedModel,
+      });
+    } catch (err) {
+      console.error('[api/chef-chat] error:', err);
+      const msg =
+        err instanceof Error && (err.message.includes('API key') || err.message.includes('PERMISSION_DENIED'))
+          ? 'کلید Gemini معتبر نیست. لطفاً در Settings > Secrets کلید را بررسی کنید.'
+          : err instanceof Error && err.message.includes('RESOURCE_EXHAUSTED')
+            ? 'سقف درخواست هوش مصنوعی موقتاً پر شده است. لطفاً کمی بعد یا با حالت «پاسخ فوری» امتحان کنید.'
+            : 'خطا در ارتباط با سرآشپز هوشمند. لطفاً دوباره تلاش کنید.';
+      return res.status(500).json({ error: msg });
     }
   });
 

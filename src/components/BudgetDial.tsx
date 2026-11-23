@@ -1,7 +1,7 @@
 import React, { useCallback, useId, useRef } from 'react';
 import { motion } from 'motion/react';
 import { formatToman, toFaDigits } from '../utils/format';
-import { hapticLight } from '../utils/native';
+import { hapticTick } from '../utils/native';
 import { IconMinus, IconPlus } from './icons/SofrehIcons';
 
 interface BudgetDialProps {
@@ -36,36 +36,48 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
   return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
 }
 
-const PRESETS = [
-  { label: '۶۰۰ هزار', val: 600_000 },
-  { label: '۱.۲ میلیون', val: 1_200_000 },
-  { label: '۲.۴ میلیون', val: 2_400_000 },
-  { label: '۴ میلیون', val: 4_000_000 },
-];
+function formatCompactBudget(amount: number): string {
+  if (amount >= 1_000_000) {
+    const m = amount / 1_000_000;
+    return `${toFaDigits(Number.isInteger(m) ? String(m) : m.toFixed(1))} میلیون`;
+  }
+  return `${toFaDigits(Math.round(amount / 1000))} هزار`;
+}
 
 /**
- * Tactile Rotary Budget Dial (minimum 300,000 Toman, up to 6,000,000 Toman).
- * Supports direct pointer/touch drag around the circular track, circular +/- buttons, and quick presets.
+ * Tactile Rotary Budget Dial (dynamically bounded from the mathematical minimum weekly cost
+ * up to 12M+ Toman per week, tuned for live Iranian grocery prices).
  */
 export const BudgetDial: React.FC<BudgetDialProps> = ({
   value,
-  min = 300_000,
-  max = 6_000_000,
-  step = 100_000,
+  min = 1_000_000,
+  max = 12_000_000,
+  step = 200_000,
   servings,
   mealsPerWeek,
   onChange,
 }) => {
+  const effectiveMin = Math.max(500_000, min);
+  const effectiveMax = Math.max(max, Math.ceil((effectiveMin * 2.5) / 1_000_000) * 1_000_000);
   const svgRef = useRef<SVGSVGElement>(null);
   const draggingRef = useRef(false);
   const uid = useId().replace(/:/g, '');
   const arcGradId = `budgetArcGrad-${uid}`;
   const knobGlowId = `knobGlow-${uid}`;
 
-  const clamped = Math.min(max, Math.max(min, value));
-  const ratio = (clamped - min) / Math.max(1, max - min);
+  const clamped = Math.min(effectiveMax, Math.max(effectiveMin, value));
+  const ratio = (clamped - effectiveMin) / Math.max(1, effectiveMax - effectiveMin);
   const currentAngle = START_ANGLE + ratio * SWEEP;
   const knobPos = polarToCartesian(CX, CY, RADIUS, currentAngle);
+
+  const presets = [0, 0.25, 0.55, 0.85].map((pct) => {
+    const raw = effectiveMin + pct * (effectiveMax - effectiveMin);
+    const val = Math.min(
+      effectiveMax,
+      Math.max(effectiveMin, Math.round(raw / step) * step)
+    );
+    return { label: formatCompactBudget(val), val };
+  });
 
   const perServing = Math.round(
     clamped / Math.max(1, mealsPerWeek * Math.max(1, servings))
@@ -87,15 +99,15 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
 
       const clampedAngle = Math.max(START_ANGLE, Math.min(END_ANGLE, angle));
       const pct = (clampedAngle - START_ANGLE) / SWEEP;
-      const raw = min + pct * (max - min);
+      const raw = effectiveMin + pct * (effectiveMax - effectiveMin);
       const snapped = Math.round(raw / step) * step;
-      const next = Math.max(min, Math.min(max, snapped));
+      const next = Math.max(effectiveMin, Math.min(effectiveMax, snapped));
       if (next !== clamped) {
-        hapticLight();
+        hapticTick();
         onChange(next);
       }
     },
-    [clamped, max, min, onChange, step]
+    [clamped, effectiveMax, effectiveMin, onChange, step]
   );
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -145,8 +157,8 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
           className="w-full h-full touch-none cursor-grab active:cursor-grabbing"
           role="slider"
           aria-label="بودجه هفتگی به تومان"
-          aria-valuemin={min}
-          aria-valuemax={max}
+          aria-valuemin={effectiveMin}
+          aria-valuemax={effectiveMax}
           aria-valuenow={clamped}
         >
           <defs>
@@ -213,10 +225,10 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
 
           {/* Min / Max corner indicators */}
           <text x="44" y="242" textAnchor="middle" fill="#8A857C" fontSize="11" fontWeight="700">
-            ۳۰۰ هزار
+            {formatCompactBudget(effectiveMin)}
           </text>
           <text x="236" y="242" textAnchor="middle" fill="#8A857C" fontSize="11" fontWeight="700">
-            ۶ میلیون
+            {formatCompactBudget(effectiveMax)}
           </text>
         </svg>
 
@@ -238,8 +250,7 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
           type="button"
           whileTap={{ scale: 0.9 }}
           onClick={() => {
-            hapticLight();
-            onChange(Math.max(min, clamped - step));
+            onChange(Math.max(effectiveMin, clamped - step));
           }}
           aria-label="کاهش بودجه"
           className="w-11 h-11 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shadow-sm"
@@ -247,16 +258,15 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
           <IconMinus size={18} />
         </motion.button>
 
-        <span className="text-xs font-extrabold text-[#75746E] tabular-nums-fa min-w-[100px] text-center">
-          گام ۱۰۰ هزار تومانی
+        <span className="text-xs font-extrabold text-[#9E9B94] tabular-nums-fa min-w-[72px] text-center">
+          {formatCompactBudget(step)}
         </span>
 
         <motion.button
           type="button"
           whileTap={{ scale: 0.9 }}
           onClick={() => {
-            hapticLight();
-            onChange(Math.min(max, clamped + step));
+            onChange(Math.min(effectiveMax, clamped + step));
           }}
           aria-label="افزایش بودجه"
           className="w-11 h-11 rounded-full coral-glass-pill text-white flex items-center justify-center"
@@ -267,14 +277,13 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
 
       {/* Clean Single-Row 4-Column Quick Presets */}
       <div className="grid grid-cols-4 gap-1.5 w-full max-w-[340px]">
-        {PRESETS.map((p) => {
+        {presets.map((p, idx) => {
           const active = clamped === p.val;
           return (
             <button
-              key={p.val}
+              key={`${p.val}-${idx}`}
               type="button"
               onClick={() => {
-                hapticLight();
                 onChange(p.val);
               }}
               className={`py-2 rounded-full text-[11px] font-extrabold transition text-center whitespace-nowrap ${

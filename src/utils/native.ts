@@ -8,40 +8,32 @@ export function getNativePlatform(): 'android' | 'ios' | 'web' {
   return 'web';
 }
 
-export async function hapticLight(): Promise<void> {
+/**
+ * Subtle tactile tick reserved strictly for continuous dials & sliders (BudgetDial, CuisineRatioControl).
+ * Normal buttons, tabs, and toggles stay completely silent to avoid annoying vibrations in the APK.
+ */
+export async function hapticTick(): Promise<void> {
   try {
     if (Capacitor.isNativePlatform()) {
-      await Haptics.impact({ style: ImpactStyle.Light });
+      await Haptics.selectionChanged();
     } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(10);
+      navigator.vibrate(6);
     }
   } catch {
     // Graceful no-op on unsupported desktop browsers
   }
 }
 
+export async function hapticLight(): Promise<void> {
+  // Intentionally silent — standard button taps must not vibrate the phone
+}
+
 export async function hapticMedium(): Promise<void> {
-  try {
-    if (Capacitor.isNativePlatform()) {
-      await Haptics.impact({ style: ImpactStyle.Medium });
-    } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate(18);
-    }
-  } catch {
-    // Graceful no-op
-  }
+  // Intentionally silent — standard toggles/actions must not vibrate the phone
 }
 
 export async function hapticSuccess(): Promise<void> {
-  try {
-    if (Capacitor.isNativePlatform()) {
-      await Haptics.notification({ type: NotificationType.Success });
-    } else if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-      navigator.vibrate([15, 40, 20]);
-    }
-  } catch {
-    // Graceful no-op
-  }
+  // Intentionally silent — avoid repetitive vibration across routine actions
 }
 
 export async function savePersistedString(key: string, value: string): Promise<void> {

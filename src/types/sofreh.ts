@@ -269,6 +269,8 @@ export interface UserPreferences {
   /** Continuous slider 0..100 representing percentage of Persian food vs International food */
   persianRatio?: number;
   allergens: AllergenId[];
+  /** Canonical ING_* codes the user dislikes and wants excluded from plans & suggestions */
+  dislikedIngredients?: string[];
   appliances: ApplianceId[];
   weeklyBudgetToman: number;
   dailyCalorieTarget: number;
@@ -277,6 +279,7 @@ export interface UserPreferences {
   soakingReminder?: boolean;
   reminderTime: string;
   householdCode: string;
+  isPro?: boolean;
 }
 
 export interface FridgeMatchResult {

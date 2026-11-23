@@ -1,30 +1,39 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ALLERGENS_META,
   DAY_NAMES_SHORT,
   DIETS_META,
-  KITCHEN_SCENE_3D,
+  DISLIKED_FOODS_META,
 } from '../data/catalog';
+import { getIngredientIconPath } from '../data/database/ingredientIcons';
 import { useAppState } from '../context/AppStateContext';
 import type { AllergenId, ApplianceId, CuisinePreference, DietType } from '../types/sofreh';
 import { formatToman, toFaDigits } from '../utils/format';
 import { hapticLight, hapticMedium } from '../utils/native';
+import { requestPrepNotificationPermission } from '../utils/notifications';
 import { BudgetDial } from './BudgetDial';
+import { CuisineRatioControl } from './CuisineRatioControl';
+import { InteractiveKitchen2D } from './InteractiveKitchen2D';
+import { AndroidApkDownloadCard } from './AndroidApkDownloadCard';
 import {
   DietStyleIcon,
   Icon3D,
   IconArrowLeft,
   IconBell,
-  IconCheck,
+  IconBellRinging,
   IconClose,
   IconKitchen,
   IconMinus,
   IconPantryShelf,
   IconPlus,
+  IconSearch,
   IconUndo,
+  IngredientIcon3D,
   SofrehLogoMark,
 } from './icons/SofrehIcons';
+
+import { ArrowsClockwise, ChefHat, Tag } from '@phosphor-icons/react';
 
 function ratioToCuisinePref(ratio: number): CuisinePreference {
   if (ratio >= 68) return 'mostly_persian';
@@ -32,19 +41,87 @@ function ratioToCuisinePref(ratio: number): CuisinePreference {
   return 'balanced';
 }
 
-export const ProfileScreen: React.FC = () => {
+export const ProfileScreen: React.FC<{
+  onOpenChefChat?: () => void;
+}> = ({ onOpenChefChat }) => {
   const {
     prefs,
     pantry,
     cookbooks,
     cookedCount,
+    ingredientsMaster,
+    ownerOverrides,
+    livePrices,
+    isSyncingPrices,
+    refreshLivePrices,
+    minWeeklyBudgetToman,
+    updateIngredientPrice,
+    resetOwnerOverrides,
     updatePrefs,
     restartOnboarding,
     openInventory,
+    registerBackHandler,
   } = useAppState();
 
   const [kitchenModalOpen, setKitchenModalOpen] = useState(false);
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
+  const [livePricesModalOpen, setLivePricesModalOpen] = useState(false);
+  const [priceSearch, setPriceSearch] = useState('');
+  const [editingPriceCode, setEditingPriceCode] = useState<string | null>(null);
+  const [draftPackPrice, setDraftPackPrice] = useState<string>('');
+
+  useEffect(() => {
+    if (!kitchenModalOpen && !budgetModalOpen && !livePricesModalOpen) return;
+    return registerBackHandler('profile-modals', () => {
+      if (livePricesModalOpen) {
+        setLivePricesModalOpen(false);
+        return true;
+      }
+      if (kitchenModalOpen) {
+        setKitchenModalOpen(false);
+        return true;
+      }
+      if (budgetModalOpen) {
+        setBudgetModalOpen(false);
+        return true;
+      }
+      return false;
+    });
+  }, [kitchenModalOpen, budgetModalOpen, livePricesModalOpen, registerBackHandler]);
+
+  const filteredPriceIngredients = useMemo(() => {
+    const q = priceSearch.trim().toLowerCase();
+    if (!q) return ingredientsMaster;
+    return ingredientsMaster.filter(
+      (ing) =>
+        ing.nameFa.toLowerCase().includes(q) ||
+        ing.nameEn.toLowerCase().includes(q) ||
+        ing.aisle.toLowerCase().includes(q)
+    );
+  }, [ingredientsMaster, priceSearch]);
+
+  const liveSourcesLabel = useMemo(() => {
+    const sources = livePrices?.sourcesUsed ?? [];
+    if (sources.includes('torob') && sources.includes('basalam')) return 'ترب + باسلام';
+    if (sources.includes('torob')) return 'ترب';
+    if (sources.includes('basalam')) return 'باسلام';
+    return 'قیمت پایه';
+  }, [livePrices]);
+
+  const liveUpdatedLabel = useMemo(() => {
+    if (!livePrices?.updatedAt) return 'آمادهٔ همگام‌سازی';
+    try {
+      const d = new Date(livePrices.updatedAt);
+      return new Intl.DateTimeFormat('fa-IR', {
+        month: 'short',
+        day: 'numeric',
+      }).format(d);
+    } catch {
+      return 'امروز';
+    }
+  }, [livePrices]);
+
+  const manualOverrideCount = Object.keys(ownerOverrides.ingredientPrices).length;
 
   const savedCount = useMemo(() => {
     const s = new Set<string>();
@@ -89,6 +166,17 @@ export const ProfileScreen: React.FC = () => {
     updatePrefs({ appliances: next.length > 0 ? next : ['stovetop'] }, true);
   };
 
+  const dislikedCodes = prefs.dislikedIngredients ?? [];
+
+  const toggleDislikedFood = (codes: string[]) => {
+    hapticLight();
+    const hasAny = codes.some((c) => dislikedCodes.includes(c));
+    const next = hasAny
+      ? dislikedCodes.filter((c) => !codes.includes(c))
+      : Array.from(new Set([...dislikedCodes, ...codes]));
+    updatePrefs({ dislikedIngredients: next }, true);
+  };
+
   return (
     <div className="space-y-5">
       {/* CLEAN CONSUMER HEADER */}
@@ -129,28 +217,92 @@ export const ProfileScreen: React.FC = () => {
         ))}
       </section>
 
-      {/* DIRECT HOME INVENTORY SHORTCUT */}
+      {/* QUICK ACCESS ROW: INVENTORY + AI CHEF */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.97 }}
+          onClick={openInventory}
+          className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
+        >
+          <div className="flex items-center justify-between">
+            <span className="w-10 h-10 rounded-full bg-[#EEF5E9] text-[#5E8B42] flex items-center justify-center shrink-0">
+              <IconPantryShelf size={20} />
+            </span>
+            <IconArrowLeft size={16} className="text-[#9E9B94]" />
+          </div>
+          <div>
+            <div className="font-display font-black text-sm text-[#292B25]">
+              موجودی یخچال
+            </div>
+            <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa">
+              {toFaDigits(inventoryCount)} قلم
+            </div>
+          </div>
+        </motion.button>
+
+        {onOpenChefChat && (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              hapticLight();
+              onOpenChefChat();
+            }}
+            data-testid="profile-open-chef-chat"
+            className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
+          >
+            <div className="flex items-center justify-between">
+              <span className="w-10 h-10 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
+                <ChefHat size={20} weight="fill" />
+              </span>
+              <IconArrowLeft size={16} className="text-[#9E9B94]" />
+            </div>
+            <div>
+              <div className="font-display font-black text-sm text-[#292B25]">
+                سرآشپز هوشمند
+              </div>
+              <div className="text-[11px] font-bold text-[#75746E]">
+                مشاوره پخت
+              </div>
+            </div>
+          </motion.button>
+        )}
+      </div>
+
+      {/* LIVE IRANIAN MARKET PRICES CARD */}
       <motion.button
         type="button"
         whileTap={{ scale: 0.98 }}
-        onClick={openInventory}
-        className="w-full liquid-glass-card rounded-[26px] p-4 flex items-center justify-between text-right"
+        onClick={() => {
+          hapticLight();
+          setLivePricesModalOpen(true);
+        }}
+        data-testid="profile-open-live-prices"
+        className="w-full liquid-glass-card rounded-[24px] p-4 flex items-center justify-between gap-3 text-right"
       >
-        <div className="flex items-center gap-3">
-          <span className="w-11 h-11 rounded-full bg-[#EEF2E6] text-[#68734E] flex items-center justify-center shrink-0">
-            <IconPantryShelf size={21} />
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="w-10 h-10 rounded-full bg-[#EEF5E9] text-[#4C6E35] flex items-center justify-center shrink-0 relative">
+            <Tag size={19} weight="fill" />
+            {livePrices && (
+              <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-[#5E8B42] ring-2 ring-white" />
+            )}
           </span>
-          <div>
-            <div className="font-display font-black text-base text-[#292B25]">
-              موجودی یخچال و خانه
+          <div className="min-w-0">
+            <div className="font-display font-black text-sm text-[#292B25]">
+              قیمت‌های روز بازار
             </div>
-            <div className="text-xs font-bold text-[#75746E] tabular-nums-fa">
-              {toFaDigits(inventoryCount)} قلم ثبت شده
+            <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa truncate mt-0.5">
+              {liveSourcesLabel} • {liveUpdatedLabel}
+              {livePrices ? ` • ${toFaDigits(livePrices.liveMatchedCount)} قلم زنده` : ''}
             </div>
           </div>
         </div>
-        <IconArrowLeft size={18} className="text-[#75746E]" />
+        <IconArrowLeft size={16} className="text-[#9E9B94] shrink-0" />
       </motion.button>
+
+      {/* ANDROID APK DIRECT DOWNLOAD (Web preview only — hidden inside native APK) */}
+      <AndroidApkDownloadCard variant="card" />
 
       {/* HOUSEHOLD, DAYS & BUDGET CARD */}
       <section className="liquid-glass-card rounded-[28px] p-5 space-y-5">
@@ -230,30 +382,18 @@ export const ProfileScreen: React.FC = () => {
           </button>
         </div>
 
-        {/* Persian / International Slider */}
-        <div className="space-y-2.5 pt-4 border-t border-[#EFE4D8]">
-          <div className="flex items-center justify-between text-xs font-extrabold">
-            <span className="text-[#292B25]">🇮🇷 ایرانی {toFaDigits(persianRatio)}٪</span>
-            <span className="text-[#68734E]">جهانی {toFaDigits(100 - persianRatio)}٪ 🌍</span>
-          </div>
-          <div dir="ltr">
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={persianRatio}
-              onChange={(e) => {
-                const v = Number(e.target.value);
-                updatePrefs(
-                  { persianRatio: v, cuisinePreference: ratioToCuisinePref(v) },
-                  true
-                );
-              }}
-              aria-label="نسبت غذای ایرانی"
-              className="w-full accent-[#F04438] h-2 cursor-pointer"
-            />
-          </div>
+        {/* Apple-style Persian / International Balance Control */}
+        <div className="pt-4 border-t border-[#EFE4D8]">
+          <CuisineRatioControl
+            compact
+            persianRatio={persianRatio}
+            onChange={(v) =>
+              updatePrefs(
+                { persianRatio: v, cuisinePreference: ratioToCuisinePref(v) },
+                true
+              )
+            }
+          />
         </div>
       </section>
 
@@ -318,20 +458,65 @@ export const ProfileScreen: React.FC = () => {
             })}
           </div>
         </div>
+        {/* Disliked Foods Tile Grid */}
+        <div className="space-y-3 pt-4 border-t border-[#EFE4D8]">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display font-black text-base text-[#292B25]">
+              مواد ناخواسته
+            </h2>
+            {dislikedCodes.length > 0 && (
+              <span className="text-xs font-extrabold text-[#F04438] tabular-nums-fa">
+                {toFaDigits(
+                  DISLIKED_FOODS_META.filter((item) =>
+                    item.codes.some((c) => dislikedCodes.includes(c))
+                  ).length
+                )}{' '}
+                مورد
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {DISLIKED_FOODS_META.map((item) => {
+              const active = item.codes.some((c) => dislikedCodes.includes(c));
+              return (
+                <motion.button
+                  key={item.id}
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => toggleDislikedFood(item.codes)}
+                  className={`rounded-[18px] p-2.5 flex flex-col items-center gap-1.5 transition ${
+                    active
+                      ? 'bg-[#FFF0ED] border-2 border-[#F04438]'
+                      : 'bg-white border border-[#EAE0D5]'
+                  }`}
+                >
+                  <IngredientIcon3D
+                    src={item.icon}
+                    alt={item.label}
+                    sizeClass="w-9 h-9"
+                  />
+                  <span
+                    className={`text-[10px] font-extrabold text-center leading-tight line-clamp-1 ${
+                      active ? 'text-[#C42F26]' : 'text-[#292B25]'
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
-      {/* KITCHEN APPLIANCES & REMINDERS */}
+      {/* KITCHEN APPLIANCES (2D INTERACTIVE) & REMINDERS */}
       <section className="liquid-glass-card rounded-[28px] p-5 space-y-4">
-        <button
-          type="button"
-          onClick={() => setKitchenModalOpen(true)}
-          className="w-full flex items-center justify-between text-right"
-        >
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
             <span className="w-10 h-10 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center shrink-0">
               <IconKitchen size={19} />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="font-display font-black text-base text-[#292B25]">
                 وسایل آشپزخانه
               </div>
@@ -340,10 +525,15 @@ export const ProfileScreen: React.FC = () => {
               </div>
             </div>
           </div>
-          <span className="px-3 py-1.5 rounded-full bg-[#F3E9DE] text-xs font-extrabold text-[#292B25]">
-            انتخاب روی تصویر
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setKitchenModalOpen(true)}
+            data-testid="profile-open-kitchen-2d"
+            className="h-9 px-4 rounded-full bg-[#292B25] text-xs font-extrabold text-white shrink-0"
+          >
+            ویرایش
+          </button>
+        </div>
 
         {/* Reminders Toggles */}
         <div className="pt-4 border-t border-[#EFE4D8] space-y-3">
@@ -351,7 +541,7 @@ export const ProfileScreen: React.FC = () => {
             <div className="flex items-center gap-2.5">
               <IconBell size={18} className="text-[#C87955]" />
               <span className="font-extrabold text-sm text-[#292B25]">
-                یادآور شروع پخت ({prefs.reminderTime})
+                اعلان شروع پخت ({prefs.reminderTime})
               </span>
             </div>
             <button
@@ -360,7 +550,7 @@ export const ProfileScreen: React.FC = () => {
               aria-checked={prefs.remindersEnabled}
               onClick={() => updatePrefs({ remindersEnabled: !prefs.remindersEnabled })}
               className={`w-12 h-7 rounded-full p-1 transition flex items-center ${
-                prefs.remindersEnabled ? 'bg-[#68734E] justify-start' : 'bg-[#DDD3C7] justify-end'
+                prefs.remindersEnabled ? 'bg-[#5E8B42] justify-start' : 'bg-[#DDD3C7] justify-end'
               }`}
             >
               <span className="w-5 h-5 rounded-full bg-white shadow" />
@@ -369,18 +559,24 @@ export const ProfileScreen: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <IconBell size={18} className="text-[#68734E]" />
+              <IconBellRinging size={18} className="text-[#5E8B42]" />
               <span className="font-extrabold text-sm text-[#292B25]">
-                یادآور خیساندن حبوبات شب قبل
+                اعلان خیساندن شب قبل
               </span>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={Boolean(prefs.soakingReminder)}
-              onClick={() => updatePrefs({ soakingReminder: !prefs.soakingReminder })}
+              onClick={async () => {
+                const next = !prefs.soakingReminder;
+                updatePrefs({ soakingReminder: next });
+                if (next) {
+                  await requestPrepNotificationPermission();
+                }
+              }}
               className={`w-12 h-7 rounded-full p-1 transition flex items-center ${
-                prefs.soakingReminder ? 'bg-[#68734E] justify-start' : 'bg-[#DDD3C7] justify-end'
+                prefs.soakingReminder ? 'bg-[#5E8B42] justify-start' : 'bg-[#DDD3C7] justify-end'
               }`}
             >
               <span className="w-5 h-5 rounded-full bg-white shadow" />
@@ -421,12 +617,10 @@ export const ProfileScreen: React.FC = () => {
               </div>
               <BudgetDial
                 value={prefs.weeklyBudgetToman}
-                min={300_000}
-                max={6_000_000}
-                step={100_000}
+                min={minWeeklyBudgetToman}
                 servings={prefs.servings}
                 mealsPerWeek={cookingDays.length * prefs.activeMealSlots.length}
-                onChange={(val) => updatePrefs({ weeklyBudgetToman: val })}
+                onChange={(val) => updatePrefs({ weeklyBudgetToman: val }, true)}
               />
               <button
                 type="button"
@@ -440,78 +634,203 @@ export const ProfileScreen: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* FULL-SCREEN INTERACTIVE 3D KITCHEN MODAL */}
+      {/* LIVE IRANIAN MARKET PRICES INSPECTOR & EDITOR SHEET */}
       <AnimatePresence>
-        {kitchenModalOpen && (
+        {livePricesModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#1B1917] overflow-hidden select-none"
+            onClick={() => setLivePricesModalOpen(false)}
+            className="fixed inset-0 z-50 bg-[#292B25]/45 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
           >
-            <div dir="ltr" className="absolute inset-0 overflow-x-auto overflow-y-hidden no-scrollbar flex items-center">
-              <div className="relative h-dvh aspect-[4/3] min-w-full shrink-0">
-                <img
-                  src={KITCHEN_SCENE_3D.image}
-                  alt="آشپزخانه"
-                  className="w-full h-full object-cover"
-                />
-                {KITCHEN_SCENE_3D.hotspots.map((spot) => {
-                  const active = prefs.appliances.includes(spot.id);
-                  return (
-                    <button
-                      key={spot.id}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              onClick={(e) => e.stopPropagation()}
+              data-testid="live-prices-sheet"
+              className="w-full sm:max-w-md max-h-[86vh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] flex flex-col shadow-2xl border border-white overflow-hidden"
+            >
+              {/* Header */}
+              <div className="px-5 pt-5 pb-3 space-y-3 shrink-0 border-b border-[#EFE4D8]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-display font-black text-xl text-[#292B25]">
+                      قیمت‌های روز بازار
+                    </h3>
+                    <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa mt-0.5">
+                      منبع: {liveSourcesLabel} • بروزرسانی: {liveUpdatedLabel}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <motion.button
                       type="button"
-                      dir="rtl"
-                      onClick={() => toggleAppliance(spot.id)}
-                      style={{ left: `${spot.xPercent}%`, top: `${spot.yPercent}%` }}
-                      className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 flex items-center gap-1.5 pl-3 pr-2 py-2 rounded-full shadow-xl transition ${
-                        active
-                          ? 'coral-glass-pill text-white ring-2 ring-white'
-                          : 'bg-white/92 text-[#292B25]'
+                      whileTap={{ scale: 0.92 }}
+                      disabled={isSyncingPrices}
+                      onClick={() => refreshLivePrices(true)}
+                      aria-label="بروزرسانی قیمت‌ها"
+                      data-testid="refresh-live-prices-btn"
+                      className="h-9 px-3 rounded-full bg-[#EEF5E9] text-[#4C6E35] text-xs font-extrabold flex items-center gap-1.5 disabled:opacity-60"
+                    >
+                      <ArrowsClockwise
+                        size={14}
+                        weight="bold"
+                        className={isSyncingPrices ? 'animate-spin' : ''}
+                      />
+                      <span>بروزرسانی</span>
+                    </motion.button>
+                    <button
+                      type="button"
+                      onClick={() => setLivePricesModalOpen(false)}
+                      aria-label="بستن"
+                      className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm"
+                    >
+                      <IconClose size={17} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="relative">
+                  <IconSearch
+                    size={16}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9E9B94]"
+                  />
+                  <input
+                    type="text"
+                    value={priceSearch}
+                    onChange={(e) => setPriceSearch(e.target.value)}
+                    placeholder="جستجوی ماده (مثلاً مرغ، برنج، شیر...)"
+                    data-testid="live-prices-search"
+                    className="w-full h-10 pr-10 pl-3 rounded-2xl bg-white border border-[#EAE0D5] text-xs font-bold text-[#292B25] placeholder:text-[#A39E95] focus:outline-none focus:border-[#F04438]"
+                  />
+                </div>
+              </div>
+
+              {/* Ingredient Price List */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+                {filteredPriceIngredients.map((ing) => {
+                  const isManual = Boolean(ownerOverrides.ingredientPrices[ing.code]);
+                  const liveEntry = livePrices?.prices[ing.code];
+                  const isLiveDirect =
+                    !isManual && Boolean(liveEntry && liveEntry.source !== 'estimated');
+                  const isEditing = editingPriceCode === ing.code;
+
+                  return (
+                    <div
+                      key={ing.code}
+                      className={`rounded-[20px] p-3 transition ${
+                        isEditing
+                          ? 'bg-white border-2 border-[#F04438]'
+                          : 'bg-white/90 border border-[#EFE4D8]'
                       }`}
                     >
-                      <span
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                          active ? 'bg-white text-[#F04438]' : 'bg-[#F04438]/12 text-[#F04438]'
-                        }`}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isEditing) {
+                            setEditingPriceCode(null);
+                          } else {
+                            setEditingPriceCode(ing.code);
+                            setDraftPackPrice(String(ing.packPriceToman));
+                          }
+                        }}
+                        className="w-full flex items-center justify-between gap-2.5 text-right"
                       >
-                        {active ? <IconCheck size={12} /> : <IconPlus size={12} />}
-                      </span>
-                      <span className="text-xs font-extrabold whitespace-nowrap">
-                        {spot.shortPinFa}
-                      </span>
-                    </button>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <IngredientIcon3D
+                            src={getIngredientIconPath(ing.code, ing.nameFa)}
+                            alt={ing.nameFa}
+                            sizeClass="w-9 h-9"
+                          />
+                          <div className="min-w-0">
+                            <div className="font-display font-black text-[13px] text-[#292B25] truncate">
+                              {ing.nameFa}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#75746E] tabular-nums-fa">
+                              <span>
+                                هر {toFaDigits(ing.packSize)} {ing.unit}
+                              </span>
+                              {isManual ? (
+                                <span className="text-[#F04438]">• دستی</span>
+                              ) : isLiveDirect ? (
+                                <span className="text-[#5E8B42]">• زنده</span>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="font-display font-black text-xs text-[#292B25] tabular-nums-fa shrink-0">
+                          {formatToman(ing.packPriceToman)}
+                        </div>
+                      </button>
+
+                      {isEditing && (
+                        <div className="mt-3 pt-2.5 border-t border-[#F1E8DD] flex items-center gap-2">
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            step={5000}
+                            min={1000}
+                            value={draftPackPrice}
+                            onChange={(e) => setDraftPackPrice(e.target.value)}
+                            className="flex-1 h-9 px-3 rounded-xl bg-[#FBF5EF] border border-[#E5D9CA] text-xs font-extrabold text-[#292B25] tabular-nums-fa focus:outline-none focus:border-[#F04438]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextPack = Math.max(
+                                1000,
+                                Math.round(Number(draftPackPrice) || ing.packPriceToman)
+                              );
+                              const nextUnit = Math.max(
+                                1,
+                                Math.round(nextPack / Math.max(1, ing.packSize))
+                              );
+                              updateIngredientPrice(ing.code, nextUnit, nextPack);
+                              setEditingPriceCode(null);
+                            }}
+                            className="h-9 px-4 rounded-xl bg-[#292B25] text-white text-xs font-extrabold shrink-0"
+                          >
+                            ذخیره
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
-            </div>
 
-            <header className="absolute top-0 inset-x-0 z-30 px-4 pt-4 safe-top flex items-center justify-between pointer-events-none">
-              <button
-                type="button"
-                onClick={() => setKitchenModalOpen(false)}
-                aria-label="بستن"
-                className="pointer-events-auto w-11 h-11 rounded-full liquid-glass text-[#292B25] flex items-center justify-center"
-              >
-                <IconClose size={20} />
-              </button>
-              <span className="px-4 py-2 rounded-full liquid-glass-dark text-white text-xs font-extrabold">
-                وسایل آشپزخانه‌ات را لمس کن
-              </span>
-              <span className="w-11" />
-            </header>
-
-            <footer className="absolute bottom-5 inset-x-4 z-30 safe-bottom max-w-md mx-auto">
-              <button
-                type="button"
-                onClick={() => setKitchenModalOpen(false)}
-                className="w-full h-14 rounded-full btn-shimmer text-white font-display font-black text-base"
-              >
-                ذخیره ({toFaDigits(prefs.appliances.length)} وسیله)
-              </button>
-            </footer>
+              {/* Footer (only shown if user has custom overrides) */}
+              {manualOverrideCount > 0 && (
+                <div className="px-5 py-3 border-t border-[#EFE4D8] bg-[#FBF5EF] shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetOwnerOverrides();
+                      setEditingPriceCode(null);
+                    }}
+                    className="w-full h-10 rounded-full bg-white border border-[#E6DACB] text-xs font-extrabold text-[#F04438]"
+                  >
+                    بازگشت {toFaDigits(manualOverrideCount)} قیمت دستی به نرخ بازار
+                  </button>
+                </div>
+              )}
+            </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FULL-SCREEN 2D INTERACTIVE KITCHEN MODAL WITH SIDE SCROLL INDICATORS */}
+      <AnimatePresence>
+        {kitchenModalOpen && (
+          <InteractiveKitchen2D
+            mode="modal"
+            selectedAppliances={prefs.appliances}
+            onToggleAppliance={toggleAppliance}
+            onBack={() => setKitchenModalOpen(false)}
+            onConfirm={() => setKitchenModalOpen(false)}
+          />
         )}
       </AnimatePresence>
     </div>

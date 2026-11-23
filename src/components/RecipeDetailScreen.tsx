@@ -1,13 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { DAY_NAMES_FULL, MEAL_SLOT_LABELS } from '../data/catalog';
+import { APPLIANCE_SHORT_LABELS, DAY_NAMES_FULL, MEAL_SLOT_LABELS } from '../data/catalog';
+import { getIngredientIconPath } from '../data/database/ingredientIcons';
 import { useAppState } from '../context/AppStateContext';
-import type { MealSlotType } from '../types/sofreh';
+import type { MealSlotType, Recipe } from '../types/sofreh';
 import { formatAmount, formatToman, toFaDigits } from '../utils/format';
 import { formatScaledStep, getRecipeConsumptionCostForServings } from '../utils/planner';
 import { hapticLight } from '../utils/native';
+import { ChefHat } from '@phosphor-icons/react';
 import {
-  getCuisineFlag,
+  ApplianceIcon,
+  CuisineFlag,
   IconArrowRight,
   IconBookmark,
   IconCalendarPlus,
@@ -22,9 +25,14 @@ import {
   IconThumbDown,
   IconThumbUp,
   IconTimer,
+  IngredientIcon3D,
+  MEAL_SLOT_THEMES,
+  MealSlotIcon,
 } from './icons/SofrehIcons';
 
-export const RecipeDetailScreen: React.FC = () => {
+export const RecipeDetailScreen: React.FC<{
+  onAskChef?: (recipe: Recipe, servings: number) => void;
+}> = ({ onAskChef }) => {
   const {
     selectedRecipeId,
     selectedRecipeServings,
@@ -153,13 +161,24 @@ export const RecipeDetailScreen: React.FC = () => {
         {/* Title + Quiet Corner Labels */}
         <div className="absolute bottom-3 inset-x-4 sm:inset-x-6 max-w-3xl mx-auto flex items-end justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-lg leading-none drop-shadow-sm" title={recipe.cuisine}>
-                {getCuisineFlag(recipe.cuisine)}
+            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-white/85 backdrop-blur-sm shadow-sm" title={recipe.cuisine}>
+                <CuisineFlag cuisine={recipe.cuisine} size="md" />
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-white/82 backdrop-blur-sm text-[11px] font-extrabold text-[#292B25]">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-sm text-[11px] font-extrabold text-[#292B25]">
                 {recipe.difficulty}
               </span>
+              {recipe.requiredAppliances.map((appId) => (
+                <span
+                  key={appId}
+                  title={APPLIANCE_SHORT_LABELS[appId]}
+                  data-testid={`recipe-detail-appliance-${appId}`}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 backdrop-blur-sm text-[10.5px] font-extrabold text-[#4D4A44]"
+                >
+                  <ApplianceIcon appliance={appId} size={12} className="text-[#C87955]" />
+                  <span>{APPLIANCE_SHORT_LABELS[appId]}</span>
+                </span>
+              ))}
             </div>
             <h1 className="font-display font-black text-[28px] sm:text-[34px] text-[#292B25] leading-tight">
               {recipe.title}
@@ -213,7 +232,7 @@ export const RecipeDetailScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* ILLUSTRATIVE VISUAL PROTEIN / CARBS / FAT WIDGET */}
+        {/* UNIFIED APPLE-FITNESS MACRO CARD (Protein=Green, Carbs=Amber, Fat=Blue) */}
         <section
           data-testid="recipe-macro-visual"
           className="liquid-glass-card rounded-[28px] p-5 space-y-4"
@@ -224,47 +243,47 @@ export const RecipeDetailScreen: React.FC = () => {
               initial={{ width: 0 }}
               animate={{ width: `${proteinPct}%` }}
               transition={{ type: 'spring', stiffness: 220, damping: 24 }}
-              className="h-full rounded-full bg-[#68734E]"
+              className="h-full rounded-full bg-[#5E8B42]"
             />
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${carbsPct}%` }}
               transition={{ type: 'spring', stiffness: 220, damping: 24, delay: 0.05 }}
-              className="h-full rounded-full bg-[#D9884B]"
+              className="h-full rounded-full bg-[#E59326]"
             />
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${fatPct}%` }}
               transition={{ type: 'spring', stiffness: 220, damping: 24, delay: 0.1 }}
-              className="h-full rounded-full bg-[#F04438]"
+              className="h-full rounded-full bg-[#3B82F6]"
             />
           </div>
 
-          {/* 3 Visual Illustrative Nutrient Cards with Mini-Ring Gauges */}
+          {/* 3 Visual Nutrient Gauges */}
           <div className="grid grid-cols-3 gap-2.5">
             {[
               {
                 label: 'پروتئین',
                 grams: recipe.proteinG,
                 pct: proteinPct,
-                color: '#68734E',
-                bg: 'bg-[#EEF2E6]/75',
+                color: '#5E8B42',
+                bg: 'bg-[#EEF5E9]',
                 icon: <IconMacroProtein size={19} />,
               },
               {
                 label: 'کربوهیدرات',
                 grams: recipe.carbsG,
                 pct: carbsPct,
-                color: '#C87955',
-                bg: 'bg-[#FBF1E8]',
+                color: '#E59326',
+                bg: 'bg-[#FEF6E8]',
                 icon: <IconMacroCarbs size={19} />,
               },
               {
                 label: 'چربی',
                 grams: recipe.fatG,
                 pct: fatPct,
-                color: '#F04438',
-                bg: 'bg-[#FFF0ED]',
+                color: '#3B82F6',
+                bg: 'bg-[#EEF5FF]',
                 icon: <IconMacroFat size={19} />,
               },
             ].map((m) => {
@@ -313,6 +332,32 @@ export const RecipeDetailScreen: React.FC = () => {
           </div>
         </section>
 
+        {/* COMPACT RECIPE-AWARE AI CHEF CTA */}
+        {onAskChef && (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              hapticLight();
+              onAskChef(recipe, servings);
+            }}
+            data-testid="recipe-ask-chef-btn"
+            className="w-full liquid-glass rounded-[22px] px-4 py-3 flex items-center justify-between gap-3 text-right"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-9 h-9 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
+                <ChefHat size={18} weight="fill" />
+              </span>
+              <span className="font-display font-black text-sm text-[#292B25] truncate">
+                سرآشپز هوشمند
+              </span>
+            </div>
+            <span className="px-3.5 py-1.5 rounded-full bg-[#292B25] text-white text-[11px] font-extrabold shrink-0">
+              پرسش
+            </span>
+          </motion.button>
+        )}
+
         {/* INGREDIENTS + CIRCULAR SERVINGS STEPPER */}
         <section className="liquid-glass-card rounded-[28px] p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
@@ -358,7 +403,14 @@ export const RecipeDetailScreen: React.FC = () => {
                   key={ing.code}
                   className="py-2.5 flex items-center justify-between gap-3"
                 >
-                  <span className="font-bold text-sm text-[#292B25]">{ing.name}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <IngredientIcon3D
+                      src={getIngredientIconPath(ing.code, ing.name)}
+                      alt={ing.name}
+                      sizeClass="w-8 h-8"
+                    />
+                    <span className="font-bold text-sm text-[#292B25] truncate">{ing.name}</span>
+                  </div>
                   <div className="text-left shrink-0">
                     <div className="font-extrabold text-sm text-[#F04438] tabular-nums-fa">
                       {formatAmount(scaledAmt, ing.unit)}
@@ -436,20 +488,24 @@ export const RecipeDetailScreen: React.FC = () => {
               ))}
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {(['breakfast', 'lunch', 'dinner'] as MealSlotType[]).map((sl) => (
-                <button
-                  key={sl}
-                  type="button"
-                  onClick={() => setPickedSlot(sl)}
-                  className={`py-2 rounded-full text-xs font-bold ${
-                    pickedSlot === sl
-                      ? 'bg-[#292B25] text-white'
-                      : 'bg-[#F3E9DE] text-[#292B25]'
-                  }`}
-                >
-                  {MEAL_SLOT_LABELS[sl]}
-                </button>
-              ))}
+              {(['breakfast', 'lunch', 'dinner'] as MealSlotType[]).map((sl) => {
+                const theme = MEAL_SLOT_THEMES[sl];
+                return (
+                  <button
+                    key={sl}
+                    type="button"
+                    onClick={() => setPickedSlot(sl)}
+                    className={`py-2 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition ${
+                      pickedSlot === sl
+                        ? theme.activePill
+                        : `${theme.badgeBg} ${theme.badgeText}`
+                    }`}
+                  >
+                    <MealSlotIcon slot={sl} size={13} filled={pickedSlot === sl} />
+                    <span>{MEAL_SLOT_LABELS[sl]}</span>
+                  </button>
+                );
+              })}
             </div>
             <button
               type="button"

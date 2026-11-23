@@ -1,241 +1,136 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Peyda", system-ui, -apple-system, sans-serif;
-  --font-display: "Abar", "Peyda", system-ui, sans-serif;
-  --color-sofreh-red: #F04438;
-  --color-sofreh-red-dark: #C42F26;
-  --color-sofreh-ink: #292B25;
-  --color-sofreh-muted: #75746E;
-  --color-sofreh-bg: #FBF5EF;
-  --color-sofreh-card: #FFFFFF;
-  --color-sofreh-terracotta: #C87955;
-  --color-sofreh-olive: #68734E;
-  --color-sofreh-cream: #F3E9DE;
+  --font-sans: "Peyda", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Abar", "Peyda", sans-serif;
+  --color-cream: #FBF5EF;
+  --color-cream-deep: #F3E9DE;
+  --color-ink: #292B25;
+  --color-muted: #75746E;
+  --color-coral: #F04438;
+  --color-coral-dark: #D92D20;
+  --color-coral-soft: #FFECEA;
+  --color-olive: #68734E;
+  --color-olive-soft: #EEF2E6;
+  --color-spice: #C87955;
+  --color-saffron: #E69A2B;
 }
 
 @layer base {
-  html,
-  body {
-    font-family: "Peyda", system-ui, -apple-system, sans-serif;
+  html {
+    direction: rtl;
+    font-family: var(--font-sans);
     background-color: #FBF5EF;
     color: #292B25;
+    -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
+    scroll-behavior: smooth;
+    overscroll-behavior-y: contain;
   }
 
-  h1,
-  h2,
-  h3,
-  .font-display {
-    font-family: "Abar", "Peyda", system-ui, sans-serif;
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    background-color: #FBF5EF;
+    overflow-x: hidden;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
   }
 }
 
-/* Warm ambient canvas so liquid glass elements genuinely refract soft warmth */
+/* 60 FPS Android-Optimized Ambient Warm Canvas (NO background-attachment: fixed!) */
 .ambient-canvas {
   background-color: #FBF5EF;
   background-image:
-    radial-gradient(ellipse 68% 44% at 88% 4%, rgba(240, 68, 56, 0.085), transparent 62%),
-    radial-gradient(ellipse 56% 42% at 10% 18%, rgba(200, 121, 85, 0.09), transparent 60%),
-    radial-gradient(ellipse 60% 45% at 50% 96%, rgba(104, 115, 78, 0.07), transparent 64%);
-  background-attachment: fixed;
+    radial-gradient(620px 420px at 88% -4%, rgba(255, 168, 128, 0.22), transparent 68%),
+    radial-gradient(540px 440px at 8% 12%, rgba(230, 154, 43, 0.13), transparent 64%),
+    linear-gradient(180deg, #FBF5EF 0%, #F7EFE5 100%);
 }
 
-/* Signature Liquid Glass (.gl from Sofreh UI v3) */
+/* Selective Liquid Glass — ONLY for floating/sticky chrome & hero accent pills (GPU-promoted) */
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.66);
-  backdrop-filter: blur(22px) saturate(1.75);
-  -webkit-backdrop-filter: blur(22px) saturate(1.75);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 250, 244, 0.64) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.55);
+  -webkit-backdrop-filter: blur(18px) saturate(1.55);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 8px 24px rgba(98, 56, 32, 0.09),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 rgba(210, 180, 155, 0.18);
+  transform: translateZ(0);
+}
+
+/* Floating Bottom Dock & Sticky Glass Bars (Selective Luminous Liquid Glass) */
+.liquid-glass-nav {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 248, 0.76) 0%,
+    rgba(252, 246, 239, 0.68) 100%
+  );
+  backdrop-filter: blur(22px) saturate(1.65);
+  -webkit-backdrop-filter: blur(22px) saturate(1.65);
   border: 1px solid rgba(255, 255, 255, 0.86);
   box-shadow:
-    0 12px 32px rgba(120, 60, 30, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+    0 14px 36px rgba(72, 42, 24, 0.16),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 rgba(196, 162, 134, 0.2);
+  transform: translateZ(0);
 }
 
-/* Slightly more transparent liquid glass specifically for the floating bottom navigation footer */
-.liquid-glass-nav {
-  background: rgba(255, 255, 255, 0.52);
-  backdrop-filter: blur(28px) saturate(1.9);
-  -webkit-backdrop-filter: blur(28px) saturate(1.9);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  box-shadow:
-    0 14px 36px rgba(95, 52, 28, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.88);
-}
-
+/* 60 FPS Elevated Card Surface (ZERO backdrop-filter on scrolling list cards!) */
 .liquid-glass-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(18px) saturate(1.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(255, 252, 248, 0.92) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.92);
   box-shadow:
-    0 8px 26px rgba(95, 52, 28, 0.075),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 8px 22px rgba(96, 56, 30, 0.065),
+    0 1px 2px rgba(96, 56, 30, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+  contain: layout style;
 }
 
 .liquid-glass-dark {
-  background: rgba(26, 28, 24, 0.62);
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  background: linear-gradient(
+    145deg,
+    rgba(36, 37, 33, 0.86) 0%,
+    rgba(24, 25, 22, 0.92) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    0 16px 38px rgba(15, 16, 14, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateZ(0);
 }
 
-@keyframes splash-col-drift {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.splash-col-up {
-  animation: splash-col-drift 6.2s ease-in-out infinite;
-}
-
-.splash-col-down {
-  animation: splash-col-drift 6.8s ease-in-out 1.2s infinite reverse;
-}
-
-/* Active coral liquid pill (floating bottom bar & active day chips) */
 .coral-glass-pill {
-  background: linear-gradient(155deg, #FF6A5C 0%, #F04438 68%, #D93327 100%);
+  background: linear-gradient(135deg, #FF5A4E 0%, #F04438 62%, #DC2C20 100%);
   box-shadow:
-    0 8px 22px rgba(240, 68, 56, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+    0 8px 20px rgba(240, 68, 56, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
 }
 
-/* Shimmering CTA button (.go from Sofreh UI v3) */
-.btn-shimmer {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(155deg, #FF6A5C 0%, #F04438 62%, #D42F24 100%);
-  box-shadow:
-    0 14px 32px rgba(240, 68, 56, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-.btn-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    110deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.34) 48%,
-    transparent 76%
-  );
-  transform: translateX(-125%);
-  animation: sofreh-shine 3.4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes sofreh-shine {
-  0%, 58% {
-    transform: translateX(-125%);
-  }
-  100% {
-    transform: translateX(135%);
-  }
-}
-
-/* Gently floating 3D hero badges */
-@keyframes float-gentle {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-7px) rotate(1.5deg);
-  }
-}
-.animate-float-slow {
-  animation: float-gentle 4.2s ease-in-out infinite;
-}
-.animate-float-delayed {
-  animation: float-gentle 4.8s ease-in-out 1.4s infinite;
-}
-
-/* Laser sweep inside AI Fridge Scanner */
-@keyframes scan-beam {
-  0% {
-    top: 8%;
-    opacity: 0.25;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    top: 88%;
-    opacity: 0.25;
-  }
-}
-.scan-laser {
-  animation: scan-beam 2.1s ease-in-out infinite alternate;
-}
-
-/* Pulsing ring for Interactive 3D Kitchen Scene hotspots */
-@keyframes hotspot-ring {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  70% {
-    transform: scale(1.65);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.65);
-    opacity: 0;
-  }
-}
-.hotspot-pulse::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 9999px;
-  border: 2px solid #F04438;
-  animation: hotspot-ring 2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
-  pointer-events: none;
-}
-
-/* Cook mode coral highlight chips (.big b) */
-.cook-qty-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.1rem 0.55rem;
-  margin: 0 0.18rem;
-  border-radius: 0.75rem;
-  background: rgba(240, 68, 56, 0.14);
-  color: #D42F24;
-  border: 1px solid rgba(240, 68, 56, 0.25);
-  font-weight: 800;
-}
-
-/* Smooth melt from high-res web dish photograph into #FBF5EF */
-.hero-fade-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(24, 25, 22, 0.34) 0%,
-    rgba(24, 25, 22, 0.04) 28%,
-    rgba(251, 245, 239, 0.18) 54%,
-    rgba(251, 245, 239, 0.84) 80%,
-    #FBF5EF 100%
-  );
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .tabular-nums-fa {
   font-variant-numeric: tabular-nums;
-}
-
-.safe-top {
-  padding-top: max(env(safe-area-inset-top), 12px);
-}
-
-.safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom), 14px);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -246,7 +141,142 @@
   scrollbar-width: none;
 }
 
-/* Blend studio-lit 3D icons seamlessly into warm surfaces */
-.icon-3d-blend {
-  mix-blend-mode: multiply;
+/* Subtle organic fade-into-cream for Recipe Detail Hero photos */
+.hero-fade-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(251, 245, 239, 0.06) 0%,
+    rgba(251, 245, 239, 0) 34%,
+    rgba(251, 245, 239, 0.52) 66%,
+    rgba(251, 245, 239, 0.92) 86%,
+    #FBF5EF 100%
+  );
+}
+
+/* Cook Mode highlighted scaled ingredient quantities */
+.cook-qty-pill {
+  display: inline;
+  padding: 2px 9px;
+  margin: 0 2px;
+  border-radius: 10px;
+  background: #FFEBE8;
+  color: #B42318;
+  font-weight: 800;
+  border: 1px solid rgba(240, 68, 56, 0.28);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* GPU-Composited Animated Shimmer CTA */
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(130%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FF5A4E 0%, #F04438 62%, #D92D20 100%);
+  box-shadow:
+    0 12px 28px rgba(240, 68, 56, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
+  animation: shimmer-sweep 3.4s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* GPU-Only Floating Parallax Columns on Onboarding Splash */
+@keyframes float-up-gentle {
+  0%, 100% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes float-down-gentle {
+  0%, 100% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+.splash-col-up {
+  animation: float-up-gentle 8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.splash-col-down {
+  animation: float-down-gentle 8.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Kitchen Interactive Hotspot Pulse (GPU-friendly opacity/scale) */
+@keyframes hotspot-ring {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(240, 68, 56, 0.5);
+  }
+  70% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 11px rgba(240, 68, 56, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(240, 68, 56, 0);
+  }
+}
+
+.hotspot-pulse {
+  animation: hotspot-ring 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+/* Fridge Scanner Laser Sweep (GPU transform) */
+@keyframes laser-sweep {
+  0% {
+    transform: translate3d(0, 16px, 0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(0, 320px, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 16px, 0);
+    opacity: 0.7;
+  }
+}
+
+.scan-laser {
+  top: 0;
+  animation: laser-sweep 2.1s ease-in-out infinite;
+  will-change: transform;
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }

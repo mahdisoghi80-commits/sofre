@@ -1,0 +1,41 @@
+name: Sync Live Iranian Grocery Prices
+
+on:
+  schedule:
+    # Twice weekly (Mondays & Thursdays at 03:30 UTC / 07:00 Tehran)
+    - cron: '30 3 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-prices:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+
+      - name: Fetch live Iranian market prices (167 canonical ingredients)
+        run: npm run sync:prices
+
+      - name: Commit updated prices-live.json if changed
+        run: |
+          if git diff --quiet public/prices-live.json; then
+            echo "No price changes detected."
+          else
+            git config user.name "sofreh-price-bot"
+            git config user.email "bot@sofreh.app"
+            git add public/prices-live.json
+            git commit -m "chore(prices): auto-sync live Iranian grocery prices"
+            git push
+          fi

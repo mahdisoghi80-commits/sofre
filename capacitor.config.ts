@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
   },
   android: {
-    allowMixedContent: false,
+    allowMixedContent: true,
     backgroundColor: '#FBF5EF',
   },
   ios: {
@@ -17,8 +17,11 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
-      launchShowDuration: 1200,
+      launchShowDuration: 1000,
       backgroundColor: '#FBF5EF',
       showSpinner: false,
     },

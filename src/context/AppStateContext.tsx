@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   EMPTY_OWNER_OVERRIDES,
   FOOD_ICONS,
@@ -26,6 +26,7 @@ import type {
 import {
   buildConsolidatedGroceryList,
   checkRecipeEligibility,
+  computeMinimumWeeklyBudget,
   generateWeeklyPlan,
 } from '../utils/planner';
 import {
@@ -35,6 +36,12 @@ import {
   loadPersistedString,
   savePersistedString,
 } from '../utils/native';
+import {
+  fetchLivePrices,
+  loadCachedLivePrices,
+  mergeLivePricesWithOverrides,
+} from '../utils/livePricing';
+import type { LivePricesPayload } from '../utils/priceEngine';
 
 const STORAGE_KEY = 'sofreh_app_state_v2';
 
@@ -86,14 +93,16 @@ const DEFAULT_PREFS: UserPreferences = {
   cuisinePreference: 'balanced',
   persianRatio: 65,
   allergens: [],
+  dislikedIngredients: [],
   appliances: ['stovetop', 'oven', 'microwave', 'blender'],
-  weeklyBudgetToman: 2_400_000,
+  weeklyBudgetToman: 5_000_000,
   dailyCalorieTarget: 2050,
   dailyProteinTarget: 95,
   remindersEnabled: true,
   soakingReminder: true,
   reminderTime: '۱۷:۳۰',
   householdCode: 'SFR-404',
+  isPro: false,
 };
 
 interface PersistedSnapshot {
@@ -128,6 +137,7 @@ interface AppStateContextValue {
   pantry: PantryItem[];
   groceryList: ConsolidatedGroceryItem[];
   costSummary: PlanCostSummary;
+  minWeeklyBudgetToman: number;
   cookbooks: CookbookCollection[];
   cookedCount: number;
   recipeFeedback: Record<string, 'up' | 'down'>;
@@ -136,6 +146,9 @@ interface AppStateContextValue {
   openFridgeCamera: () => void;
   openInventory: () => void;
   setActiveTab: (tab: AppTab) => void;
+  goBackTab: () => boolean;
+  registerBackHandler: (id: string, handler: () => boolean) => () => void;
+  handleBackNavigation: () => boolean;
   setSelectedDay: (day: number) => void;
   openRecipe: (recipeId: string, servings?: number) => void;
   closeRecipe: () => void;
@@ -169,6 +182,9 @@ interface AppStateContextValue {
   addImportedRecipeRecord: (record: RecipeMasterRecord) => Recipe;
   updateIngredientPrice: (code: string, unitPriceToman: number, packPriceToman: number) => void;
   resetOwnerOverrides: () => void;
+  livePrices: LivePricesPayload | null;
+  isSyncingPrices: boolean;
+  refreshLivePrices: (force?: boolean) => Promise<void>;
   showToast: (text: string, undoLabel?: string, onUndo?: () => void) => void;
   dismissToast: () => void;
 }
@@ -218,8 +234,22 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [recipeFeedback, setRecipeFeedback] = useState<Record<string, 'up' | 'down'>>({});
   const [planLocked, setPlanLocked] = useState<boolean>(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [livePrices, setLivePrices] = useState<LivePricesPayload | null>(null);
+  const [isSyncingPrices, setIsSyncingPrices] = useState<boolean>(false);
 
-  const hydratedDb = useMemo(() => getHydratedCatalog(ownerOverrides), [ownerOverrides]);
+  const tabHistoryRef = useRef<AppTab[]>([]);
+  const backHandlersRef = useRef<Array<{ id: string; handler: () => boolean }>>([]);
+  const varietySeedRef = useRef<number>(1);
+
+  const effectiveOverrides = useMemo(
+    () => mergeLivePricesWithOverrides(livePrices, ownerOverrides),
+    [livePrices, ownerOverrides]
+  );
+
+  const hydratedDb = useMemo(
+    () => getHydratedCatalog(effectiveOverrides),
+    [effectiveOverrides]
+  );
   const recipes = hydratedDb.recipes;
   const ingredientsMaster = hydratedDb.ingredients;
 
@@ -279,6 +309,45 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [autostart]);
 
+  // Load cached live Iranian grocery prices immediately, then refresh in background
+  const refreshLivePrices = useCallback(
+    async (force = false) => {
+      setIsSyncingPrices(true);
+      try {
+        const fresh = await fetchLivePrices(force);
+        if (fresh) {
+          setLivePrices(fresh);
+          if (force) {
+            hapticSuccess();
+            showToast('قیمت‌های روز بازار به‌روزرسانی شد');
+          }
+        } else if (force) {
+          showToast('دریافت قیمت جدید انجام نشد؛ قیمت‌های ذخیره فعال است');
+        }
+      } finally {
+        setIsSyncingPrices(false);
+      }
+    },
+    [showToast]
+  );
+
+  useEffect(() => {
+    let active = true;
+    loadCachedLivePrices().then((cached) => {
+      if (active && cached?.payload) {
+        setLivePrices(cached.payload);
+      }
+    });
+    fetchLivePrices(false).then((fresh) => {
+      if (active && fresh) {
+        setLivePrices(fresh);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Persist changes
   useEffect(() => {
     if (!hydrated) return;
@@ -331,6 +400,11 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [plan, recipes, pantry, checkedGroceryMap, manualGroceryItems]
   );
 
+  const minWeeklyBudgetToman = useMemo(
+    () => computeMinimumWeeklyBudget(recipes, prefs),
+    [recipes, prefs]
+  );
+
   const costSummary = useMemo<PlanCostSummary>(() => {
     const budgetPercent =
       prefs.weeklyBudgetToman > 0
@@ -343,27 +417,115 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [rawCostSummary, prefs.weeklyBudgetToman]);
 
+  // Automatic Budget-Compliance Guard:
+  // When live market prices finish loading (or legacy stored budget is below mathematical floor),
+  // ensure the weekly plan stays strictly within budget — never "7M over budget"!
+  const budgetGuardSigRef = useRef<string>('');
+  useEffect(() => {
+    if (!hydrated || planLocked || plan.length === 0) return;
+
+    const sig = `${livePrices?.updatedAt ?? 'base'}|${prefs.weeklyBudgetToman}|${minWeeklyBudgetToman}|${prefs.servings}`;
+    if (budgetGuardSigRef.current === sig) return;
+
+    // 1. Lift impossible legacy stored budget up to realistic minimum floor
+    if (prefs.weeklyBudgetToman < minWeeklyBudgetToman) {
+      const liftedBudget = Math.ceil(minWeeklyBudgetToman / 200_000) * 200_000;
+      budgetGuardSigRef.current = `${livePrices?.updatedAt ?? 'base'}|${liftedBudget}|${minWeeklyBudgetToman}|${prefs.servings}`;
+      const adjustedPrefs = { ...prefs, weeklyBudgetToman: liftedBudget };
+      setPrefs(adjustedPrefs);
+      setPlan(generateWeeklyPlan(recipes, adjustedPrefs, pantry, recipeFeedback, savedRecipeIds));
+      return;
+    }
+
+    // 2. If live prices pushed the existing plan over budget, re-optimize strictly inside budget
+    if (rawCostSummary.consumptionCostToman > prefs.weeklyBudgetToman) {
+      budgetGuardSigRef.current = sig;
+      setPlan(generateWeeklyPlan(recipes, prefs, pantry, recipeFeedback, savedRecipeIds));
+      return;
+    }
+
+    budgetGuardSigRef.current = sig;
+  }, [
+    hydrated,
+    planLocked,
+    plan.length,
+    livePrices?.updatedAt,
+    prefs,
+    minWeeklyBudgetToman,
+    rawCostSummary.consumptionCostToman,
+    recipes,
+    pantry,
+    recipeFeedback,
+    savedRecipeIds,
+  ]);
+
   const setActiveTab = useCallback((tab: AppTab) => {
     hapticLight();
     setSelectedRecipeId(null);
     if (tab === 'scan') {
       setFridgeInitialSubTab('camera');
     }
-    setActiveTabState(tab);
+    setActiveTabState((prev) => {
+      if (prev !== tab) {
+        tabHistoryRef.current = [...tabHistoryRef.current.slice(-11), prev];
+      }
+      return tab;
+    });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0 });
+    }
+  }, []);
+
+  const goBackTab = useCallback((): boolean => {
+    const stack = tabHistoryRef.current;
+    while (stack.length > 0) {
+      const prevTab = stack.pop()!;
+      if (prevTab !== activeTab) {
+        hapticLight();
+        setActiveTabState(prevTab);
+        return true;
+      }
+    }
+    if (activeTab !== 'plan') {
+      hapticLight();
+      setActiveTabState('plan');
+      return true;
+    }
+    return false;
+  }, [activeTab]);
+
+  const registerBackHandler = useCallback((id: string, handler: () => boolean) => {
+    backHandlersRef.current = [
+      ...backHandlersRef.current.filter((h) => h.id !== id),
+      { id, handler },
+    ];
+    return () => {
+      backHandlersRef.current = backHandlersRef.current.filter((h) => h.id !== id);
+    };
   }, []);
 
   const openFridgeCamera = useCallback(() => {
     hapticLight();
     setSelectedRecipeId(null);
     setFridgeInitialSubTab('camera');
-    setActiveTabState('scan');
+    setActiveTabState((prev) => {
+      if (prev !== 'scan') {
+        tabHistoryRef.current = [...tabHistoryRef.current.slice(-11), prev];
+      }
+      return 'scan';
+    });
   }, []);
 
   const openInventory = useCallback(() => {
     hapticLight();
     setSelectedRecipeId(null);
     setFridgeInitialSubTab('inventory');
-    setActiveTabState('scan');
+    setActiveTabState((prev) => {
+      if (prev !== 'scan') {
+        tabHistoryRef.current = [...tabHistoryRef.current.slice(-11), prev];
+      }
+      return 'scan';
+    });
   }, []);
 
   const openRecipe = useCallback(
@@ -391,6 +553,31 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCookModeRecipeId(null);
   }, []);
 
+  const handleBackNavigation = useCallback((): boolean => {
+    // 1. Always exit full-screen Cook Mode first
+    if (cookModeRecipeId) {
+      closeCookMode();
+      return true;
+    }
+    // 2. Let the most recently mounted modal/sheet/onboarding-step intercept Back (LIFO)
+    const handlers = [...backHandlersRef.current].reverse();
+    for (const entry of handlers) {
+      if (entry.handler()) {
+        return true;
+      }
+    }
+    // 3. Close open Recipe Detail page
+    if (selectedRecipeId) {
+      closeRecipe();
+      return true;
+    }
+    // 4. Pop tab navigation stack or return to root 'plan' tab
+    if (onboarded) {
+      return goBackTab();
+    }
+    return false;
+  }, [cookModeRecipeId, closeCookMode, selectedRecipeId, closeRecipe, onboarded, goBackTab]);
+
   const updatePrefs = useCallback(
     (patch: Partial<UserPreferences>, autoRefilter = false) => {
       setPrefs((prev) => {
@@ -404,14 +591,30 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const structureChanged =
               (patch.cuisinePreference && patch.cuisinePreference !== prev.cuisinePreference) ||
               (typeof patch.persianRatio === 'number' && patch.persianRatio !== prev.persianRatio) ||
+              (typeof patch.weeklyBudgetToman === 'number' &&
+                patch.weeklyBudgetToman < prev.weeklyBudgetToman) ||
+              (Array.isArray(patch.dislikedIngredients) &&
+                patch.dislikedIngredients.join(',') !== (prev.dislikedIngredients ?? []).join(',')) ||
               (Array.isArray(patch.cookingDays) &&
                 patch.cookingDays.join(',') !== (prev.cookingDays ?? []).join(','));
             if (hasIncompatible || structureChanged) {
-              showToast('برنامهٔ هفته به‌روز شد');
+              showToast('برنامهٔ هفته متناسب با تنظیمات جدید چیده شد');
               return generateWeeklyPlan(recipes, next, pantry, recipeFeedback, savedRecipeIds);
             }
             if (patch.servings && patch.servings !== prev.servings) {
-              return currentPlan.map((m) => ({ ...m, servings: next.servings }));
+              const scaled = currentPlan.map((m) => ({ ...m, servings: next.servings }));
+              // Re-optimize if increasing servings pushes total cost above weekly budget
+              const scaledSummary = buildConsolidatedGroceryList(
+                scaled,
+                recipes,
+                pantry,
+                {},
+                []
+              ).summary;
+              if (scaledSummary.consumptionCostToman > next.weeklyBudgetToman) {
+                return generateWeeklyPlan(recipes, next, pantry, recipeFeedback, savedRecipeIds);
+              }
+              return scaled;
             }
             return currentPlan;
           });
@@ -475,12 +678,17 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       hapticMedium();
       const previousPlan = plan;
-      // Rotate catalog slightly to surface fresh high-scoring dishes from the 250-food pool
-      const shift = Math.max(1, Math.floor(Math.random() * 25));
-      const rotated = [...recipes.slice(shift), ...recipes.slice(0, shift)];
-      const fresh = generateWeeklyPlan(rotated, prefs, pantry, recipeFeedback, savedRecipeIds);
+      varietySeedRef.current += 1;
+      const fresh = generateWeeklyPlan(
+        recipes,
+        prefs,
+        pantry,
+        recipeFeedback,
+        savedRecipeIds,
+        varietySeedRef.current
+      );
       setPlan(fresh);
-      showToast('برنامهٔ تازه از میان ۲۵۰ غذا چیده شد', 'بازگردانی', () => {
+      showToast('برنامهٔ تازه با موتور هوشمند سفره چیده شد', 'بازگردانی', () => {
         setPlan(previousPlan);
       });
     },
@@ -883,7 +1091,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const resetOwnerOverrides = useCallback(() => {
     hapticMedium();
     setOwnerOverrides(EMPTY_OWNER_OVERRIDES);
-    showToast('قیمت‌های پایه پایگاه‌داده به حالت استاندارد برگشت');
+    showToast('قیمت‌های دستی حذف شد و قیمت روز بازار فعال است');
   }, [showToast]);
 
   const value: AppStateContextValue = {
@@ -904,6 +1112,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     pantry,
     groceryList,
     costSummary,
+    minWeeklyBudgetToman,
     cookbooks,
     cookedCount,
     recipeFeedback,
@@ -912,6 +1121,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     openFridgeCamera,
     openInventory,
     setActiveTab,
+    goBackTab,
+    registerBackHandler,
+    handleBackNavigation,
     setSelectedDay,
     openRecipe,
     closeRecipe,
@@ -939,6 +1151,9 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addImportedRecipeRecord,
     updateIngredientPrice,
     resetOwnerOverrides,
+    livePrices,
+    isSyncingPrices,
+    refreshLivePrices,
     showToast,
     dismissToast,
   };

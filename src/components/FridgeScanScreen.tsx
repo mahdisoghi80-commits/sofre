@@ -1,10 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { QUICK_FRIDGE_STAPLE_CODES } from '../data/catalog';
+import { getIngredientIconPath } from '../data/database/ingredientIcons';
 import { useAppState } from '../context/AppStateContext';
 import type { FridgeAIDetectedItem } from '../types/sofreh';
 import { formatToman, toFaDigits } from '../utils/format';
-import { resolveApiUrl } from '../utils/api';
+import {
+  getActiveNativeApiBaseUrl,
+  getCustomApiBaseUrl,
+  postApiJson,
+  setCustomApiBaseUrl,
+} from '../utils/api';
 import { matchRecipesByIngredients } from '../utils/planner';
 import { hapticLight, hapticMedium, hapticSuccess } from '../utils/native';
 import {
@@ -17,28 +23,57 @@ import {
   IconCookingPot,
   IconFridgeLens,
   IconGallery,
+  IconGlobe,
   IconMarketBasket,
   IconPantryShelf,
   IconPlus,
   IconSearch,
   IconSparkle,
   IconTrash,
+  IconUndo,
+  IngredientIcon3D,
 } from './icons/SofrehIcons';
 
-function fileToBase64(file: File): Promise<{ base64: string; mimeType: string; previewUrl: string }> {
-  return new Promise((resolve, reject) => {
+/**
+ * Downscales large 8–12 MB mobile camera/gallery photos to max 1024px JPEG (0.78 quality, ~90 KB)
+ * so uploads over mobile data / CapacitorHttp are instant and never fail or time out.
+ */
+async function compressImageFile(
+  file: File,
+  maxDim = 1024
+): Promise<{ base64: string; mimeType: string; previewUrl: string }> {
+  const rawDataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result ?? '');
-      const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
-      resolve({
-        base64,
-        mimeType: file.type || 'image/jpeg',
-        previewUrl: dataUrl,
-      });
-    };
+    reader.onload = () => resolve(String(reader.result ?? ''));
     reader.onerror = () => reject(new Error('خواندن تصویر ناموفق بود'));
     reader.readAsDataURL(file);
+  });
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        const base64 = rawDataUrl.includes(',') ? rawDataUrl.split(',')[1] : rawDataUrl;
+        resolve({ base64, mimeType: file.type || 'image/jpeg', previewUrl: rawDataUrl });
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.78);
+      const base64 = compressed.split(',')[1] ?? '';
+      resolve({ base64, mimeType: 'image/jpeg', previewUrl: compressed });
+    };
+    img.onerror = () => {
+      const base64 = rawDataUrl.includes(',') ? rawDataUrl.split(',')[1] : rawDataUrl;
+      resolve({ base64, mimeType: file.type || 'image/jpeg', previewUrl: rawDataUrl });
+    };
+    img.src = rawDataUrl;
   });
 }
 
@@ -63,12 +98,19 @@ export const FridgeScanScreen: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastCapturedRef = useRef<{ base64: string; mimeType: string; previewUrl: string } | null>(
+    null
+  );
 
   const [cameraStatus, setCameraStatus] = useState<'starting' | 'live' | 'unavailable'>('starting');
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [showServerConfig, setShowServerConfig] = useState(false);
+  const [serverUrlDraft, setServerUrlDraft] = useState<string>(
+    () => getCustomApiBaseUrl() || getActiveNativeApiBaseUrl()
+  );
   const [aiMetaMap, setAiMetaMap] = useState<Record<string, FridgeAIDetectedItem>>({});
   const [manualQuery, setManualQuery] = useState('');
   const [respectPrefs, setRespectPrefs] = useState(true);
@@ -77,7 +119,7 @@ export const FridgeScanScreen: React.FC = () => {
     setSubTab(fridgeInitialSubTab);
   }, [fridgeInitialSubTab]);
 
-  // Live Inventory codes sourced directly from persisted pantry inStock items!
+  // Live Inventory codes sourced directly from persisted pantry inStock items
   const inventoryCodes = useMemo(
     () => pantry.filter((p) => p.inStock).map((p) => p.ingredientId),
     [pantry]
@@ -88,7 +130,6 @@ export const FridgeScanScreen: React.FC = () => {
     [ingredientsMaster]
   );
 
-  // Stop active camera tracks cleanly
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -96,7 +137,6 @@ export const FridgeScanScreen: React.FC = () => {
     }
   }, []);
 
-  // Immediately open live camera when entering Camera sub-tab
   useEffect(() => {
     if (subTab !== 'camera' || capturedPreview) {
       stopCamera();
@@ -145,6 +185,7 @@ export const FridgeScanScreen: React.FC = () => {
 
   const analyzeImageBase64 = useCallback(
     async (base64: string, mimeType: string, previewUrl: string) => {
+      lastCapturedRef.current = { base64, mimeType, previewUrl };
       setCapturedPreview(previewUrl);
       setAiError(null);
       setAiMessage(null);
@@ -152,35 +193,25 @@ export const FridgeScanScreen: React.FC = () => {
       hapticMedium();
 
       try {
-        const resp = await fetch(resolveApiUrl('/api/scan-fridge'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: base64, mimeType }),
-        });
-
-        const rawText = await resp.text();
-        let data: {
+        const resp = await postApiJson<{
           summaryFa?: string;
           detected?: FridgeAIDetectedItem[];
           error?: string;
-        } = {};
-        try {
-          data = JSON.parse(rawText);
-        } catch {
-          // Non-JSON response (e.g. backend offline or not yet deployed)
-        }
+        }>('/api/scan-fridge', { imageBase64: base64, mimeType });
 
         if (!resp.ok) {
           throw new Error(
-            data.error ||
-              'اتصال به سرور هوش مصنوعی برقرار نشد. مطمئن شوید نسخه سرور اپ منتشر شده است.'
+            resp.data.error ||
+              (resp.status === 404
+                ? 'سرور هوش مصنوعی هنوز منتشر (Deploy) نشده است. می‌توانید آدرس سرور را تنظیم کنید یا مواد را دستی وارد کنید.'
+                : 'پاسخی از سرور هوش مصنوعی دریافت نشد. اینترنت را بررسی کنید یا مواد را دستی اضافه کنید.')
           );
         }
 
-        const detected = data.detected ?? [];
+        const detected = resp.data.detected ?? [];
         if (detected.length === 0) {
           setAiMessage(
-            data.summaryFa ?? 'ماده‌ای تشخیص داده نشد؛ می‌توانید دستی به موجودی اضافه کنید.'
+            resp.data.summaryFa ?? 'ماده‌ای تشخیص داده نشد؛ می‌توانید دستی به موجودی اضافه کنید.'
           );
         } else {
           hapticSuccess();
@@ -193,7 +224,7 @@ export const FridgeScanScreen: React.FC = () => {
           setAiMetaMap((prev) => ({ ...prev, ...meta }));
           setPantryItemsInStock(codes, true);
           setAiMessage(
-            data.summaryFa ?? `${toFaDigits(detected.length)} قلم به موجودی خانه اضافه شد.`
+            resp.data.summaryFa ?? `${toFaDigits(detected.length)} قلم به موجودی خانه اضافه شد.`
           );
           showToast(`${toFaDigits(detected.length)} قلم به موجودی خانه اضافه شد`);
           setSubTab('inventory');
@@ -215,14 +246,17 @@ export const FridgeScanScreen: React.FC = () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const width = video.videoWidth || 1280;
-    const height = video.videoHeight || 960;
+    const rawW = video.videoWidth || 1280;
+    const rawH = video.videoHeight || 960;
+    const scale = Math.min(1, 1024 / Math.max(rawW, rawH));
+    const width = Math.max(1, Math.round(rawW * scale));
+    const height = Math.max(1, Math.round(rawH * scale));
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, width, height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
     const base64 = dataUrl.split(',')[1] ?? '';
     stopCamera();
     analyzeImageBase64(base64, 'image/jpeg', dataUrl);
@@ -233,7 +267,7 @@ export const FridgeScanScreen: React.FC = () => {
     if (!file) return;
     e.target.value = '';
     try {
-      const { base64, mimeType, previewUrl } = await fileToBase64(file);
+      const { base64, mimeType, previewUrl } = await compressImageFile(file, 1024);
       stopCamera();
       analyzeImageBase64(base64, mimeType, previewUrl);
     } catch {
@@ -279,7 +313,7 @@ export const FridgeScanScreen: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* CLEAN MINIMAL HEADER + CAMERA / INVENTORY SWITCH */}
-      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/84 backdrop-blur-xl border-b border-white/60 safe-top">
+      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 backdrop-blur-md border-b border-white/60 safe-top">
         <div className="flex items-center justify-between gap-3">
           <h1 className="font-display font-black text-2xl text-[#292B25]">
             یخچال
@@ -294,7 +328,7 @@ export const FridgeScanScreen: React.FC = () => {
                 subTab === 'camera' ? 'coral-glass-pill text-white' : 'text-[#5C5952]'
               }`}
             >
-              <IconFridgeLens size={15} />
+              <IconFridgeLens size={15} filled={subTab === 'camera'} />
               <span>دوربین</span>
             </button>
             <button
@@ -305,7 +339,7 @@ export const FridgeScanScreen: React.FC = () => {
                 subTab === 'inventory' ? 'coral-glass-pill text-white' : 'text-[#5C5952]'
               }`}
             >
-              <IconPantryShelf size={15} />
+              <IconPantryShelf size={15} filled={subTab === 'inventory'} />
               <span>موجودی ({toFaDigits(inventoryCodes.length)})</span>
             </button>
           </div>
@@ -327,7 +361,6 @@ export const FridgeScanScreen: React.FC = () => {
           data-testid="fridge-live-camera"
           className="relative rounded-[32px] overflow-hidden bg-[#141513] text-white shadow-[0_24px_54px_rgba(20,21,19,0.32)] min-h-[470px] sm:min-h-[520px] flex flex-col justify-between"
         >
-          {/* Live Video Feed or Captured Photo */}
           {capturedPreview ? (
             <img
               src={capturedPreview}
@@ -346,12 +379,10 @@ export const FridgeScanScreen: React.FC = () => {
             />
           )}
 
-          {/* Subtle dark studio backdrop only when camera device isn't available */}
           {!capturedPreview && cameraStatus !== 'live' && (
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(240,68,56,0.16),transparent_60%),#141513]" />
           )}
 
-          {/* Clean Viewfinder Corner Brackets */}
           <div className="absolute inset-6 pointer-events-none">
             <span className="absolute top-0 right-0 w-7 h-7 border-t-[2.5px] border-r-[2.5px] border-white/70 rounded-tr-xl" />
             <span className="absolute top-0 left-0 w-7 h-7 border-t-[2.5px] border-l-[2.5px] border-white/70 rounded-tl-xl" />
@@ -388,7 +419,7 @@ export const FridgeScanScreen: React.FC = () => {
             )}
           </div>
 
-          {/* Center Minimal State (No verbose AI pitch!) */}
+          {/* Center Minimal State */}
           <div className="relative z-10 flex-1 flex items-center justify-center px-6 text-center">
             {scanning ? (
               <div className="liquid-glass-dark rounded-full px-5 py-3 inline-flex items-center gap-2.5">
@@ -396,24 +427,19 @@ export const FridgeScanScreen: React.FC = () => {
                 <span className="font-display font-black text-sm">شناسایی مواد…</span>
               </div>
             ) : cameraStatus === 'unavailable' && !capturedPreview ? (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-16 h-16 mx-auto rounded-full bg-white/12 border border-white/25 flex items-center justify-center text-white"
-                >
-                  <IconFridgeLens size={28} />
-                </button>
-                <p className="text-xs font-bold text-white/75">
-                  دسترسی دوربین فعال نیست؛ از گالری انتخاب کن
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="انتخاب از گالری"
+                className="w-18 h-18 mx-auto rounded-full bg-white/14 border border-white/25 flex items-center justify-center text-white"
+              >
+                <IconGallery size={28} />
+              </button>
             ) : null}
           </div>
 
-          {/* Native Camera Bottom Shutter Dock (True Circular Buttons) */}
+          {/* Native Camera Bottom Shutter Dock */}
           <div className="relative z-10 px-6 pb-6 pt-4 bg-gradient-to-t from-black/80 via-black/45 to-transparent flex items-center justify-between">
-            {/* Gallery Button */}
             <motion.button
               type="button"
               whileTap={{ scale: 0.9 }}
@@ -425,7 +451,6 @@ export const FridgeScanScreen: React.FC = () => {
               <IconGallery size={21} />
             </motion.button>
 
-            {/* Primary Circular Camera Shutter */}
             <motion.button
               type="button"
               whileTap={{ scale: 0.9 }}
@@ -444,7 +469,6 @@ export const FridgeScanScreen: React.FC = () => {
               <span className="w-full h-full rounded-full bg-white active:bg-[#F04438] transition" />
             </motion.button>
 
-            {/* Switch straight to Inventory */}
             <motion.button
               type="button"
               whileTap={{ scale: 0.9 }}
@@ -463,7 +487,7 @@ export const FridgeScanScreen: React.FC = () => {
         </section>
       )}
 
-      {/* Honest AI Feedback Banners */}
+      {/* Honest AI Feedback Banners + Recovery Actions */}
       <AnimatePresence>
         {aiMessage && (
           <motion.div
@@ -481,10 +505,81 @@ export const FridgeScanScreen: React.FC = () => {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl bg-[#FFF0ED] border border-[#F04438]/25 px-4 py-3 flex items-center gap-2.5 text-xs font-bold text-[#B42318]"
+            className="rounded-[24px] bg-[#FFF0ED] border border-[#F04438]/25 p-4 space-y-3 text-xs font-bold text-[#9A1F17]"
           >
-            <IconAlert size={16} className="shrink-0" />
-            <span>{aiError}</span>
+            <div className="flex items-start gap-2.5">
+              <IconAlert size={18} className="shrink-0 mt-0.5 text-[#F04438]" />
+              <span className="leading-relaxed">{aiError}</span>
+            </div>
+
+            <div className="flex items-center flex-wrap gap-2">
+              {lastCapturedRef.current && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const last = lastCapturedRef.current;
+                    if (last) analyzeImageBase64(last.base64, last.mimeType, last.previewUrl);
+                  }}
+                  className="h-8 px-3 rounded-full bg-[#F04438] text-white text-[11px] font-extrabold inline-flex items-center gap-1"
+                >
+                  <IconUndo size={13} />
+                  <span>تلاش مجدد</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSubTab('inventory')}
+                className="h-8 px-3 rounded-full bg-[#292B25] text-white text-[11px] font-extrabold inline-flex items-center gap-1"
+              >
+                <IconPlus size={13} />
+                <span>افزودن دستی مواد</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowServerConfig((v) => !v)}
+                className="h-8 px-3 rounded-full bg-white text-[#292B25] border border-[#E6DACD] text-[11px] font-extrabold inline-flex items-center gap-1"
+              >
+                <IconGlobe size={13} />
+                <span>آدرس سرور</span>
+              </button>
+            </div>
+
+            {showServerConfig && (
+              <div className="pt-2 border-t border-[#F04438]/15 space-y-2">
+                <input
+                  type="url"
+                  dir="ltr"
+                  value={serverUrlDraft}
+                  onChange={(e) => setServerUrlDraft(e.target.value)}
+                  placeholder="https://your-sofreh-server.run.app"
+                  className="w-full h-9 px-3 rounded-xl bg-white border border-[#E6DACD] text-[#292B25] text-xs font-bold text-left focus:outline-none"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomApiBaseUrl(serverUrlDraft);
+                      setShowServerConfig(false);
+                      showToast('آدرس سرور ذخیره شد');
+                    }}
+                    className="h-8 px-3.5 rounded-full bg-[#68734E] text-white text-[11px] font-extrabold"
+                  >
+                    ذخیره آدرس
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomApiBaseUrl('');
+                      setServerUrlDraft(getActiveNativeApiBaseUrl());
+                      showToast('به آدرس پیش‌فرض برگشت');
+                    }}
+                    className="h-8 px-3 rounded-full bg-white text-[#5C5952] text-[11px] font-bold"
+                  >
+                    پیش‌فرض
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -494,8 +589,8 @@ export const FridgeScanScreen: React.FC = () => {
         <div className="space-y-5" data-testid="fridge-inventory-section">
           <section className="liquid-glass-card rounded-[28px] p-4 sm:p-5 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-display font-black text-lg text-[#292B25]">
-                موجودی یخچال و خانه ({toFaDigits(inventoryCodes.length)})
+              <h2 className="font-display font-black text-lg text-[#292B25] tabular-nums-fa">
+                موجودی ({toFaDigits(inventoryCodes.length)})
               </h2>
               {inventoryCodes.length > 0 && (
                 <button
@@ -513,7 +608,7 @@ export const FridgeScanScreen: React.FC = () => {
               )}
             </div>
 
-            {/* 1-by-1 Manual Ingredient Adder */}
+            {/* Search & Add Ingredient */}
             <div className="relative">
               <IconSearch
                 size={17}
@@ -530,7 +625,7 @@ export const FridgeScanScreen: React.FC = () => {
                   }
                 }}
                 data-testid="manual-fridge-input"
-                placeholder="افزودن ماده به موجودی (قارچ، مرغ، پنیر…)"
+                placeholder="افزودن ماده…"
                 className="w-full h-11 pr-10 pl-4 rounded-full bg-white border border-[#E6DACD] focus:border-[#F04438] focus:outline-none text-sm font-bold"
               />
 
@@ -541,9 +636,16 @@ export const FridgeScanScreen: React.FC = () => {
                       key={ing.code}
                       type="button"
                       onClick={() => addCode(ing.code)}
-                      className="w-full px-4 py-2.5 flex items-center justify-between text-right hover:bg-[#FFF5F2] transition"
+                      className="w-full px-3.5 py-2 flex items-center justify-between text-right hover:bg-[#FFF5F2] transition"
                     >
-                      <span className="font-extrabold text-sm text-[#292B25]">{ing.nameFa}</span>
+                      <div className="flex items-center gap-2.5">
+                        <IngredientIcon3D
+                          src={getIngredientIconPath(ing.code, ing.nameFa)}
+                          alt={ing.nameFa}
+                          sizeClass="w-8 h-8"
+                        />
+                        <span className="font-extrabold text-sm text-[#292B25]">{ing.nameFa}</span>
+                      </div>
                       <span className="w-7 h-7 rounded-full coral-glass-pill text-white flex items-center justify-center">
                         <IconPlus size={14} />
                       </span>
@@ -553,50 +655,54 @@ export const FridgeScanScreen: React.FC = () => {
               )}
             </div>
 
-            {/* Current Inventory Chips */}
+            {/* Compact Apple-Style Small Tiles for Current Inventory */}
             {inventoryCodes.length === 0 ? (
-              <p className="text-xs font-bold text-[#75746E] text-center py-3">
-                موردی در موجودی خانه ثبت نشده؛ بالا جستجو کن یا با دوربین اسکن کن.
-              </p>
+              <div className="text-xs font-bold text-[#8A847C] text-center py-4">
+                یخچال خالی است
+              </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                <AnimatePresence>
-                  {inventoryCodes.map((code) => {
-                    const ing = ingredientsByCode[code];
-                    if (!ing) return null;
-                    const aiMeta = aiMetaMap[code];
-                    return (
-                      <motion.span
-                        key={code}
-                        layout
-                        initial={{ scale: 0.85, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.8, opacity: 0 }}
-                        className="inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#292B25] text-white text-xs font-extrabold"
+              <div
+                data-testid="fridge-inventory-tiles"
+                className="grid grid-cols-4 sm:grid-cols-6 gap-2"
+              >
+                {inventoryCodes.map((code) => {
+                  const ing = ingredientsByCode[code];
+                  if (!ing) return null;
+                  const aiMeta = aiMetaMap[code];
+                  return (
+                    <div
+                      key={code}
+                      className="relative rounded-[18px] bg-white border border-[#EFE4D8] p-2 pt-3 flex flex-col items-center justify-center gap-1 text-center shadow-[0_2px_8px_rgba(96,56,30,0.04)]"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => removeCode(code)}
+                        aria-label={`حذف ${ing.nameFa}`}
+                        className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full bg-[#F3E9DE] hover:bg-[#F04438] text-[#75746E] hover:text-white flex items-center justify-center transition"
                       >
-                        <span>{ing.nameFa}</span>
-                        {aiMeta?.quantityHint && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/15 text-[#FFD3CD]">
-                            {aiMeta.quantityHint}
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeCode(code)}
-                          aria-label={`حذف ${ing.nameFa}`}
-                          className="w-5 h-5 rounded-full bg-white/18 hover:bg-[#F04438] flex items-center justify-center transition"
-                        >
-                          <IconClose size={11} />
-                        </button>
-                      </motion.span>
-                    );
-                  })}
-                </AnimatePresence>
+                        <IconClose size={10} />
+                      </button>
+                      <IngredientIcon3D
+                        src={getIngredientIconPath(code, ing.nameFa)}
+                        alt={ing.nameFa}
+                        sizeClass="w-9 h-9"
+                      />
+                      <span className="text-[11px] font-extrabold text-[#292B25] leading-tight line-clamp-1 w-full">
+                        {ing.nameFa.split(' ')[0]}
+                      </span>
+                      {aiMeta?.quantityHint && (
+                        <span className="text-[9px] font-bold text-[#F04438] leading-none">
+                          {aiMeta.quantityHint}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Quick Staple Add Rail */}
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pt-1">
+            {/* Quick-Add Compact Mini Tiles */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1">
               {QUICK_FRIDGE_STAPLE_CODES.filter((c) => !inventoryCodes.includes(c))
                 .slice(0, 12)
                 .map((code) => {
@@ -607,10 +713,19 @@ export const FridgeScanScreen: React.FC = () => {
                       key={code}
                       type="button"
                       onClick={() => addCode(code)}
-                      className="shrink-0 px-3 py-1.5 rounded-full bg-white border border-[#E6DACD] hover:border-[#F04438] text-xs font-bold text-[#292B25] flex items-center gap-1 active:scale-95 transition"
+                      className="relative shrink-0 w-[68px] rounded-[16px] bg-[#FBF5EF] border border-dashed border-[#DFD2C3] hover:border-[#F04438] p-2 flex flex-col items-center gap-1 active:scale-95 transition"
                     >
-                      <IconPlus size={12} className="text-[#F04438]" />
-                      <span>{ing.nameFa}</span>
+                      <span className="absolute top-1 left-1 w-4 h-4 rounded-full bg-[#F04438]/12 text-[#F04438] flex items-center justify-center">
+                        <IconPlus size={9} />
+                      </span>
+                      <IngredientIcon3D
+                        src={getIngredientIconPath(code, ing.nameFa)}
+                        alt={ing.nameFa}
+                        sizeClass="w-8 h-8"
+                      />
+                      <span className="text-[10px] font-bold text-[#5C5952] truncate w-full text-center">
+                        {ing.nameFa.split(' ')[0]}
+                      </span>
                     </button>
                   );
                 })}
@@ -621,33 +736,32 @@ export const FridgeScanScreen: React.FC = () => {
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-display font-black text-lg text-[#292B25]">
-                با همین‌ها می‌تونی بپزی
+                قابل پخت
               </h3>
               <button
                 type="button"
                 onClick={() => setRespectPrefs((v) => !v)}
                 className={`px-3 py-1.5 rounded-full text-[11px] font-extrabold transition ${
                   respectPrefs
-                    ? 'bg-[#68734E] text-white'
+                    ? 'bg-[#5E8B42] text-white'
                     : 'liquid-glass text-[#75746E]'
                 }`}
               >
-                {respectPrefs ? 'مطابق رژیم من' : 'همهٔ غذاها'}
+                {respectPrefs ? 'رژیم من' : 'همه'}
               </button>
             </div>
 
             {matches.length === 0 ? (
               <div className="liquid-glass-card rounded-[26px] p-6 text-center text-xs font-bold text-[#75746E]">
-                چند ماده به موجودی اضافه کن تا غذاهای قابل پخت نمایش داده شوند.
+                مواد اضافه کن
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {matches.map((item) => {
                   const { recipe, missingIngredients, matchType, missingEstimatedCostToman } = item;
                   return (
-                    <motion.article
+                    <article
                       key={recipe.id}
-                      layout
                       className="liquid-glass-card rounded-[26px] p-3.5 flex flex-col justify-between gap-3"
                     >
                       <div className="flex items-center gap-3">
@@ -677,7 +791,9 @@ export const FridgeScanScreen: React.FC = () => {
                                 ? 'آمادهٔ پخت'
                                 : `${toFaDigits(missingIngredients.length)} قلم کسری`}
                             </span>
-                            <span className="text-sm">{getCuisineFlag(recipe.cuisine)}</span>
+                            <span className="inline-flex items-center">
+                              {getCuisineFlag(recipe.cuisine)}
+                            </span>
                           </div>
 
                           <button
@@ -726,7 +842,7 @@ export const FridgeScanScreen: React.FC = () => {
                           </button>
                         )}
                       </div>
-                    </motion.article>
+                    </article>
                   );
                 })}
               </div>

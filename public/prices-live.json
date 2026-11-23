@@ -1,0 +1,1090 @@
+{
+  "version": 2,
+  "updatedAt": "2026-11-23T11:16:25.989Z",
+  "sourcesUsed": [
+    "basalam"
+  ],
+  "liveMatchedCount": 122,
+  "totalCount": 167,
+  "prices": {
+    "ING_LAMB_SHANK": {
+      "unitPriceToman": 1700,
+      "packPriceToman": 1020000,
+      "source": "basalam",
+      "sampleTitle": "ماهیچه گوسفندی(شیشک جوان)(1kg)",
+      "sampleCount": 9
+    },
+    "ING_LAMB_STEW": {
+      "unitPriceToman": 1700,
+      "packPriceToman": 850000,
+      "source": "basalam",
+      "sampleTitle": "گوشت چرخ کرده خالص گوسفندی (500g)",
+      "sampleCount": 9
+    },
+    "ING_BEEF_SIRLOIN": {
+      "unitPriceToman": 2400,
+      "packPriceToman": 1200000,
+      "source": "basalam",
+      "sampleTitle": "گوشت گوساله نر ممتاز (1kg)",
+      "sampleCount": 3
+    },
+    "ING_BEEF_MINCED": {
+      "unitPriceToman": 1200,
+      "packPriceToman": 600000,
+      "source": "basalam",
+      "sampleTitle": "گوشت چرخ کرده قلوه گاه گوسفندی و گوساله 1000 گرمی",
+      "sampleCount": 3
+    },
+    "ING_TURKEY_BREAST": {
+      "unitPriceToman": 905,
+      "packPriceToman": 453000,
+      "source": "basalam",
+      "sampleTitle": "سینه بی استخوان بوقلمون (2kg)",
+      "sampleCount": 8
+    },
+    "ING_CHICKEN_MINCED": {
+      "unitPriceToman": 520,
+      "packPriceToman": 260000,
+      "source": "basalam",
+      "sampleTitle": "گوشت مرغ(چرخ کرده )20کیلویی عمده",
+      "sampleCount": 2
+    },
+    "ING_CHICKEN_THIGH": {
+      "unitPriceToman": 320,
+      "packPriceToman": 320000,
+      "source": "basalam",
+      "sampleTitle": "ران مرغ کشتار روز (1kg)",
+      "sampleCount": 7
+    },
+    "ING_DUCK_MEAT": {
+      "unitPriceToman": 1200,
+      "packPriceToman": 1200000,
+      "source": "basalam",
+      "sampleTitle": "گوشت چرخ کرده قلوه گاه گوسفندی و گوساله 1000 گرمی",
+      "sampleCount": 2
+    },
+    "ING_WHITE_FISH": {
+      "unitPriceToman": 1600,
+      "packPriceToman": 800000,
+      "source": "basalam",
+      "sampleTitle": "فیله ماهی قزل آلا آدانا تورکیش ",
+      "sampleCount": 7
+    },
+    "ING_SHRIMP": {
+      "unitPriceToman": 1500,
+      "packPriceToman": 750000,
+      "source": "basalam",
+      "sampleTitle": "میگو فلفلی ترد و خوشمزه 250 گرم",
+      "sampleCount": 4
+    },
+    "ING_CHICKEN_BREAST": {
+      "unitPriceToman": 785,
+      "packPriceToman": 785000,
+      "source": "basalam",
+      "sampleTitle": "سینه بدون استخوان مرغ ممتاز 10 کیلویی",
+      "sampleCount": 6
+    },
+    "ING_TUNA_CAN": {
+      "unitPriceToman": 1600,
+      "packPriceToman": 288000,
+      "source": "basalam",
+      "sampleTitle": "کنسرو ماهی تن در روغن محفل (180 گرم) کد 2960",
+      "sampleCount": 8
+    },
+    "ING_SALMON_FILLET": {
+      "unitPriceToman": 1800,
+      "packPriceToman": 720000,
+      "source": "basalam",
+      "sampleTitle": "فیله ماهی سالمون دودی ",
+      "sampleCount": 10
+    },
+    "ING_EGG": {
+      "unitPriceToman": 23400,
+      "packPriceToman": 351000,
+      "source": "basalam",
+      "sampleTitle": "تخم مرغ شانه ای 30 عددی",
+      "sampleCount": 6
+    },
+    "ING_TOFU": {
+      "unitPriceToman": 1000,
+      "packPriceToman": 300000,
+      "source": "basalam",
+      "sampleTitle": "پنیر توفوی دکتر پگی 450 گرم",
+      "sampleCount": 1
+    },
+    "ING_SOY_PROTEIN": {
+      "unitPriceToman": 250,
+      "packPriceToman": 63000,
+      "source": "basalam",
+      "sampleTitle": "پروتئین سویا خوراکی دانه ریز بسته 300 گرمی",
+      "sampleCount": 2
+    },
+    "ING_LAMB_LIVER": {
+      "unitPriceToman": 2100,
+      "packPriceToman": 1050000,
+      "source": "basalam",
+      "sampleTitle": "جگر ودل وقلوه گوسفند",
+      "sampleCount": 1
+    },
+    "ING_BEEF_SAUSAGE": {
+      "unitPriceToman": 700,
+      "packPriceToman": 280000,
+      "source": "basalam",
+      "sampleTitle": "سوسیس خرد شده، 90 درصد گوشت، 1000 گرم",
+      "sampleCount": 2
+    },
+    "ING_GARLIC": {
+      "unitPriceToman": 3000,
+      "packPriceToman": 36000,
+      "source": "basalam",
+      "sampleTitle": "سیر محلی تازه ارگانیک یک کیلویی گیلان.رشت",
+      "sampleCount": 6
+    },
+    "ING_SWEET_POTATO": {
+      "unitPriceToman": 320,
+      "packPriceToman": 160000,
+      "source": "basalam",
+      "sampleTitle": "سیب زمینی تنوری 2 کیلویی ب آ",
+      "sampleCount": 2
+    },
+    "ING_PUMPKIN": {
+      "unitPriceToman": 60,
+      "packPriceToman": 60000,
+      "source": "basalam",
+      "sampleTitle": "کدو حلوایی محلی اورگانیک سایز متوسط 3370 گرم",
+      "sampleCount": 3
+    },
+    "ING_EGGPLANT": {
+      "unitPriceToman": 85,
+      "packPriceToman": 85000,
+      "source": "basalam",
+      "sampleTitle": "بادمجان سیاه قلمی",
+      "sampleCount": 1
+    },
+    "ING_BELL_PEPPER": {
+      "unitPriceToman": 180,
+      "packPriceToman": 90000,
+      "source": "basalam",
+      "sampleTitle": "فلفل دلمه ای سبز یک کیلویی صیفی",
+      "sampleCount": 1
+    },
+    "ING_BROCCOLI": {
+      "unitPriceToman": 250,
+      "packPriceToman": 125000,
+      "source": "basalam",
+      "sampleTitle": "کلم بروکلی - 500 گرم",
+      "sampleCount": 1
+    },
+    "ING_CELERY": {
+      "unitPriceToman": 125,
+      "packPriceToman": 63000,
+      "source": "basalam",
+      "sampleTitle": "کرفس خردشده تازه بسته 1 کیلویی",
+      "sampleCount": 1
+    },
+    "ING_SPINACH": {
+      "unitPriceToman": 150,
+      "packPriceToman": 75000,
+      "source": "basalam",
+      "sampleTitle": "اسفناج تازه خرد شده بسته بندی شده زیپ کیپ یک کیلویی",
+      "sampleCount": 2
+    },
+    "ING_GREEN_BEAN": {
+      "unitPriceToman": 145,
+      "packPriceToman": 73000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا پاچ باقالا (باقالی) محلی تازه سبز ترد 1 کیلوگرم",
+      "sampleCount": 3
+    },
+    "ING_OKRA": {
+      "unitPriceToman": 450,
+      "packPriceToman": 225000,
+      "source": "basalam",
+      "sampleTitle": "بامیه تازه بسته 5کیلویی",
+      "sampleCount": 2
+    },
+    "ING_FAVA_BEAN": {
+      "unitPriceToman": 420,
+      "packPriceToman": 210000,
+      "source": "basalam",
+      "sampleTitle": "باقالی پاک شده و فریزر در بسته های نیم کیلویی",
+      "sampleCount": 3
+    },
+    "ING_CORN_KERNEL": {
+      "unitPriceToman": 200,
+      "packPriceToman": 80000,
+      "source": "basalam",
+      "sampleTitle": "ذرت شیرین بسته 10کیلویی",
+      "sampleCount": 3
+    },
+    "ING_GREEN_PEA": {
+      "unitPriceToman": 380,
+      "packPriceToman": 190000,
+      "source": "basalam",
+      "sampleTitle": "نخودفرنگی منجمد",
+      "sampleCount": 1
+    },
+    "ING_LETTUCE": {
+      "unitPriceToman": 60,
+      "packPriceToman": 30000,
+      "source": "basalam",
+      "sampleTitle": "کاهو رسمی - یک کیلوگرم",
+      "sampleCount": 1
+    },
+    "ING_LEMON": {
+      "unitPriceToman": 21800,
+      "packPriceToman": 131000,
+      "source": "basalam",
+      "sampleTitle": "لیموترش (لیمو ترش) تازه و آبدار 1 کیلو",
+      "sampleCount": 1
+    },
+    "ING_AVOCADO": {
+      "unitPriceToman": 166700,
+      "packPriceToman": 333000,
+      "source": "basalam",
+      "sampleTitle": "آووکادو بسته 6 عددی و ارگانیک تازه چین",
+      "sampleCount": 4
+    },
+    "ING_HERB_KUKU": {
+      "unitPriceToman": 145,
+      "packPriceToman": 73000,
+      "source": "basalam",
+      "sampleTitle": "سبزی کوکو خرد شده تازه 1 کیلویی",
+      "sampleCount": 3
+    },
+    "ING_HERB_ASH": {
+      "unitPriceToman": 140,
+      "packPriceToman": 70000,
+      "source": "basalam",
+      "sampleTitle": "سبزی آش رشته 1 کیلویی",
+      "sampleCount": 2
+    },
+    "ING_DILL": {
+      "unitPriceToman": 210,
+      "packPriceToman": 53000,
+      "source": "basalam",
+      "sampleTitle": "شوید تازه ریحانو",
+      "sampleCount": 1
+    },
+    "ING_GINGER_FRESH": {
+      "unitPriceToman": 295,
+      "packPriceToman": 44000,
+      "source": "basalam",
+      "sampleTitle": "زنجبیل تازه آسیاب (100/250/500 گرم)",
+      "sampleCount": 2
+    },
+    "ING_QUINCE": {
+      "unitPriceToman": 390,
+      "packPriceToman": 390000,
+      "source": "basalam",
+      "sampleTitle": "میوه تازه و پاییزی به مراغه(یک کیلوگرم)",
+      "sampleCount": 4
+    },
+    "ING_POMEGRANATE_SEEDS": {
+      "unitPriceToman": 600,
+      "packPriceToman": 180000,
+      "source": "basalam",
+      "sampleTitle": "اناردون محلی خونگی ترش،ناردون،دانه انار یک کیلویی،گیلان.رشت",
+      "sampleCount": 1
+    },
+    "ING_OLIVES": {
+      "unitPriceToman": 410,
+      "packPriceToman": 103000,
+      "source": "basalam",
+      "sampleTitle": "زیتون بی هسته ممتاز(متوسط) طارم پت 2.8کیلوگرم خالص مامین",
+      "sampleCount": 8
+    },
+    "ING_PICKLES": {
+      "unitPriceToman": 245,
+      "packPriceToman": 123000,
+      "source": "basalam",
+      "sampleTitle": "خیارشور خانگی تازه تردوخوشمزه یک کیلو300گرم",
+      "sampleCount": 3
+    },
+    "ING_YOGURT": {
+      "unitPriceToman": 245,
+      "packPriceToman": 123000,
+      "source": "basalam",
+      "sampleTitle": "ماست کم چرب 90 گرمی تک نفره کاله بسته 100 عددی",
+      "sampleCount": 2
+    },
+    "ING_GREEK_YOGURT": {
+      "unitPriceToman": 270,
+      "packPriceToman": 108000,
+      "source": "basalam",
+      "sampleTitle": "ماست چکیده محلی 1400",
+      "sampleCount": 2
+    },
+    "ING_MILK": {
+      "unitPriceToman": 145,
+      "packPriceToman": 145000,
+      "source": "basalam",
+      "sampleTitle": "شیر کم چرب 1 لیتری دومینو -باکس 10 عددی",
+      "sampleCount": 2
+    },
+    "ING_KASHK": {
+      "unitPriceToman": 290,
+      "packPriceToman": 145000,
+      "source": "basalam",
+      "sampleTitle": "کشک رشته ای ممتاز 500 گرمی",
+      "sampleCount": 7
+    },
+    "ING_FETA_CHEESE": {
+      "unitPriceToman": 510,
+      "packPriceToman": 204000,
+      "source": "basalam",
+      "sampleTitle": "پنیر سفید نیم چرب حاوی ویتامین D3 پگاه 400 گرمی",
+      "sampleCount": 3
+    },
+    "ING_HEAVY_CREAM": {
+      "unitPriceToman": 520,
+      "packPriceToman": 104000,
+      "source": "basalam",
+      "sampleTitle": "خامه قنادی ممتاز 900 گرمی کاله",
+      "sampleCount": 5
+    },
+    "ING_BUTTER": {
+      "unitPriceToman": 985,
+      "packPriceToman": 99000,
+      "source": "basalam",
+      "sampleTitle": "کره بادام زمینی خالص 150 گرمی اعتماد (بدون هیچ گونه ماده افزودنی)",
+      "sampleCount": 10
+    },
+    "ING_PARMESAN": {
+      "unitPriceToman": 1400,
+      "packPriceToman": 210000,
+      "source": "basalam",
+      "sampleTitle": "پودر پنیر پارمسان درجه یک 100 گرمی ترنج",
+      "sampleCount": 1
+    },
+    "ING_MOZZARELLA": {
+      "unitPriceToman": 1000,
+      "packPriceToman": 400000,
+      "source": "basalam",
+      "sampleTitle": "پنیر پیتزا موزارلا 180 گرمی میهن بسته (6 عددی)",
+      "sampleCount": 9
+    },
+    "ING_HALLOUMI": {
+      "unitPriceToman": 925,
+      "packPriceToman": 185000,
+      "source": "basalam",
+      "sampleTitle": "پنیر پیتزا پروسس کم چرب شگالیو یک کیلوگرم",
+      "sampleCount": 7
+    },
+    "ING_CREAM_CHEESE": {
+      "unitPriceToman": 635,
+      "packPriceToman": 127000,
+      "source": "basalam",
+      "sampleTitle": "پنیر خامه ای پرچرب پگاه 100 گرمی",
+      "sampleCount": 5
+    },
+    "ING_COCONUT_MILK": {
+      "unitPriceToman": 450,
+      "packPriceToman": 180000,
+      "source": "basalam",
+      "sampleTitle": "شیر نارگیل آژیل 200 میلی لیتر",
+      "sampleCount": 2
+    },
+    "ING_RICE_IRANI": {
+      "unitPriceToman": 490,
+      "packPriceToman": 490000,
+      "source": "basalam",
+      "sampleTitle": "برنج داربن طارم هاشمی کشت یک 50 کیلو ( 5 تا کیسه)",
+      "sampleCount": 4
+    },
+    "ING_RICE_ARBORIO": {
+      "unitPriceToman": 355,
+      "packPriceToman": 178000,
+      "source": "basalam",
+      "sampleTitle": "برنج ایرانی گرده درجه یک باارسال رایگان (10کیلویی)",
+      "sampleCount": 7
+    },
+    "ING_QUINOA": {
+      "unitPriceToman": 900,
+      "packPriceToman": 360000,
+      "source": "basalam",
+      "sampleTitle": "کینوا سفید ممتاز - 500 گرم",
+      "sampleCount": 4
+    },
+    "ING_BULGUR": {
+      "unitPriceToman": 160,
+      "packPriceToman": 80000,
+      "source": "basalam",
+      "sampleTitle": "بلغور گندم یک کیلویی اعتماد تازه و تمیز (بلغورگندم)",
+      "sampleCount": 9
+    },
+    "ING_BARLEY": {
+      "unitPriceToman": 155,
+      "packPriceToman": 78000,
+      "source": "basalam",
+      "sampleTitle": "جو  پوست کنده کیفیت عاااالی یک کیلویی",
+      "sampleCount": 9
+    },
+    "ING_OATS": {
+      "unitPriceToman": 355,
+      "packPriceToman": 178000,
+      "source": "basalam",
+      "sampleTitle": "جو دوسر پرک فوری 500 گرم",
+      "sampleCount": 1
+    },
+    "ING_SPAGHETTI": {
+      "unitPriceToman": 215,
+      "packPriceToman": 108000,
+      "source": "basalam",
+      "sampleTitle": "اسپاگتی ماکارونی زر ماکارون مقدار700 گرم قطر 1.2",
+      "sampleCount": 6
+    },
+    "ING_PASTA_PENNE": {
+      "unitPriceToman": 355,
+      "packPriceToman": 178000,
+      "source": "basalam",
+      "sampleTitle": "ماکارونی پاستا پنه زر ماکارون 500 گرمی",
+      "sampleCount": 3
+    },
+    "ING_RESHTEH_ASH": {
+      "unitPriceToman": 230,
+      "packPriceToman": 115000,
+      "source": "basalam",
+      "sampleTitle": "بسته 2 عددی رشته آش میلاد 500 گرمی",
+      "sampleCount": 4
+    },
+    "ING_NOODLE_ASIAN": {
+      "unitPriceToman": 570,
+      "packPriceToman": 228000,
+      "source": "basalam",
+      "sampleTitle": "نودل با طعم سبزیجات هاتی کارا بسته 5 عددی",
+      "sampleCount": 1
+    },
+    "ING_RESHTEH_POLO": {
+      "unitPriceToman": 240,
+      "packPriceToman": 120000,
+      "source": "basalam",
+      "sampleTitle": "رشته پلویی سبوس دار 500 گرمی",
+      "sampleCount": 7
+    },
+    "ING_VERMICELLI": {
+      "unitPriceToman": 260,
+      "packPriceToman": 104000,
+      "source": "basalam",
+      "sampleTitle": "ورمیشل رشته سوپ مک فرمی فیدلی 500 گرمی",
+      "sampleCount": 3
+    },
+    "ING_TORTILLA": {
+      "unitPriceToman": 19800,
+      "packPriceToman": 158000,
+      "source": "basalam",
+      "sampleTitle": "نان پانی پوری هندی آماده سرخ کردن به همراه ادویه مخصوص 40 عددی",
+      "sampleCount": 4
+    },
+    "ING_TOAST_BREAD": {
+      "unitPriceToman": 10000,
+      "packPriceToman": 140000,
+      "source": "basalam",
+      "sampleTitle": "نان محلی تیری سبوس دار فارس - 1000 گرم",
+      "sampleCount": 7
+    },
+    "ING_BURGER_BUN": {
+      "unitPriceToman": 19800,
+      "packPriceToman": 79000,
+      "source": "basalam",
+      "sampleTitle": "نان پانی پوری هندی آماده سرخ کردن به همراه ادویه مخصوص 40 عددی",
+      "sampleCount": 3
+    },
+    "ING_FLOUR_WHEAT": {
+      "unitPriceToman": 145,
+      "packPriceToman": 145000,
+      "source": "basalam",
+      "sampleTitle": "آرد کامل گندم محلی سبوس دار یک کیلو",
+      "sampleCount": 5
+    },
+    "ING_BREADCRUMBS": {
+      "unitPriceToman": 240,
+      "packPriceToman": 72000,
+      "source": "basalam",
+      "sampleTitle": "پودر سوخاری نارنجی تردان - 200 گرم",
+      "sampleCount": 2
+    },
+    "ING_RED_BEANS": {
+      "unitPriceToman": 385,
+      "packPriceToman": 193000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا قرمز محلی مرغوب و خوش پخت 900 گرمی",
+      "sampleCount": 5
+    },
+    "ING_CHICKPEA_FLOUR": {
+      "unitPriceToman": 425,
+      "packPriceToman": 213000,
+      "source": "basalam",
+      "sampleTitle": "آرد نخودچی یک کیلویی شرکت مزرعه درجه یک",
+      "sampleCount": 8
+    },
+    "ING_WHITE_BEANS": {
+      "unitPriceToman": 390,
+      "packPriceToman": 195000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا سفید 900 گرمی پاک شده نوسار ",
+      "sampleCount": 6
+    },
+    "ING_PINTO_BEANS": {
+      "unitPriceToman": 440,
+      "packPriceToman": 220000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا چیتی محلی مرغوب و خوش پخت 900 گرمی",
+      "sampleCount": 4
+    },
+    "ING_BLACK_BEANS": {
+      "unitPriceToman": 380,
+      "packPriceToman": 190000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا قرمز ایرانی 500 گرمی اعتماد  (لوبیاقرمز )",
+      "sampleCount": 7
+    },
+    "ING_CHICKPEA": {
+      "unitPriceToman": 300,
+      "packPriceToman": 150000,
+      "source": "basalam",
+      "sampleTitle": "نخود آبگوشتی درجه یک 1000 گرمی",
+      "sampleCount": 7
+    },
+    "ING_SPLIT_PEA": {
+      "unitPriceToman": 395,
+      "packPriceToman": 198000,
+      "source": "basalam",
+      "sampleTitle": "لپه پاک شده و امساله آذرشهر 1000 گرمی",
+      "sampleCount": 10
+    },
+    "ING_LENTILS": {
+      "unitPriceToman": 335,
+      "packPriceToman": 168000,
+      "source": "basalam",
+      "sampleTitle": "عدس ریز 900 گرمی بارفروش",
+      "sampleCount": 11
+    },
+    "ING_RED_LENTILS": {
+      "unitPriceToman": 305,
+      "packPriceToman": 153000,
+      "source": "basalam",
+      "sampleTitle": "دال عدس  پاک شده(عدس قرمز) (2000 گرمی، ارسال رایگان) ",
+      "sampleCount": 8
+    },
+    "ING_MUNG_BEANS": {
+      "unitPriceToman": 470,
+      "packPriceToman": 235000,
+      "source": "basalam",
+      "sampleTitle": "ماش سبز اعتماد خوب - 900 گرم",
+      "sampleCount": 4
+    },
+    "ING_BLACK_EYED_PEA": {
+      "unitPriceToman": 440,
+      "packPriceToman": 220000,
+      "source": "basalam",
+      "sampleTitle": "لوبیا چشم بلبلی 500 گرمی اعتماد (لوبیاچشم بلبلی )",
+      "sampleCount": 6
+    },
+    "ING_PEANUT_BUTTER": {
+      "unitPriceToman": 975,
+      "packPriceToman": 293000,
+      "source": "basalam",
+      "sampleTitle": "کره بادام زمینی 300 گرمی / تولید روز/ اردکان",
+      "sampleCount": 1
+    },
+    "ING_WALNUT": {
+      "unitPriceToman": 2200,
+      "packPriceToman": 550000,
+      "source": "basalam",
+      "sampleTitle": "مغز گردو تویسرکان-500 گرمی 1405",
+      "sampleCount": 9
+    },
+    "ING_CASHEW": {
+      "unitPriceToman": 3400,
+      "packPriceToman": 680000,
+      "source": "basalam",
+      "sampleTitle": "بادام هندی خام 250 گرم فله",
+      "sampleCount": 1
+    },
+    "ING_TAHINI": {
+      "unitPriceToman": 990,
+      "packPriceToman": 347000,
+      "source": "basalam",
+      "sampleTitle": "ارده ممتاز ایرانی از  کنجد شستشو شده 500 گرمی",
+      "sampleCount": 10
+    },
+    "ING_PINE_NUTS": {
+      "unitPriceToman": 2400,
+      "packPriceToman": 240000,
+      "source": "basalam",
+      "sampleTitle": "دانه یا پودر قهوه ونیز سیدانو 1 کیلوگرمی (20 درصد عربیکا 80 درصد روبوستا",
+      "sampleCount": 8
+    },
+    "ING_CHIA_SEEDS": {
+      "unitPriceToman": 1200,
+      "packPriceToman": 240000,
+      "source": "basalam",
+      "sampleTitle": "دانه چیا خاکستری 250 گرم - سوپرفود مناسب برای خوش استایلی- غنی از اسید آ",
+      "sampleCount": 2
+    },
+    "ING_SESAME_SEEDS": {
+      "unitPriceToman": 710,
+      "packPriceToman": 107000,
+      "source": "basalam",
+      "sampleTitle": "کنجد بوداده(تفت داده) (500 گرمی ارسال رایگان)",
+      "sampleCount": 5
+    },
+    "ING_TOMATO_PASTE": {
+      "unitPriceToman": 7400,
+      "packPriceToman": 222000,
+      "source": "basalam",
+      "sampleTitle": "رب گوجه فرنگی چین چین 800 گرمی",
+      "sampleCount": 8
+    },
+    "ING_POMEGRANATE_PASTE": {
+      "unitPriceToman": 9500,
+      "packPriceToman": 238000,
+      "source": "basalam",
+      "sampleTitle": "رب انار ملس ارگانیک (500 گرمی)",
+      "sampleCount": 10
+    },
+    "ING_RAISIN": {
+      "unitPriceToman": 700,
+      "packPriceToman": 175000,
+      "source": "basalam",
+      "sampleTitle": "کشمش پلویی درشت زرد 500 گرم",
+      "sampleCount": 11
+    },
+    "ING_BARBERRY": {
+      "unitPriceToman": 1000,
+      "packPriceToman": 200000,
+      "source": "basalam",
+      "sampleTitle": "زرشک پفکی درجه یک 250 گرم فله",
+      "sampleCount": 9
+    },
+    "ING_DRIED_PLUM": {
+      "unitPriceToman": 820,
+      "packPriceToman": 205000,
+      "source": "basalam",
+      "sampleTitle": "آلو نمکی درجه یک خوانسار ، آلو خورشتی ، آلو بخارا ( 250 گرم) خشکبار خوان",
+      "sampleCount": 3
+    },
+    "ING_ORANGE_PEEL": {
+      "unitPriceToman": 800,
+      "packPriceToman": 120000,
+      "source": "basalam",
+      "sampleTitle": "خلال پوست پرتقال شیرین شده 250 گرمی",
+      "sampleCount": 1
+    },
+    "ING_OLIVE_OIL": {
+      "unitPriceToman": 32200,
+      "packPriceToman": 1127000,
+      "source": "basalam",
+      "sampleTitle": "روغن زیتون فرابکر دلفین 500 میلی لیتر",
+      "sampleCount": 7
+    },
+    "ING_COOKING_OIL": {
+      "unitPriceToman": 6000,
+      "packPriceToman": 360000,
+      "source": "basalam",
+      "sampleTitle": " روغن مایع سرخ کردنی بدون پالم بهار الماس مقدار 1/5 لیتر",
+      "sampleCount": 6
+    },
+    "ING_SESAME_OIL": {
+      "unitPriceToman": 18500,
+      "packPriceToman": 370000,
+      "source": "basalam",
+      "sampleTitle": "روغن کنجد گیاه قانون - 500 میلی لیتر",
+      "sampleCount": 12
+    },
+    "ING_TAMARIND_PASTE": {
+      "unitPriceToman": 565,
+      "packPriceToman": 141000,
+      "source": "basalam",
+      "sampleTitle": "تمر هندی کشتی اورجینال 300 گرم",
+      "sampleCount": 6
+    },
+    "ING_BALSAMIC_VINEGAR": {
+      "unitPriceToman": 16800,
+      "packPriceToman": 420000,
+      "source": "basalam",
+      "sampleTitle": "سرکه بالزامیک انگور سیاه بولونی تورکه - 500 میلی لیتر",
+      "sampleCount": 9
+    },
+    "ING_GRAPE_VINEGAR": {
+      "unitPriceToman": 2200,
+      "packPriceToman": 88000,
+      "source": "basalam",
+      "sampleTitle": "سرکه سیب 1 لیتری ( 1000گرم خالص)",
+      "sampleCount": 3
+    },
+    "ING_MAYONNAISE": {
+      "unitPriceToman": 5200,
+      "packPriceToman": 130000,
+      "source": "basalam",
+      "sampleTitle": "سس مایونز کم چرب سطلی مهرام - 3000 گرم",
+      "sampleCount": 2
+    },
+    "ING_VERJUICE": {
+      "unitPriceToman": 3800,
+      "packPriceToman": 152000,
+      "source": "basalam",
+      "sampleTitle": "آبغوره طبیعی 1 و نیم لیتری بدون اسانس",
+      "sampleCount": 9
+    },
+    "ING_HONEY": {
+      "unitPriceToman": 15700,
+      "packPriceToman": 393000,
+      "source": "basalam",
+      "sampleTitle": "عسل گون گز طبیعی 5ستاره فدک (500 گرم)",
+      "sampleCount": 5
+    },
+    "ING_MUSTARD": {
+      "unitPriceToman": 7700,
+      "packPriceToman": 154000,
+      "source": "basalam",
+      "sampleTitle": "سس خردل ملایم سطلی مهرام 3000 گرم دبه",
+      "sampleCount": 5
+    },
+    "ING_SALSA": {
+      "unitPriceToman": 6000,
+      "packPriceToman": 108000,
+      "source": "basalam",
+      "sampleTitle": "سس دیپ سالسا مهرام - 340 گرم",
+      "sampleCount": 1
+    },
+    "ING_SRIRACHA": {
+      "unitPriceToman": 8800,
+      "packPriceToman": 176000,
+      "source": "basalam",
+      "sampleTitle": "سس فلفل تند محلی/شمال/رامسر(546گرم)",
+      "sampleCount": 2
+    },
+    "ING_BBQ_SAUCE": {
+      "unitPriceToman": 5700,
+      "packPriceToman": 114000,
+      "source": "basalam",
+      "sampleTitle": "سس باربیکیو رژیمی کاله ـ 330 گرم",
+      "sampleCount": 2
+    },
+    "ING_SUGAR": {
+      "unitPriceToman": 2100,
+      "packPriceToman": 126000,
+      "source": "basalam",
+      "sampleTitle": "شکر سفید یک کیلو نیم",
+      "sampleCount": 5
+    },
+    "ING_ROSEWATER": {
+      "unitPriceToman": 4100,
+      "packPriceToman": 123000,
+      "source": "basalam",
+      "sampleTitle": "گلاب دو آتشه (یک لیتری) موسسه پژوهشی طبی بازرگانی سیمرغ ",
+      "sampleCount": 10
+    },
+    "ING_SAFFRON": {
+      "unitPriceToman": 37800,
+      "packPriceToman": 454000,
+      "source": "basalam",
+      "sampleTitle": "زعفران سرگل خراسان (ده بسته یک مثقالی) پخش عمده زعفران قائنات زعفران مرغ",
+      "sampleCount": 1
+    },
+    "ING_DRIED_LIME": {
+      "unitPriceToman": 14400,
+      "packPriceToman": 216000,
+      "source": "basalam",
+      "sampleTitle": "لیمو عمانی میناب  250 گرم(محصول تایید شده بدون تلخ)",
+      "sampleCount": 2
+    },
+    "ING_TURMERIC": {
+      "unitPriceToman": 4000,
+      "packPriceToman": 100000,
+      "source": "basalam",
+      "sampleTitle": "پودر زردچوبه خالص(100 گرم ) ",
+      "sampleCount": 6
+    },
+    "ING_CUMIN": {
+      "unitPriceToman": 4000,
+      "packPriceToman": 80000,
+      "source": "basalam",
+      "sampleTitle": "زیره سبز سورت شده درجه یک و ممتاز (کیفیت عالی) عطر و طعم فوق العاده 100 ",
+      "sampleCount": 9
+    },
+    "ING_CINNAMON": {
+      "unitPriceToman": 4700,
+      "packPriceToman": 94000,
+      "source": "basalam",
+      "sampleTitle": "پودر دارچین فدک - 100 گرم",
+      "sampleCount": 8
+    },
+    "ING_SUMAC": {
+      "unitPriceToman": 6900,
+      "packPriceToman": 138000,
+      "source": "basalam",
+      "sampleTitle": "سماق قرمز وزن خالص 100 گرم بسته بندی شده داخل پاکت با لیبل چاپی",
+      "sampleCount": 5
+    },
+    "ING_CURRY_POWDER": {
+      "unitPriceToman": 4100,
+      "packPriceToman": 82000,
+      "source": "basalam",
+      "sampleTitle": "ادویه کاری درجه یک (100 گرم)",
+      "sampleCount": 4
+    },
+    "ING_PAPRIKA": {
+      "unitPriceToman": 4300,
+      "packPriceToman": 86000,
+      "source": "basalam",
+      "sampleTitle": "پودر پاپریکا دودی (100 گرم) سوغات دزفول A-PK10",
+      "sampleCount": 6
+    },
+    "ING_DRIED_MINT": {
+      "unitPriceToman": 4400,
+      "packPriceToman": 88000,
+      "source": "basalam",
+      "sampleTitle": "نعناع خشک ممتاز ادویان - 100 گرم",
+      "sampleCount": 7
+    },
+    "ING_OREGANO": {
+      "unitPriceToman": 4000,
+      "packPriceToman": 80000,
+      "source": "basalam",
+      "sampleTitle": "گیاه برگ آویشن (آزربه) 100 گرم (خشک)",
+      "sampleCount": 3
+    },
+    "ING_BLACK_PEPPER": {
+      "unitPriceToman": 1800,
+      "packPriceToman": 54000,
+      "source": "basalam",
+      "sampleTitle": "فلفل سیاه با کیفیت ( 100/250/500 گرم)",
+      "sampleCount": 1
+    },
+    "ING_TACO_SPICE": {
+      "unitPriceToman": 6000,
+      "packPriceToman": 120000,
+      "source": "basalam",
+      "sampleTitle": "ادویه تاکو مکزیکی/برخلاف ترکیبش اصلا تندنیست گرم و دودی است",
+      "sampleCount": 2
+    },
+    "ING_ONION": {
+      "unitPriceToman": 65,
+      "packPriceToman": 65000,
+      "source": "estimated"
+    },
+    "ING_RED_ONION": {
+      "unitPriceToman": 80,
+      "packPriceToman": 40000,
+      "source": "estimated"
+    },
+    "ING_TOMATO": {
+      "unitPriceToman": 100,
+      "packPriceToman": 100000,
+      "source": "estimated"
+    },
+    "ING_CHERRY_TOMATO": {
+      "unitPriceToman": 210,
+      "packPriceToman": 63000,
+      "source": "estimated"
+    },
+    "ING_POTATO": {
+      "unitPriceToman": 75,
+      "packPriceToman": 75000,
+      "source": "estimated"
+    },
+    "ING_ZUCCHINI": {
+      "unitPriceToman": 105,
+      "packPriceToman": 105000,
+      "source": "estimated"
+    },
+    "ING_CARROT": {
+      "unitPriceToman": 75,
+      "packPriceToman": 75000,
+      "source": "estimated"
+    },
+    "ING_MUSHROOM": {
+      "unitPriceToman": 345,
+      "packPriceToman": 138000,
+      "source": "estimated"
+    },
+    "ING_CAULIFLOWER": {
+      "unitPriceToman": 125,
+      "packPriceToman": 125000,
+      "source": "estimated"
+    },
+    "ING_CABBAGE": {
+      "unitPriceToman": 85,
+      "packPriceToman": 85000,
+      "source": "estimated"
+    },
+    "ING_CUCUMBER": {
+      "unitPriceToman": 105,
+      "packPriceToman": 105000,
+      "source": "estimated"
+    },
+    "ING_ARUGULA": {
+      "unitPriceToman": 345,
+      "packPriceToman": 69000,
+      "source": "estimated"
+    },
+    "ING_LIME": {
+      "unitPriceToman": 15400,
+      "packPriceToman": 123000,
+      "source": "estimated"
+    },
+    "ING_HERB_GHORMEH": {
+      "unitPriceToman": 230,
+      "packPriceToman": 115000,
+      "source": "estimated"
+    },
+    "ING_PARSLEY": {
+      "unitPriceToman": 210,
+      "packPriceToman": 53000,
+      "source": "estimated"
+    },
+    "ING_CILANTRO": {
+      "unitPriceToman": 210,
+      "packPriceToman": 53000,
+      "source": "estimated"
+    },
+    "ING_BASIL": {
+      "unitPriceToman": 310,
+      "packPriceToman": 47000,
+      "source": "estimated"
+    },
+    "ING_MINT_FRESH": {
+      "unitPriceToman": 250,
+      "packPriceToman": 50000,
+      "source": "estimated"
+    },
+    "ING_GREEN_ONION": {
+      "unitPriceToman": 190,
+      "packPriceToman": 48000,
+      "source": "estimated"
+    },
+    "ING_CHILI_PEPPER": {
+      "unitPriceToman": 7700,
+      "packPriceToman": 77000,
+      "source": "estimated"
+    },
+    "ING_GRAPE_LEAVES": {
+      "unitPriceToman": 310,
+      "packPriceToman": 124000,
+      "source": "estimated"
+    },
+    "ING_BEETROOT": {
+      "unitPriceToman": 105,
+      "packPriceToman": 105000,
+      "source": "estimated"
+    },
+    "ING_RHUBARB": {
+      "unitPriceToman": 270,
+      "packPriceToman": 135000,
+      "source": "estimated"
+    },
+    "ING_BANANA": {
+      "unitPriceToman": 42300,
+      "packPriceToman": 212000,
+      "source": "estimated"
+    },
+    "ING_BERRIES": {
+      "unitPriceToman": 540,
+      "packPriceToman": 135000,
+      "source": "estimated"
+    },
+    "ING_APPLE": {
+      "unitPriceToman": 30800,
+      "packPriceToman": 185000,
+      "source": "estimated"
+    },
+    "ING_CHEDDAR": {
+      "unitPriceToman": 985,
+      "packPriceToman": 197000,
+      "source": "estimated"
+    },
+    "ING_LASAGNA_SHEET": {
+      "unitPriceToman": 355,
+      "packPriceToman": 178000,
+      "source": "estimated"
+    },
+    "ING_SANGAK_BREAD": {
+      "unitPriceToman": 45500,
+      "packPriceToman": 91000,
+      "source": "estimated"
+    },
+    "ING_PITA_BREAD": {
+      "unitPriceToman": 27800,
+      "packPriceToman": 167000,
+      "source": "estimated"
+    },
+    "ING_PIZZA_DOUGH": {
+      "unitPriceToman": 305,
+      "packPriceToman": 122000,
+      "source": "estimated"
+    },
+    "ING_ALMOND_SLIVER": {
+      "unitPriceToman": 2000,
+      "packPriceToman": 300000,
+      "source": "estimated"
+    },
+    "ING_PISTACHIO": {
+      "unitPriceToman": 3200,
+      "packPriceToman": 320000,
+      "source": "estimated"
+    },
+    "ING_DATES": {
+      "unitPriceToman": 460,
+      "packPriceToman": 230000,
+      "source": "estimated"
+    },
+    "ING_SOUR_CHERRY": {
+      "unitPriceToman": 615,
+      "packPriceToman": 308000,
+      "source": "estimated"
+    },
+    "ING_SOY_SAUCE": {
+      "unitPriceToman": 14300,
+      "packPriceToman": 358000,
+      "source": "estimated"
+    },
+    "ING_PESTO_SAUCE": {
+      "unitPriceToman": 30800,
+      "packPriceToman": 370000,
+      "source": "estimated"
+    },
+    "ING_CHICKEN_BROTH": {
+      "unitPriceToman": 17600,
+      "packPriceToman": 106000,
+      "source": "estimated"
+    },
+    "ING_VEG_BROTH": {
+      "unitPriceToman": 13200,
+      "packPriceToman": 79000,
+      "source": "estimated"
+    },
+    "ING_COCOA_POWDER": {
+      "unitPriceToman": 14300,
+      "packPriceToman": 215000,
+      "source": "estimated"
+    },
+    "ING_ADVIEH_PERSIAN": {
+      "unitPriceToman": 5500,
+      "packPriceToman": 110000,
+      "source": "estimated"
+    },
+    "ING_CARDAMOM": {
+      "unitPriceToman": 13100,
+      "packPriceToman": 157000,
+      "source": "estimated"
+    },
+    "ING_ZAATAR": {
+      "unitPriceToman": 6900,
+      "packPriceToman": 124000,
+      "source": "estimated"
+    },
+    "ING_ANGELICA": {
+      "unitPriceToman": 5500,
+      "packPriceToman": 99000,
+      "source": "estimated"
+    },
+    "ING_SOUP_STOCK_CUBE": {
+      "unitPriceToman": 5500,
+      "packPriceToman": 66000,
+      "source": "estimated"
+    }
+  }
+}

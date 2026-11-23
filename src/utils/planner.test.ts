@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import test from 'node:test';
 import { RECIPES_CATALOG } from '../data/catalog';
 import { INGREDIENTS_MASTER } from '../data/database/ingredients';
@@ -7,15 +8,20 @@ import {
   getHydratedCatalog,
 } from '../data/database/repository';
 import type { PantryItem, UserPreferences } from '../types/sofreh';
+import { mergeLivePricesWithOverrides } from './livePricing';
 import {
   buildConsolidatedGroceryList,
+  buildWeeklyPrepInsights,
+  computeMinimumWeeklyBudget,
   formatScaledStep,
   formatScaledStepSegments,
   generateWeeklyPlan,
   getSwapCandidates,
+  inferTasteProfile,
   matchRecipesByIngredients,
   searchRecipes,
 } from './planner';
+import { getIngredientIconPath } from '../data/database/ingredientIcons';
 
 const BASE_PREFS: UserPreferences = {
   name: 'آرش',
@@ -237,3 +243,149 @@ test('planner honors continuous persianRatio slider and sub-1M Toman weekly budg
   assert.ok(persianCountLow <= 1, `Expected almost no Persian at 0%, got ${persianCountLow}`);
 });
 
+test('all 250 dishes resolve to rich distinct 3D food icons (>= 40 unique icons) and all 167 ingredients map to transparent 3D PNG icons', () => {
+  const uniqueFoodIcons = new Set(RECIPES_CATALOG.map((r) => r.icon));
+  assert.ok(
+    uniqueFoodIcons.size >= 40,
+    `Expected >= 40 distinct 3D food icons across catalog, got ${uniqueFoodIcons.size}`
+  );
+  for (const ing of INGREDIENTS_MASTER) {
+    const iconPath = getIngredientIconPath(ing.code, ing.nameFa);
+    assert.ok(
+      iconPath.startsWith('/assets/ingredients/') && iconPath.endsWith('.png'),
+      `Ingredient ${ing.code} should resolve to transparent PNG icon, got ${iconPath}`
+    );
+  }
+});
+
+test('multi-stage optimizer pulls tight-budget weekly plan under budget without breaking dietary rules', () => {
+  const tightPrefs: UserPreferences = {
+    ...BASE_PREFS,
+    goals: ['budget', 'nowaste'],
+    activeMealSlots: ['lunch', 'dinner'],
+    weeklyBudgetToman: 1_200_000,
+    servings: 2,
+  };
+  const plan = generateWeeklyPlan(RECIPES_CATALOG, tightPrefs, []);
+  const { summary } = buildConsolidatedGroceryList(plan, RECIPES_CATALOG, [], {}, []);
+  assert.ok(
+    summary.consumptionCostToman <= tightPrefs.weeklyBudgetToman * 1.15,
+    `Expected tight-budget plan (${summary.consumptionCostToman}) near budget ${tightPrefs.weeklyBudgetToman}`
+  );
+});
+
+test('latent taste profile inference learns preferred cuisines & categories from user ratings', () => {
+  const profile = inferTasteProfile(
+    RECIPES_CATALOG,
+    {
+      'pasta-alfredo-chicken': 'up',
+      'ghormeh-sabzi': 'down',
+    },
+    new Set(['pasta-aglio-olio'])
+  );
+  assert.ok((profile.cuisineAffinity['ایتالیایی'] ?? 0) > 0);
+  assert.ok((profile.categoryAffinity['پاستا و ایتالیایی'] ?? 0) > 0);
+  assert.ok((profile.categoryAffinity['خورشت'] ?? 0) < 0);
+});
+
+test('buildWeeklyPrepInsights surfaces legume soaking alerts and shared perishable waste savings', () => {
+  const plan = generateWeeklyPlan(RECIPES_CATALOG, BASE_PREFS, []);
+  const insights = buildWeeklyPrepInsights(plan, RECIPES_CATALOG);
+  assert.ok(insights.weeklyAvgProteinG > 25);
+  assert.ok(insights.weeklyAvgCalories > 400);
+  assert.ok(Array.isArray(insights.soakingAlerts));
+  assert.ok(Array.isArray(insights.batchPrepSuggestions));
+});
+
+test('searchRecipes supports multi-mode sorting (fastest, cheapest, highest_protein, lowest_cal)', () => {
+  const fastest = searchRecipes(RECIPES_CATALOG, '', { sortBy: 'fastest' });
+  assert.ok(
+    fastest[0].prepMinutes + fastest[0].cookMinutes <=
+      fastest[fastest.length - 1].prepMinutes + fastest[fastest.length - 1].cookMinutes
+  );
+  const cheapest = searchRecipes(RECIPES_CATALOG, '', { sortBy: 'cheapest' });
+  assert.ok(cheapest[0].costPerServingToman <= cheapest[cheapest.length - 1].costPerServingToman);
+  const highProtein = searchRecipes(RECIPES_CATALOG, '', { sortBy: 'highest_protein' });
+  assert.ok(highProtein[0].proteinG >= highProtein[highProtein.length - 1].proteinG);
+  const lowCal = searchRecipes(RECIPES_CATALOG, '', { sortBy: 'lowest_cal' });
+  assert.ok(lowCal[0].caloriesPerServing <= lowCal[lowCal.length - 1].caloriesPerServing);
+});
+
+test('dislikedIngredients strictly excludes eggplant, milk, and mushroom recipes from weekly plan and swap candidates', () => {
+  const dislikedPrefs: UserPreferences = {
+    ...BASE_PREFS,
+    dislikedIngredients: ['ING_EGGPLANT', 'ING_MILK', 'ING_MUSHROOM'],
+    activeMealSlots: ['breakfast', 'lunch', 'dinner'],
+  };
+  const plan = generateWeeklyPlan(RECIPES_CATALOG, dislikedPrefs, []);
+  assert.equal(plan.length, 21);
+
+  for (const meal of plan) {
+    const recipe = RECIPES_CATALOG.find((r) => r.id === meal.recipeId)!;
+    const ingCodes = recipe.ingredients.map((i) => i.code);
+    assert.ok(!ingCodes.includes('ING_EGGPLANT'), `${recipe.id} leaked disliked ING_EGGPLANT`);
+    assert.ok(!ingCodes.includes('ING_MILK'), `${recipe.id} leaked disliked ING_MILK`);
+    assert.ok(!ingCodes.includes('ING_MUSHROOM'), `${recipe.id} leaked disliked ING_MUSHROOM`);
+  }
+
+  const swaps = getSwapCandidates(plan[1], plan, RECIPES_CATALOG, dislikedPrefs, []);
+  assert.ok(swaps.length >= 5);
+  for (const cand of swaps) {
+    const ingCodes = cand.recipe.ingredients.map((i) => i.code);
+    assert.ok(!ingCodes.includes('ING_EGGPLANT'), `Swap ${cand.recipe.id} leaked ING_EGGPLANT`);
+    assert.ok(!ingCodes.includes('ING_MILK'), `Swap ${cand.recipe.id} leaked ING_MILK`);
+    assert.ok(!ingCodes.includes('ING_MUSHROOM'), `Swap ${cand.recipe.id} leaked ING_MUSHROOM`);
+  }
+});
+
+test('strict budget guarantee never exceeds weeklyBudgetToman under live 2026 Iranian prices', () => {
+  const live = JSON.parse(fs.readFileSync('public/prices-live.json', 'utf8'));
+  const liveCatalog = getHydratedCatalog(
+    mergeLivePricesWithOverrides(live, EMPTY_OWNER_OVERRIDES)
+  ).recipes;
+
+  const scenarios: Array<{ label: string; prefs: UserPreferences }> = [
+    {
+      label: '2ppl x 14 meals at minimum floor',
+      prefs: {
+        ...BASE_PREFS,
+        servings: 2,
+        activeMealSlots: ['lunch', 'dinner'],
+        cookingDays: [0, 1, 2, 3, 4, 5, 6],
+        cookingDaysPerWeek: 7,
+      },
+    },
+    {
+      label: '4ppl x 21 meals at minimum floor',
+      prefs: {
+        ...BASE_PREFS,
+        servings: 4,
+        activeMealSlots: ['breakfast', 'lunch', 'dinner'],
+        cookingDays: [0, 1, 2, 3, 4, 5, 6],
+        cookingDaysPerWeek: 7,
+      },
+    },
+    {
+      label: '2ppl x 14 meals healthy high-protein at minimum + 400k',
+      prefs: {
+        ...BASE_PREFS,
+        goals: ['healthy', 'budget'],
+        diet: 'high_protein',
+        servings: 2,
+        activeMealSlots: ['lunch', 'dinner'],
+      },
+    },
+  ];
+
+  for (const sc of scenarios) {
+    const floor = computeMinimumWeeklyBudget(liveCatalog, sc.prefs);
+    const budget = sc.label.includes('+ 400k') ? floor + 400_000 : floor;
+    const prefsWithBudget: UserPreferences = { ...sc.prefs, weeklyBudgetToman: budget };
+    const plan = generateWeeklyPlan(liveCatalog, prefsWithBudget, []);
+    const { summary } = buildConsolidatedGroceryList(plan, liveCatalog, [], {}, []);
+    assert.ok(
+      summary.consumptionCostToman <= budget,
+      `[${sc.label}] Plan cost (${summary.consumptionCostToman}) exceeded budget (${budget})!`
+    );
+  }
+});

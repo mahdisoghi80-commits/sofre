@@ -1,49 +1,30 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { toPersianDigits } from '../utils/format';
+import { IconFlame } from './icons/SofrehIcons';
 
 interface MacroRingProps {
   calories: number;
   targetCalories?: number;
-  proteinG: number;
-  carbsG: number;
-  fatG: number;
   size?: number;
   strokeWidth?: number;
-  label?: string;
 }
 
+/**
+ * Unmistakable Apple-Fitness-style Calorie Goal Ring.
+ * Uses a single semantic coral hue (#F04438) strictly for calories so it never conflicts
+ * with Protein (green), Carbs (amber), or Fat (blue).
+ */
 export const MacroRing: React.FC<MacroRingProps> = ({
   calories,
-  targetCalories,
-  proteinG,
-  carbsG,
-  fatG,
-  size = 112,
-  strokeWidth = 10,
-  label = 'کالری',
+  targetCalories = 2000,
+  size = 104,
+  strokeWidth = 9,
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const targetLabel = targetCalories ? `از ${toPersianDigits(Math.round(targetCalories))}` : label;
-
-  const pCal = proteinG * 4;
-  const cCal = carbsG * 4;
-  const fCal = fatG * 9;
-  const total = Math.max(1, pCal + cCal + fCal);
-
-  const pFrac = pCal / total;
-  const cFrac = cCal / total;
-  const fFrac = fCal / total;
-
-  const gap = 3;
-  const pLen = Math.max(0, pFrac * circumference - gap);
-  const cLen = Math.max(0, cFrac * circumference - gap);
-  const fLen = Math.max(0, fFrac * circumference - gap);
-
-  const pOffset = 0;
-  const cOffset = -(pFrac * circumference);
-  const fOffset = -((pFrac + cFrac) * circumference);
+  const pct = Math.min(1, Math.max(0, calories / Math.max(1, targetCalories)));
+  const dashLen = Math.max(0, pct * circumference);
 
   return (
     <div
@@ -62,7 +43,7 @@ export const MacroRing: React.FC<MacroRingProps> = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#EFE5D8"
+          stroke="#F3E8DF"
           strokeWidth={strokeWidth}
         />
         <motion.circle
@@ -73,44 +54,19 @@ export const MacroRing: React.FC<MacroRingProps> = ({
           stroke="#F04438"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
-          strokeDasharray={`${pLen} ${circumference}`}
+          strokeDasharray={`${dashLen} ${circumference}`}
           initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: pOffset }}
-          transition={{ type: 'spring', stiffness: 90, damping: 18 }}
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#C87955"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${cLen} ${circumference}`}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: cOffset }}
-          transition={{ type: 'spring', stiffness: 85, damping: 18, delay: 0.08 }}
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#68734E"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={`${fLen} ${circumference}`}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: fOffset }}
-          transition={{ type: 'spring', stiffness: 80, damping: 18, delay: 0.16 }}
+          animate={{ strokeDashoffset: 0 }}
+          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-display text-xl font-black text-[#292B25] leading-none tabular-nums-fa">
+        <IconFlame size={15} className="text-[#F04438] mb-0.5" />
+        <span className="font-display text-lg font-black text-[#292B25] leading-none tabular-nums-fa">
           {toPersianDigits(Math.round(calories))}
         </span>
-        <span className="text-[11px] font-semibold text-[#75746E] mt-1 tabular-nums-fa">
-          {targetLabel}
+        <span className="text-[10px] font-bold text-[#8A847C] mt-0.5 tabular-nums-fa">
+          از {toPersianDigits(Math.round(targetCalories))}
         </span>
       </div>
     </div>
