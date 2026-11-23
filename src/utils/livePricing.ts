@@ -35,9 +35,14 @@ export async function loadCachedLivePrices(): Promise<CachedLivePrices | null> {
   }
 }
 
+const DEFAULT_GITHUB_RAW_PRICES_URL =
+  'https://raw.githubusercontent.com/mahdisoghi80-commits/sofre/main/public/prices-live.json';
+const DEFAULT_JSDELIVR_PRICES_URL =
+  'https://cdn.jsdelivr.net/gh/mahdisoghi80-commits/sofre@main/public/prices-live.json';
+
 /**
- * Fetch fresh live prices JSON (auto-updated by GitHub Actions / local Iran-IP sync).
- * Tries VITE_PRICES_URL (e.g. GitHub Raw / CDN) -> hosted /api/prices-live -> bundled /prices-live.json.
+ * Fetch fresh live prices JSON (auto-updated by GitHub Actions).
+ * Tries VITE_PRICES_URL -> GitHub Raw -> jsDelivr CDN mirror (Iran-friendly) -> /api/prices-live -> bundled /prices-live.json.
  */
 export async function fetchLivePrices(force = false): Promise<LivePricesPayload | null> {
   if (!force) {
@@ -55,6 +60,8 @@ export async function fetchLivePrices(force = false): Promise<LivePricesPayload 
   const candidates = Array.from(
     new Set([
       ...(envUrl ? [envUrl] : []),
+      DEFAULT_GITHUB_RAW_PRICES_URL,
+      DEFAULT_JSDELIVR_PRICES_URL,
       apiPricesUrl,
       '/prices-live.json',
     ])
