@@ -77,11 +77,11 @@ export const PrepAlertModal: React.FC<{
             transition={{ type: 'spring', stiffness: 360, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
             data-testid="prep-alert-modal"
-            className="w-full sm:max-w-sm bg-[#FBF5EF] rounded-t-[34px] sm:rounded-[34px] p-5 space-y-5 shadow-2xl border border-white"
+            className="w-full sm:max-w-sm bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[34px] sm:rounded-[34px] p-5 space-y-5 shadow-2xl border border-white dark:border-white/10"
           >
             {/* Top Bar */}
             <div className="flex items-center justify-between">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#292B25] text-white text-[11px] font-extrabold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#292B25] dark:bg-[#2A2D26] text-white text-[11px] font-extrabold">
                 <IconMoon size={14} className="text-[#FFD66B]" />
                 <span>آماده‌سازی امشب</span>
               </div>
@@ -89,28 +89,28 @@ export const PrepAlertModal: React.FC<{
                 type="button"
                 onClick={onClose}
                 aria-label="بستن"
-                className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
               >
                 <IconClose size={16} />
               </button>
             </div>
 
             {/* Visual Stage: Legume 3D Icons + Target Dish Card */}
-            <div className="rounded-[26px] bg-white p-5 border border-[#EFE4D8] flex flex-col items-center text-center space-y-4">
+            <div className="rounded-[26px] bg-white dark:bg-[#262822] p-5 border border-[#EFE4D8] dark:border-white/10 flex flex-col items-center text-center space-y-4">
               <div className="flex items-center justify-center gap-3">
                 {alert.legumeCodes.map((code, idx) => (
                   <div
                     key={code}
                     className="flex flex-col items-center gap-1.5"
                   >
-                    <div className="w-18 h-18 rounded-[22px] bg-[#EEF2E6] flex items-center justify-center shadow-inner">
+                    <div className="w-18 h-18 rounded-[22px] bg-[#EEF2E6] dark:bg-[#232D1F] flex items-center justify-center shadow-inner">
                       <IngredientIcon3D
                         src={getIngredientIconPath(code, alert.legumes[idx])}
                         alt={alert.legumes[idx] ?? 'حبوبات'}
                         sizeClass="w-13 h-13"
                       />
                     </div>
-                    <span className="text-xs font-extrabold text-[#292B25]">
+                    <span className="text-xs font-extrabold text-[#292B25] dark:text-[#F5EFE8]">
                       {alert.legumes[idx]}
                     </span>
                   </div>
@@ -118,7 +118,7 @@ export const PrepAlertModal: React.FC<{
               </div>
 
               {/* Target Dish Pill */}
-              <div className="w-full rounded-[20px] bg-[#FBF5EF] p-2.5 flex items-center justify-between gap-3">
+              <div className="w-full rounded-[20px] bg-[#FBF5EF] dark:bg-[#1C1E19] p-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Icon3D
                     src={alert.recipeIcon}
@@ -127,15 +127,15 @@ export const PrepAlertModal: React.FC<{
                     roundedClass="rounded-[13px]"
                   />
                   <div className="text-right min-w-0">
-                    <div className="text-[10px] font-extrabold text-[#75746E]">
+                    <div className="text-[10px] font-extrabold text-[#75746E] dark:text-[#ADA89F]">
                       {DAY_NAMES_FULL[alert.dayIndex]}
                     </div>
-                    <div className="font-display font-black text-sm text-[#292B25] truncate">
+                    <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">
                       {alert.recipeTitle}
                     </div>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full bg-white text-[11px] font-extrabold text-[#5E8B42] shrink-0 tabular-nums-fa">
+                <span className="px-2.5 py-1 rounded-full bg-white dark:bg-[#2A2D26] text-[11px] font-extrabold text-[#5E8B42] dark:text-[#98C87A] shrink-0 tabular-nums-fa">
                   ۸–۱۲ ساعت
                 </span>
               </div>
@@ -150,11 +150,11 @@ export const PrepAlertModal: React.FC<{
                 data-testid="prep-alert-push-btn"
                 className={`h-13 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition ${
                   notified
-                    ? 'bg-[#EEF2E6] text-[#4C6E35]'
-                    : 'bg-white border border-[#E6DACD] text-[#292B25]'
+                    ? 'bg-[#EEF2E6] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A]'
+                    : 'bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-[#292B25] dark:text-[#F5EFE8]'
                 }`}
               >
-                <IconBellRinging size={17} className="text-[#F04438]" />
+                <IconBellRinging size={17} className="text-[#F04438] dark:text-[#FF7E75]" />
                 <span>{notified ? 'اعلان فعال شد' : 'اعلان یادآور'}</span>
               </motion.button>
 

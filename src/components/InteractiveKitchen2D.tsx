@@ -227,7 +227,7 @@ export const InteractiveKitchen2D: React.FC<InteractiveKitchen2DProps> = ({
           whileTap={{ scale: 0.9 }}
           onClick={onBack}
           aria-label={mode === 'onboarding' ? 'مرحله قبل' : 'بستن'}
-          className="pointer-events-auto w-11 h-11 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shadow-lg"
+          className="pointer-events-auto w-11 h-11 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-lg"
         >
           {mode === 'onboarding' ? <IconArrowRight size={20} /> : <IconClose size={20} />}
         </motion.button>
@@ -278,7 +278,7 @@ export const InteractiveKitchen2D: React.FC<InteractiveKitchen2DProps> = ({
                 whileTap={{ scale: 0.92 }}
                 onClick={onBack}
                 aria-label="قبلی"
-                className="w-14 h-14 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shrink-0"
+                className="w-14 h-14 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shrink-0"
               >
                 <IconArrowRight size={22} />
               </motion.button>

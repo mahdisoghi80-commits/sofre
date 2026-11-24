@@ -126,22 +126,22 @@ export const AndroidApkDownloadCard: React.FC<{
           disabled={downloading}
           onClick={startDownload}
           data-testid="download-android-apk-btn"
-          className="h-11 px-5 rounded-full liquid-glass text-[#292B25] text-xs font-extrabold flex items-center justify-center gap-2 disabled:opacity-75"
+          className="h-11 px-5 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] text-xs font-extrabold flex items-center justify-center gap-2 disabled:opacity-75"
         >
-          <IconAndroidDownload size={16} className="text-[#F04438]" />
+          <IconAndroidDownload size={16} className="text-[#F04438] dark:text-[#FF7E75]" />
           {downloading ? (
             <span className="tabular-nums-fa">
               در حال دریافت نسخه اندروید… {toFaDigits(progress)}٪
             </span>
           ) : done ? (
-            <span className="text-[#68734E]">فایل APK دانلود شد — دوباره دانلود</span>
+            <span className="text-[#68734E] dark:text-[#98C87A]">فایل APK دانلود شد — دوباره دانلود</span>
           ) : (
             <span className="tabular-nums-fa">
               دانلود نسخه اندروید (APK · {toFaDigits(sizeMb)} مگابایت)
             </span>
           )}
         </motion.button>
-        {error && <span className="text-[11px] font-bold text-[#F04438]">{error}</span>}
+        {error && <span className="text-[11px] font-bold text-[#F04438] dark:text-[#FF7E75]">{error}</span>}
       </div>
     );
   }
@@ -156,14 +156,14 @@ export const AndroidApkDownloadCard: React.FC<{
       className="w-full liquid-glass-card rounded-[26px] p-4 flex items-center justify-between text-right gap-3 disabled:opacity-80"
     >
       <div className="flex items-center gap-3 min-w-0">
-        <span className="w-11 h-11 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center shrink-0">
+        <span className="w-11 h-11 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center shrink-0">
           <IconAndroidDownload size={20} />
         </span>
         <div className="min-w-0">
-          <div className="font-display font-black text-base text-[#292B25]">
+          <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">
             دانلود اپلیکیشن اندروید (APK)
           </div>
-          <div className="text-xs font-bold text-[#75746E] tabular-nums-fa truncate">
+          <div className="text-xs font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa truncate">
             {downloading
               ? `در حال دانلود… ${toFaDigits(progress)}٪`
               : error

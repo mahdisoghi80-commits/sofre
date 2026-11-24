@@ -280,6 +280,7 @@ export interface UserPreferences {
   reminderTime: string;
   householdCode: string;
   isPro?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export interface FridgeMatchResult {

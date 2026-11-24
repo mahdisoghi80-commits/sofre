@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { APPLIANCE_SHORT_LABELS, DAY_NAMES_FULL, MEAL_SLOT_LABELS } from '../data/catalog';
 import { getIngredientIconPath } from '../data/database/ingredientIcons';
@@ -6,7 +6,7 @@ import { useAppState } from '../context/AppStateContext';
 import type { MealSlotType, Recipe } from '../types/sofreh';
 import { formatAmount, formatToman, toFaDigits } from '../utils/format';
 import { formatScaledStep, getRecipeConsumptionCostForServings } from '../utils/planner';
-import { hapticLight } from '../utils/native';
+import { hapticLight, scrollToTopInstant } from '../utils/native';
 import { ChefHat } from '@phosphor-icons/react';
 import {
   ApplianceIcon,
@@ -57,6 +57,16 @@ export const RecipeDetailScreen: React.FC<{
   const [pickedDay, setPickedDay] = useState(0);
   const [pickedSlot, setPickedSlot] = useState<MealSlotType>('lunch');
 
+  // Always start recipe view at the very top of the hero image
+  useLayoutEffect(() => {
+    setHeroImgFailed(false);
+    setShowAddDayPicker(false);
+    setServings(selectedRecipeServings);
+    scrollToTopInstant();
+    const raf = window.requestAnimationFrame(scrollToTopInstant);
+    return () => window.cancelAnimationFrame(raf);
+  }, [selectedRecipeId, selectedRecipeServings]);
+
   if (!recipe) return null;
 
   const isSaved = cookbooks.some((cb) => cb.recipeIds.includes(recipe.id));
@@ -82,7 +92,7 @@ export const RecipeDetailScreen: React.FC<{
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 14 }}
       transition={{ type: 'spring', stiffness: 360, damping: 30 }}
-      className="min-h-dvh w-full bg-[#FBF5EF] pb-32 relative"
+      className="min-h-dvh w-full bg-[#FBF5EF] dark:bg-[#161714] pb-32 relative"
     >
       {/* STRICTLY LOCKED CIRCULAR FLOATING TOP CONTROLS */}
       <header className="fixed top-0 inset-x-0 lg:right-[248px] z-50 px-4 pt-3 safe-top pointer-events-none">
@@ -93,7 +103,7 @@ export const RecipeDetailScreen: React.FC<{
             onClick={closeRecipe}
             aria-label="بازگشت"
             data-testid="recipe-back-btn"
-            className="w-11 h-11 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shadow-lg"
+            className="w-11 h-11 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-lg"
           >
             <IconArrowRight size={20} />
           </motion.button>
@@ -107,7 +117,7 @@ export const RecipeDetailScreen: React.FC<{
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                 feedback === 'up'
                   ? 'bg-[#68734E] text-white shadow-lg'
-                  : 'liquid-glass text-[#292B25]'
+                  : 'liquid-glass text-[#292B25] dark:text-[#F5EFE8]'
               }`}
             >
               <IconThumbUp size={17} filled={feedback === 'up'} />
@@ -119,8 +129,8 @@ export const RecipeDetailScreen: React.FC<{
               aria-label="کمتر پیشنهاد بده"
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                 feedback === 'down'
-                  ? 'bg-[#292B25] text-white shadow-lg'
-                  : 'liquid-glass text-[#292B25]'
+                  ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] shadow-lg'
+                  : 'liquid-glass text-[#292B25] dark:text-[#F5EFE8]'
               }`}
             >
               <IconThumbDown size={17} filled={feedback === 'down'} />
@@ -136,7 +146,7 @@ export const RecipeDetailScreen: React.FC<{
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                 isSaved
                   ? 'coral-glass-pill text-white'
-                  : 'liquid-glass text-[#292B25]'
+                  : 'liquid-glass text-[#292B25] dark:text-[#F5EFE8]'
               }`}
             >
               <IconBookmark size={17} filled={isSaved} />
@@ -145,8 +155,8 @@ export const RecipeDetailScreen: React.FC<{
         </div>
       </header>
 
-      {/* FULL-BLEED HIGH-RES PHOTO FADING SEAMLESSLY INTO #FBF5EF (No AI square icon next to title!) */}
-      <div className="relative w-full h-[340px] sm:h-[400px] overflow-hidden bg-[#EFE4D8]">
+      {/* FULL-BLEED HIGH-RES PHOTO FADING SEAMLESSLY INTO #FBF5EF / #161714 */}
+      <div className="relative w-full h-[340px] sm:h-[400px] overflow-hidden bg-[#EFE4D8] dark:bg-[#20221D]">
         <img
           src={heroImgFailed ? recipe.icon : recipe.photoUrl}
           alt={recipe.title}
@@ -162,10 +172,10 @@ export const RecipeDetailScreen: React.FC<{
         <div className="absolute bottom-3 inset-x-4 sm:inset-x-6 max-w-3xl mx-auto flex items-end justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-              <span className="inline-flex items-center px-2 py-1 rounded-full bg-white/85 backdrop-blur-sm shadow-sm" title={recipe.cuisine}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full bg-white/85 dark:bg-[#1E201B]/88 backdrop-blur-sm shadow-sm" title={recipe.cuisine}>
                 <CuisineFlag cuisine={recipe.cuisine} size="md" />
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-white/85 backdrop-blur-sm text-[11px] font-extrabold text-[#292B25]">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/85 dark:bg-[#1E201B]/88 backdrop-blur-sm text-[11px] font-extrabold text-[#292B25] dark:text-[#F5EFE8]">
                 {recipe.difficulty}
               </span>
               {recipe.requiredAppliances.map((appId) => (
@@ -173,14 +183,14 @@ export const RecipeDetailScreen: React.FC<{
                   key={appId}
                   title={APPLIANCE_SHORT_LABELS[appId]}
                   data-testid={`recipe-detail-appliance-${appId}`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 backdrop-blur-sm text-[10.5px] font-extrabold text-[#4D4A44]"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 dark:bg-[#1E201B]/85 backdrop-blur-sm text-[10.5px] font-extrabold text-[#4D4A44] dark:text-[#D5CFC6]"
                 >
-                  <ApplianceIcon appliance={appId} size={12} className="text-[#C87955]" />
+                  <ApplianceIcon appliance={appId} size={12} className="text-[#C87955] dark:text-[#E59B78]" />
                   <span>{APPLIANCE_SHORT_LABELS[appId]}</span>
                 </span>
               ))}
             </div>
-            <h1 className="font-display font-black text-[28px] sm:text-[34px] text-[#292B25] leading-tight">
+            <h1 className="font-display font-black text-[28px] sm:text-[34px] text-[#292B25] dark:text-[#F5EFE8] leading-tight">
               {recipe.title}
             </h1>
           </div>
@@ -191,7 +201,7 @@ export const RecipeDetailScreen: React.FC<{
               {quietCornerTags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-0.5 rounded-full bg-white/75 backdrop-blur-md text-[10px] font-bold text-[#6A665F] border border-white/80"
+                  className="px-2.5 py-0.5 rounded-full bg-white/75 dark:bg-[#1E201B]/85 backdrop-blur-md text-[10px] font-bold text-[#6A665F] dark:text-[#C8C3BA] border border-white/80 dark:border-white/10"
                 >
                   {tag}
                 </span>
@@ -206,27 +216,27 @@ export const RecipeDetailScreen: React.FC<{
         {/* Clean Time, Calories & Cost Strip */}
         <div className="grid grid-cols-3 gap-2.5">
           <div className="liquid-glass-card rounded-[24px] p-3.5 text-center space-y-1">
-            <IconClock size={18} className="text-[#C87955] mx-auto" />
-            <div className="font-display font-black text-base text-[#292B25] tabular-nums-fa">
+            <IconClock size={18} className="text-[#C87955] dark:text-[#E59B78] mx-auto" />
+            <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
               {toFaDigits(totalMinutes)} دقیقه
             </div>
-            <div className="text-[10px] font-bold text-[#75746E]">زمان کل</div>
+            <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F]">زمان کل</div>
           </div>
 
           <div className="liquid-glass-card rounded-[24px] p-3.5 text-center space-y-1">
-            <IconFlame size={18} className="text-[#F04438] mx-auto" />
-            <div className="font-display font-black text-base text-[#292B25] tabular-nums-fa">
+            <IconFlame size={18} className="text-[#F04438] dark:text-[#FF7E75] mx-auto" />
+            <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
               {toFaDigits(recipe.caloriesPerServing)}
             </div>
-            <div className="text-[10px] font-bold text-[#75746E]">کالری</div>
+            <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F]">کالری</div>
           </div>
 
           <div className="liquid-glass-card rounded-[24px] p-3.5 text-center space-y-1">
-            <span className="text-xs font-black text-[#68734E] block leading-[18px]">تومان</span>
-            <div className="font-display font-black text-base text-[#292B25] tabular-nums-fa">
+            <span className="text-xs font-black text-[#68734E] dark:text-[#98C87A] block leading-[18px]">تومان</span>
+            <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
               {toFaDigits(Math.round(scaledTotalCost / 1000))} هزار
             </div>
-            <div className="text-[10px] font-bold text-[#75746E]">
+            <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F]">
               برای {toFaDigits(servings)} نفر
             </div>
           </div>
@@ -238,7 +248,7 @@ export const RecipeDetailScreen: React.FC<{
           className="liquid-glass-card rounded-[28px] p-5 space-y-4"
         >
           {/* Proportional Tri-Color Stacked Bar */}
-          <div className="h-3 rounded-full overflow-hidden flex bg-[#EFE4D8] gap-0.5 p-0.5">
+          <div className="h-3 rounded-full overflow-hidden flex bg-[#EFE4D8] dark:bg-[#2A2D26] gap-0.5 p-0.5">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${proteinPct}%` }}
@@ -267,7 +277,7 @@ export const RecipeDetailScreen: React.FC<{
                 grams: recipe.proteinG,
                 pct: proteinPct,
                 color: '#5E8B42',
-                bg: 'bg-[#EEF5E9]',
+                bg: 'bg-[#EEF5E9] dark:bg-[#232D1F]',
                 icon: <IconMacroProtein size={19} />,
               },
               {
@@ -275,7 +285,7 @@ export const RecipeDetailScreen: React.FC<{
                 grams: recipe.carbsG,
                 pct: carbsPct,
                 color: '#E59326',
-                bg: 'bg-[#FEF6E8]',
+                bg: 'bg-[#FEF6E8] dark:bg-[#2D261A]',
                 icon: <IconMacroCarbs size={19} />,
               },
               {
@@ -283,7 +293,7 @@ export const RecipeDetailScreen: React.FC<{
                 grams: recipe.fatG,
                 pct: fatPct,
                 color: '#3B82F6',
-                bg: 'bg-[#EEF5FF]',
+                bg: 'bg-[#EEF5FF] dark:bg-[#1E2634]',
                 icon: <IconMacroFat size={19} />,
               },
             ].map((m) => {
@@ -302,7 +312,7 @@ export const RecipeDetailScreen: React.FC<{
                         cy="24"
                         r={r}
                         fill="none"
-                        stroke="rgba(41,43,37,0.08)"
+                        className="stroke-black/8 dark:stroke-white/12"
                         strokeWidth="4"
                       />
                       <circle
@@ -320,10 +330,10 @@ export const RecipeDetailScreen: React.FC<{
                       {m.icon}
                     </span>
                   </div>
-                  <div className="font-display font-black text-base text-[#292B25] tabular-nums-fa leading-none">
+                  <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa leading-none">
                     {toFaDigits(m.grams)} گرم
                   </div>
-                  <div className="text-[10px] font-extrabold text-[#75746E]">
+                  <div className="text-[10px] font-extrabold text-[#75746E] dark:text-[#ADA89F]">
                     {m.label} · {toFaDigits(m.pct)}٪
                   </div>
                 </div>
@@ -348,11 +358,11 @@ export const RecipeDetailScreen: React.FC<{
               <span className="w-9 h-9 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
                 <ChefHat size={18} weight="fill" />
               </span>
-              <span className="font-display font-black text-sm text-[#292B25] truncate">
+              <span className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">
                 سرآشپز هوشمند
               </span>
             </div>
-            <span className="px-3.5 py-1.5 rounded-full bg-[#292B25] text-white text-[11px] font-extrabold shrink-0">
+            <span className="px-3.5 py-1.5 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] text-[11px] font-extrabold shrink-0">
               پرسش
             </span>
           </motion.button>
@@ -361,11 +371,11 @@ export const RecipeDetailScreen: React.FC<{
         {/* INGREDIENTS + CIRCULAR SERVINGS STEPPER */}
         <section className="liquid-glass-card rounded-[28px] p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-display font-black text-xl text-[#292B25]">
+            <h2 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
               مواد لازم
             </h2>
 
-            <div className="flex items-center gap-2 bg-[#F3E9DE] rounded-full p-1">
+            <div className="flex items-center gap-2 bg-[#F3E9DE] dark:bg-[#2A2D26] rounded-full p-1">
               <button
                 type="button"
                 onClick={() => {
@@ -373,11 +383,11 @@ export const RecipeDetailScreen: React.FC<{
                   setServings((s) => Math.max(1, s - 1));
                 }}
                 aria-label="کاهش نفرات"
-                className="w-8 h-8 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm active:scale-90"
+                className="w-8 h-8 rounded-full bg-white dark:bg-[#1E201B] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm active:scale-90"
               >
                 <IconMinus size={15} />
               </button>
-              <span className="px-2 font-extrabold text-xs text-[#292B25] tabular-nums-fa">
+              <span className="px-2 font-extrabold text-xs text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
                 {toFaDigits(servings)} نفر
               </span>
               <button
@@ -394,7 +404,7 @@ export const RecipeDetailScreen: React.FC<{
             </div>
           </div>
 
-          <div className="divide-y divide-[#EFE4D8]">
+          <div className="divide-y divide-[#EFE4D8] dark:divide-white/8">
             {recipe.ingredients.map((ing) => {
               const scaledAmt = ing.amount * ratio;
               const scaledCost = Math.round(ing.consumptionCostToman * ratio);
@@ -409,13 +419,13 @@ export const RecipeDetailScreen: React.FC<{
                       alt={ing.name}
                       sizeClass="w-8 h-8"
                     />
-                    <span className="font-bold text-sm text-[#292B25] truncate">{ing.name}</span>
+                    <span className="font-bold text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">{ing.name}</span>
                   </div>
                   <div className="text-left shrink-0">
-                    <div className="font-extrabold text-sm text-[#F04438] tabular-nums-fa">
+                    <div className="font-extrabold text-sm text-[#F04438] dark:text-[#FF7E75] tabular-nums-fa">
                       {formatAmount(scaledAmt, ing.unit)}
                     </div>
-                    <div className="text-[10px] text-[#75746E] tabular-nums-fa">
+                    <div className="text-[10px] text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                       {formatToman(scaledCost)}
                     </div>
                   </div>
@@ -427,7 +437,7 @@ export const RecipeDetailScreen: React.FC<{
 
         {/* STEP-BY-STEP COOKING */}
         <section className="liquid-glass-card rounded-[28px] p-5 space-y-4">
-          <h2 className="font-display font-black text-xl text-[#292B25]">
+          <h2 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
             مراحل پخت
           </h2>
 
@@ -435,23 +445,23 @@ export const RecipeDetailScreen: React.FC<{
             {recipe.steps.map((s, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl bg-[#FBF5EF]/90 border border-[#EFE4D8] p-4 flex gap-3.5"
+                className="rounded-2xl bg-[#FBF5EF]/90 dark:bg-[#252721] border border-[#EFE4D8] dark:border-white/10 p-4 flex gap-3.5"
               >
                 <span className="w-8 h-8 rounded-full coral-glass-pill text-white font-display font-black text-sm flex items-center justify-center shrink-0">
                   {toFaDigits(idx + 1)}
                 </span>
                 <div className="flex-1 space-y-2">
-                  <p className="text-sm text-[#292B25] leading-relaxed font-medium">
+                  <p className="text-sm text-[#292B25] dark:text-[#F5EFE8] leading-relaxed font-medium">
                     {formatScaledStep(recipe, idx, servings)}
                   </p>
                   {s.timerSeconds && (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0ED] text-[#C42F26] text-[11px] font-extrabold tabular-nums-fa">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#C42F26] dark:text-[#FF857B] text-[11px] font-extrabold tabular-nums-fa">
                       <IconTimer size={14} />
                       <span>{toFaDigits(Math.max(1, Math.round(s.timerSeconds / 60)))} دقیقه</span>
                     </div>
                   )}
                   {s.tip && (
-                    <p className="text-xs text-[#68734E] bg-[#EEF2E6] rounded-xl px-3 py-2 font-medium">
+                    <p className="text-xs text-[#68734E] dark:text-[#98C87A] bg-[#EEF2E6] dark:bg-[#232D1F] rounded-xl px-3 py-2 font-medium">
                       {s.tip}
                     </p>
                   )}
@@ -468,7 +478,7 @@ export const RecipeDetailScreen: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             className="liquid-glass-card rounded-[26px] p-4 space-y-3 border-2 border-[#F04438]/30"
           >
-            <div className="font-extrabold text-sm text-[#292B25]">
+            <div className="font-extrabold text-sm text-[#292B25] dark:text-[#F5EFE8]">
               ثبت در کدام روز؟
             </div>
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -480,7 +490,7 @@ export const RecipeDetailScreen: React.FC<{
                   className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 ${
                     pickedDay === idx
                       ? 'coral-glass-pill text-white'
-                      : 'bg-[#F3E9DE] text-[#292B25]'
+                      : 'bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#292B25] dark:text-[#F5EFE8]'
                   }`}
                 >
                   {d}
@@ -538,7 +548,7 @@ export const RecipeDetailScreen: React.FC<{
             whileTap={{ scale: 0.92 }}
             onClick={() => setShowAddDayPicker((v) => !v)}
             aria-label="افزودن به برنامه هفته"
-            className="w-13 h-13 rounded-full bg-[#292B25] text-white flex items-center justify-center shrink-0"
+            className="w-13 h-13 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] flex items-center justify-center shrink-0"
           >
             <IconCalendarPlus size={20} />
           </motion.button>

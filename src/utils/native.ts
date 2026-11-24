@@ -1,11 +1,55 @@
 import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { Haptics } from '@capacitor/haptics';
 import { Preferences } from '@capacitor/preferences';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 export function getNativePlatform(): 'android' | 'ios' | 'web' {
   const platform = Capacitor.getPlatform();
   if (platform === 'android' || platform === 'ios') return platform;
   return 'web';
+}
+
+/**
+ * Inform Android / iOS system status bar whether to render dark icons (Light Mode)
+ * or light/white icons (Dark Mode) — without altering the app background itself.
+ */
+export async function syncNativeStatusBar(isDark: boolean): Promise<void> {
+  if (typeof window !== 'undefined') {
+    try {
+      window.localStorage.setItem('sofreh_theme', isDark ? 'dark' : 'light');
+    } catch {
+      // Ignore storage restrictions
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', isDark ? '#161714' : '#FBF5EF');
+    }
+  }
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    // Style.Light => dark icons for bright backgrounds; Style.Dark => light icons for dark backgrounds
+    await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+  } catch {
+    // Safe fallback if status bar plugin is unavailable
+  }
+}
+
+/**
+ * Reset root scroll position immediately across Web, iOS WKWebView, and Android WebView.
+ */
+export function scrollToTopInstant(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  } catch {
+    window.scrollTo(0, 0);
+  }
+  if (typeof document !== 'undefined') {
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+  }
 }
 
 /**

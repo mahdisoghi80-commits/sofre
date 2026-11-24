@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   ALLERGENS_META,
@@ -20,7 +20,7 @@ import type {
   UserPreferences,
 } from '../types/sofreh';
 import { formatToman, toFaDigits } from '../utils/format';
-import { hapticLight, hapticMedium, hapticSuccess } from '../utils/native';
+import { hapticLight, hapticMedium, hapticSuccess, scrollToTopInstant } from '../utils/native';
 import { computeMinimumWeeklyBudget } from '../utils/planner';
 import { BudgetDial } from './BudgetDial';
 import { AndroidApkDownloadCard } from './AndroidApkDownloadCard';
@@ -96,6 +96,10 @@ export const OnboardingFlow: React.FC = () => {
     setDirection(next > step ? 1 : -1);
     setStep(next);
   };
+
+  useLayoutEffect(() => {
+    scrollToTopInstant();
+  }, [step]);
 
   useEffect(() => {
     return registerBackHandler('onboarding-step-back', () => {
@@ -213,7 +217,7 @@ export const OnboardingFlow: React.FC = () => {
   /* ======================== STEP 0: REAL-PHOTO SPLASH ======================== */
   if (step === 0) {
     return (
-      <div className="min-h-dvh w-full bg-[#FBF5EF] flex flex-col justify-between relative overflow-hidden">
+      <div className="min-h-dvh w-full bg-[#FBF5EF] dark:bg-[#161714] flex flex-col justify-between relative overflow-hidden">
         <div className="relative w-full h-[56dvh] min-h-[340px] max-h-[540px] overflow-hidden">
           <div className="grid grid-cols-4 gap-2.5 sm:gap-3.5 px-2.5 sm:px-6 -mt-6 h-[112%] max-w-2xl mx-auto">
             <div className="splash-col-up flex flex-col gap-2.5 sm:gap-3.5">
@@ -278,11 +282,7 @@ export const OnboardingFlow: React.FC = () => {
           </div>
 
           <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(to bottom, rgba(251,245,239,0.06) 0%, rgba(251,245,239,0) 42%, rgba(251,245,239,0.78) 78%, #FBF5EF 100%)',
-            }}
+            className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#FBF5EF]/5 via-[#FBF5EF]/60 to-[#FBF5EF] dark:from-[#161714]/15 dark:via-[#161714]/70 dark:to-[#161714]"
           />
         </div>
 
@@ -291,16 +291,16 @@ export const OnboardingFlow: React.FC = () => {
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-            className="w-16 h-16 rounded-full liquid-glass p-2 flex items-center justify-center mb-4 shadow-lg"
+            className="w-20 h-20 rounded-[22px] overflow-hidden mb-4 shadow-[0_14px_32px_rgba(96,52,28,0.18)] ring-1 ring-black/5 dark:ring-white/12"
           >
-            <SofrehLogoMark className="w-full h-full" />
+            <SofrehLogoMark variant="hero" className="w-full h-full" />
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08 }}
-            className="font-display font-black text-[32px] sm:text-[36px] leading-[1.2] text-[#292B25] tracking-tight mb-7"
+            className="font-display font-black text-[32px] sm:text-[36px] leading-[1.2] text-[#292B25] dark:text-[#F5EFE8] tracking-tight mb-7"
           >
             سفرهٔ هفته‌ات رو با بودجه‌ات ببند
           </motion.h1>
@@ -340,39 +340,35 @@ export const OnboardingFlow: React.FC = () => {
   const stepBackdropSrc = STEP_BACKDROPS[(Math.max(1, step) - 1) % STEP_BACKDROPS.length];
 
   return (
-    <div className="min-h-dvh w-full bg-[#FBF5EF] flex flex-col relative overflow-x-clip">
+    <div className="min-h-dvh w-full bg-[#FBF5EF] dark:bg-[#161714] flex flex-col relative overflow-x-clip">
       {/* Photorealistic Subtle Backdrop */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
         <img
           src={stepBackdropSrc}
           alt=""
           decoding="async"
-          className="w-full h-full object-cover opacity-[0.14] scale-105 transition-opacity duration-500"
+          className="w-full h-full object-cover opacity-[0.14] dark:opacity-[0.08] scale-105 transition-opacity duration-500"
         />
         <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse at 50% 35%, rgba(251,245,239,0.55) 0%, rgba(251,245,239,0.9) 72%, rgba(251,245,239,0.98) 100%)',
-          }}
+          className="absolute inset-0 bg-[#FBF5EF]/80 dark:bg-[#161714]/88"
         />
       </div>
 
       {/* Minimal Sticky Top Progress Bar */}
       {step >= 1 && step <= TOTAL_FORM_STEPS && (
-        <header className="sticky top-0 z-30 px-4 pt-3 pb-2.5 bg-[#FBF5EF]/80 backdrop-blur-md safe-top">
+        <header className="sticky top-0 z-30 px-4 pt-3 pb-2.5 bg-[#FBF5EF]/80 dark:bg-[#161714]/85 backdrop-blur-md safe-top">
           <div className="max-w-lg mx-auto flex items-center gap-3">
             <motion.button
               type="button"
               whileTap={{ scale: 0.9 }}
               onClick={() => go(step - 1)}
               aria-label="مرحله قبل"
-              className="w-10 h-10 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shrink-0"
+              className="w-10 h-10 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shrink-0"
             >
               <IconArrowRight size={19} />
             </motion.button>
 
-            <div className="flex-1 h-1.5 bg-[#EAE0D5] rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-[#EAE0D5] dark:bg-[#2A2D26] rounded-full overflow-hidden">
               <motion.div
                 className="h-full rounded-full bg-gradient-to-l from-[#FF6A5C] to-[#F04438]"
                 animate={{ width: `${progressRatio}%` }}
@@ -380,7 +376,7 @@ export const OnboardingFlow: React.FC = () => {
               />
             </div>
 
-            <span className="text-xs font-extrabold text-[#75746E] tabular-nums-fa w-9 text-left">
+            <span className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa w-9 text-left">
               {toFaDigits(step)}/{toFaDigits(TOTAL_FORM_STEPS)}
             </span>
           </div>
@@ -400,7 +396,7 @@ export const OnboardingFlow: React.FC = () => {
               transition={{ type: 'spring', stiffness: 360, damping: 30 }}
               className="space-y-6"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 هدفت از سفره چیه؟
               </h2>
 
@@ -415,8 +411,8 @@ export const OnboardingFlow: React.FC = () => {
                       onClick={() => toggleGoal(goal.id)}
                       className={`relative rounded-[26px] p-4 flex flex-col items-center justify-center gap-3 text-center transition-all ${
                         active
-                          ? 'bg-white border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
-                          : 'liquid-glass-card border border-white/90'
+                          ? 'bg-white dark:bg-[#262822] border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
+                          : 'liquid-glass-card border border-white/90 dark:border-white/10'
                       }`}
                     >
                       {active && (
@@ -430,7 +426,7 @@ export const OnboardingFlow: React.FC = () => {
                         sizeClass="w-16 h-16"
                         roundedClass="rounded-[20px]"
                       />
-                      <span className="font-display font-black text-[15px] text-[#292B25]">
+                      <span className="font-display font-black text-[15px] text-[#292B25] dark:text-[#F5EFE8]">
                         {goal.title}
                       </span>
                     </motion.button>
@@ -450,7 +446,7 @@ export const OnboardingFlow: React.FC = () => {
               transition={{ type: 'spring', stiffness: 360, damping: 30 }}
               className="space-y-7"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 سرِ سفره چند نفرید؟
               </h2>
 
@@ -463,7 +459,7 @@ export const OnboardingFlow: React.FC = () => {
                     setDraft((d) => ({ ...d, servings: Math.max(1, d.servings - 1) }));
                   }}
                   aria-label="کاهش نفر"
-                  className="w-14 h-14 rounded-full bg-[#F3E9DE] text-[#292B25] flex items-center justify-center"
+                  className="w-14 h-14 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center"
                 >
                   <IconMinus size={22} />
                 </motion.button>
@@ -477,7 +473,7 @@ export const OnboardingFlow: React.FC = () => {
                   >
                     {toFaDigits(draft.servings)}
                   </motion.div>
-                  <div className="text-sm font-extrabold text-[#75746E] mt-2">نفر</div>
+                  <div className="text-sm font-extrabold text-[#75746E] dark:text-[#ADA89F] mt-2">نفر</div>
                 </div>
 
                 <motion.button
@@ -509,7 +505,7 @@ export const OnboardingFlow: React.FC = () => {
                       className={`rounded-[24px] py-4 px-2 flex flex-col items-center justify-center gap-2 transition-all border ${
                         active
                           ? `${theme.activePill} border-transparent`
-                          : `liquid-glass-card text-[#292B25] ${theme.cardBorder}`
+                          : `liquid-glass-card text-[#292B25] dark:text-[#F5EFE8] ${theme.cardBorder}`
                       }`}
                     >
                       <span
@@ -540,7 +536,7 @@ export const OnboardingFlow: React.FC = () => {
               className="space-y-6"
               data-testid="onboarding-calendar-step"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 کدام روزها می‌پزی؟
               </h2>
 
@@ -560,7 +556,7 @@ export const OnboardingFlow: React.FC = () => {
                         className={`py-4 rounded-[22px] flex flex-col items-center justify-center gap-2 transition-all ${
                           active
                             ? 'coral-glass-pill text-white'
-                            : 'bg-[#F3E9DE]/80 text-[#6F6B64]'
+                            : 'bg-[#F3E9DE]/80 dark:bg-[#2A2D26] text-[#6F6B64] dark:text-[#ADA89F]'
                         }`}
                       >
                         <span className="font-display font-black text-base">
@@ -568,7 +564,7 @@ export const OnboardingFlow: React.FC = () => {
                         </span>
                         <span
                           className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            active ? 'bg-white/25 text-white' : 'bg-white/60 text-transparent'
+                            active ? 'bg-white/25 text-white' : 'bg-white/60 dark:bg-white/10 text-transparent'
                           }`}
                         >
                           <IconCheck size={11} />
@@ -600,8 +596,8 @@ export const OnboardingFlow: React.FC = () => {
                       }}
                       className={`px-3.5 py-2 rounded-full text-xs font-extrabold transition ${
                         isMatch
-                          ? 'bg-[#292B25] text-white'
-                          : 'liquid-glass text-[#5C5952]'
+                          ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                          : 'liquid-glass text-[#5C5952] dark:text-[#C8C3BA]'
                       }`}
                     >
                       {preset.label}
@@ -623,7 +619,7 @@ export const OnboardingFlow: React.FC = () => {
               className="space-y-6"
               data-testid="onboarding-cuisine-slider-step"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 چقدر ایرانی، چقدر جهانی؟
               </h2>
 
@@ -650,7 +646,7 @@ export const OnboardingFlow: React.FC = () => {
               transition={{ type: 'spring', stiffness: 360, damping: 30 }}
               className="space-y-6"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 حساسیت غذایی داری؟
               </h2>
 
@@ -665,8 +661,8 @@ export const OnboardingFlow: React.FC = () => {
                       onClick={() => toggleAllergen(item.id)}
                       className={`relative rounded-[26px] p-4 flex flex-col items-center justify-center gap-3 text-center transition-all ${
                         active
-                          ? 'bg-white border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
-                          : 'liquid-glass-card border border-white/90'
+                          ? 'bg-white dark:bg-[#262822] border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
+                          : 'liquid-glass-card border border-white/90 dark:border-white/10'
                       }`}
                     >
                       {active && (
@@ -680,7 +676,7 @@ export const OnboardingFlow: React.FC = () => {
                         sizeClass="w-16 h-16"
                         roundedClass="rounded-[20px]"
                       />
-                      <span className="font-display font-black text-[15px] text-[#292B25]">
+                      <span className="font-display font-black text-[15px] text-[#292B25] dark:text-[#F5EFE8]">
                         {item.label}
                       </span>
                     </motion.button>
@@ -701,7 +697,7 @@ export const OnboardingFlow: React.FC = () => {
               className="space-y-6"
               data-testid="onboarding-diet-step"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 رژیم خاصی داری؟
               </h2>
 
@@ -720,8 +716,8 @@ export const OnboardingFlow: React.FC = () => {
                       data-testid={`diet-btn-${item.id}`}
                       className={`relative rounded-[26px] p-4 flex flex-col items-center justify-center gap-3 text-center transition-all ${
                         active
-                          ? 'bg-white border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
-                          : 'liquid-glass-card border border-white/90'
+                          ? 'bg-white dark:bg-[#262822] border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
+                          : 'liquid-glass-card border border-white/90 dark:border-white/10'
                       }`}
                     >
                       {active && (
@@ -733,12 +729,12 @@ export const OnboardingFlow: React.FC = () => {
                         className={`w-13 h-13 rounded-full flex items-center justify-center ${
                           active
                             ? 'coral-glass-pill text-white'
-                            : 'bg-[#F3E9DE] text-[#C42F26]'
+                            : 'bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#C42F26] dark:text-[#FF7E75]'
                         }`}
                       >
                         <DietStyleIcon diet={item.id} size={24} />
                       </span>
-                      <span className="font-display font-black text-[15px] text-[#292B25]">
+                      <span className="font-display font-black text-[15px] text-[#292B25] dark:text-[#F5EFE8]">
                         {item.label}
                       </span>
                     </motion.button>
@@ -758,7 +754,7 @@ export const OnboardingFlow: React.FC = () => {
               transition={{ type: 'spring', stiffness: 360, damping: 30 }}
               className="space-y-4"
             >
-              <h2 className="font-display font-black text-[28px] text-[#292B25] text-center">
+              <h2 className="font-display font-black text-[28px] text-[#292B25] dark:text-[#F5EFE8] text-center">
                 بودجهٔ هفته‌ات چقدره؟
               </h2>
 
@@ -786,11 +782,11 @@ export const OnboardingFlow: React.FC = () => {
               data-testid="onboarding-disliked-step"
             >
               <div className="text-center space-y-1">
-                <h2 className="font-display font-black text-[26px] text-[#292B25]">
+                <h2 className="font-display font-black text-[26px] text-[#292B25] dark:text-[#F5EFE8]">
                   کدوم‌ها رو دوست نداری؟
                 </h2>
                 {dislikedSet.size > 0 && (
-                  <div className="inline-flex items-center px-3 py-0.5 rounded-full bg-[#FFF0ED] text-[#C42F26] text-xs font-extrabold tabular-nums-fa">
+                  <div className="inline-flex items-center px-3 py-0.5 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#C42F26] dark:text-[#FF857B] text-xs font-extrabold tabular-nums-fa">
                     {toFaDigits(
                       DISLIKED_FOODS_META.filter((item) =>
                         item.codes.every((c) => dislikedSet.has(c))
@@ -814,8 +810,8 @@ export const OnboardingFlow: React.FC = () => {
                       aria-pressed={active}
                       className={`relative rounded-[20px] p-2.5 flex flex-col items-center justify-center gap-1.5 text-center transition-all border ${
                         active
-                          ? 'bg-[#FFF0ED] border-2 border-[#F04438] shadow-[0_6px_16px_rgba(240,68,56,0.14)]'
-                          : 'liquid-glass-card border-white/90'
+                          ? 'bg-[#FFF0ED] dark:bg-[#3A2220] border-2 border-[#F04438] shadow-[0_6px_16px_rgba(240,68,56,0.14)]'
+                          : 'liquid-glass-card border-white/90 dark:border-white/10'
                       }`}
                     >
                       {active && (
@@ -831,7 +827,7 @@ export const OnboardingFlow: React.FC = () => {
                       />
                       <span
                         className={`font-display font-black text-[11px] leading-tight line-clamp-1 ${
-                          active ? 'text-[#C42F26] line-through' : 'text-[#292B25]'
+                          active ? 'text-[#C42F26] dark:text-[#FF857B] line-through' : 'text-[#292B25] dark:text-[#F5EFE8]'
                         }`}
                       >
                         {item.label}
@@ -857,11 +853,11 @@ export const OnboardingFlow: React.FC = () => {
                 transition={{ duration: 2.8, repeat: Infinity, ease: 'linear' }}
                 className="w-22 h-22 mx-auto rounded-full coral-glass-pill p-4 flex items-center justify-center shadow-xl"
               >
-                <SofrehLogoMark className="w-full h-full" />
+                <SofrehLogoMark variant="on-coral" className="w-full h-full" />
               </motion.div>
 
               <div className="space-y-2">
-                <h2 className="font-display font-black text-2xl text-[#292B25]">
+                <h2 className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8]">
                   در حال چیدن سفرهٔ تو
                 </h2>
                 <div className="font-display font-black text-lg text-[#F04438] tabular-nums-fa">
@@ -869,7 +865,7 @@ export const OnboardingFlow: React.FC = () => {
                 </div>
               </div>
 
-              <div className="max-w-xs mx-auto h-2.5 bg-[#EAE0D5] rounded-full overflow-hidden">
+              <div className="max-w-xs mx-auto h-2.5 bg-[#EAE0D5] dark:bg-[#2A2D26] rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-gradient-to-l from-[#FF6A5C] to-[#F04438]"
                   initial={{ width: '8%' }}
@@ -896,12 +892,12 @@ export const OnboardingFlow: React.FC = () => {
                             ? 'bg-[#5E8B42] text-white'
                             : current
                               ? 'bg-[#F04438] text-white'
-                              : 'bg-[#E8DDD0] text-transparent'
+                              : 'bg-[#E8DDD0] dark:bg-[#2A2D26] text-transparent'
                         }`}
                       >
                         <IconCheck size={11} />
                       </span>
-                      <span className={done ? 'text-[#5E8B42]' : 'text-[#292B25]'}>
+                      <span className={done ? 'text-[#5E8B42] dark:text-[#98C87A]' : 'text-[#292B25] dark:text-[#F5EFE8]'}>
                         {st.label}
                       </span>
                     </div>
@@ -923,10 +919,10 @@ export const OnboardingFlow: React.FC = () => {
                 <IconCheck size={36} />
               </div>
               <div className="space-y-1.5">
-                <h2 className="font-display font-black text-3xl text-[#292B25]">
+                <h2 className="font-display font-black text-3xl text-[#292B25] dark:text-[#F5EFE8]">
                   سفرهٔ هفته‌ات آماده شد
                 </h2>
-                <p className="text-sm font-bold text-[#75746E] tabular-nums-fa">
+                <p className="text-sm font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                   {toFaDigits(selectedDays.length)} روز · {toFaDigits(draft.servings)} نفر ·{' '}
                   {formatToman(draft.weeklyBudgetToman)}
                 </p>
@@ -954,7 +950,7 @@ export const OnboardingFlow: React.FC = () => {
               whileTap={{ scale: 0.9 }}
               onClick={() => go(step - 1)}
               aria-label="قبلی"
-              className="w-14 h-14 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shrink-0"
+              className="w-14 h-14 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shrink-0"
             >
               <IconArrowRight size={22} />
             </motion.button>

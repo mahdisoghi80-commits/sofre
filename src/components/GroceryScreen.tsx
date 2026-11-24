@@ -155,9 +155,9 @@ export const GroceryScreen: React.FC<{
   return (
     <div className="space-y-3.5">
       {/* CLEAN MINIMAL HEADER */}
-      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 backdrop-blur-md border-b border-white/60 safe-top">
+      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 dark:bg-[#161714]/90 backdrop-blur-md border-b border-white/60 dark:border-white/10 safe-top">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="font-display font-black text-2xl text-[#292B25]">
+          <h1 className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8]">
             لیست خرید
           </h1>
 
@@ -181,17 +181,17 @@ export const GroceryScreen: React.FC<{
         whileTap={{ scale: 0.985 }}
         onClick={openInventory}
         data-testid="grocery-home-inventory-btn"
-        className="w-full rounded-[24px] bg-[#EEF5E9] hover:bg-[#E5F0DC] border border-[#5E8B42]/20 px-4 py-3 flex items-center justify-between gap-3 text-right transition shadow-[0_4px_14px_rgba(76,110,53,0.08)]"
+        className="w-full rounded-[24px] bg-[#EEF5E9] dark:bg-[#232D1F] hover:bg-[#E5F0DC] dark:hover:bg-[#293524] border border-[#5E8B42]/20 dark:border-[#8EC06E]/25 px-4 py-3 flex items-center justify-between gap-3 text-right transition shadow-[0_4px_14px_rgba(76,110,53,0.08)]"
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className="w-10 h-10 rounded-[14px] bg-[#5E8B42] text-white flex items-center justify-center shrink-0 shadow-sm">
             <IconPantryShelf size={20} />
           </span>
           <div className="min-w-0">
-            <div className="font-display font-black text-sm text-[#292B25]">
+            <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
               موجودی خانه
             </div>
-            <div className="text-[11px] font-bold text-[#4C6E35] tabular-nums-fa">
+            <div className="text-[11px] font-bold text-[#4C6E35] dark:text-[#98C87A] tabular-nums-fa">
               {toFaDigits(stockedPantryItems.length)} قلم در یخچال
               {coveredByPantryCount > 0
                 ? ` · ${toFaDigits(coveredByPantryCount)} مورد از خرید حذف شد`
@@ -206,7 +206,7 @@ export const GroceryScreen: React.FC<{
               {stockedPantryItems.slice(0, 3).map((item) => (
                 <span
                   key={item.ingredientId}
-                  className="w-8 h-8 rounded-full bg-white border-2 border-[#EEF5E9] flex items-center justify-center shadow-xs"
+                  className="w-8 h-8 rounded-full bg-white dark:bg-[#2A2D26] border-2 border-[#EEF5E9] dark:border-[#232D1F] flex items-center justify-center shadow-xs"
                 >
                   <IngredientIcon3D
                     src={getIngredientIconPath(item.ingredientId, item.name)}
@@ -217,7 +217,7 @@ export const GroceryScreen: React.FC<{
               ))}
             </div>
           )}
-          <IconCaretLeft size={17} className="text-[#4C6E35]" />
+          <IconCaretLeft size={17} className="text-[#4C6E35] dark:text-[#98C87A]" />
         </div>
       </motion.button>
 
@@ -231,13 +231,13 @@ export const GroceryScreen: React.FC<{
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-[11px] font-bold text-[#75746E]">ماندهٔ سبد خرید</div>
-            <div className="font-display font-black text-[28px] leading-tight text-[#292B25] tabular-nums-fa mt-0.5">
+            <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">ماندهٔ سبد خرید</div>
+            <div className="font-display font-black text-[28px] leading-tight text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa mt-0.5">
               {formatToman(remainingCostToman)}
             </div>
           </div>
 
-          <span className="px-3 py-1.5 rounded-full bg-[#FFF0ED] text-[#F04438] text-[11px] font-extrabold inline-flex items-center gap-1 shrink-0">
+          <span className="px-3 py-1.5 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] text-[11px] font-extrabold inline-flex items-center gap-1 shrink-0">
             <IconChartBar size={14} />
             <span>نمودار خرید</span>
             <IconCaretLeft size={13} />
@@ -246,7 +246,7 @@ export const GroceryScreen: React.FC<{
 
         {/* Crisp Linear Progress Bar */}
         <div className="space-y-1.5">
-          <div className="h-2.5 bg-[#EFE4D8] rounded-full overflow-hidden">
+          <div className="h-2.5 bg-[#EFE4D8] dark:bg-[#2A2D26] rounded-full overflow-hidden">
             <motion.div
               className={`h-full rounded-full ${
                 progressPct === 100
@@ -260,12 +260,12 @@ export const GroceryScreen: React.FC<{
           </div>
 
           <div className="flex items-center justify-between text-[11px] font-extrabold tabular-nums-fa">
-            <span className="text-[#5C5952]">
+            <span className="text-[#5C5952] dark:text-[#C8C3BA]">
               {remainingCount === 0
                 ? 'خرید کامل شد!'
                 : `${toFaDigits(remainingCount)} قلم مانده از ${toFaDigits(toBuyItems.length)}`}
             </span>
-            <span className="text-[#F04438]">{toFaDigits(progressPct)}٪</span>
+            <span className="text-[#F04438] dark:text-[#FF7E75]">{toFaDigits(progressPct)}٪</span>
           </div>
         </div>
       </motion.button>
@@ -277,7 +277,9 @@ export const GroceryScreen: React.FC<{
             type="button"
             onClick={() => setGroupBy('aisle')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold transition ${
-              groupBy === 'aisle' ? 'bg-[#292B25] text-white shadow-xs' : 'text-[#5C5952]'
+              groupBy === 'aisle'
+                ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] shadow-xs'
+                : 'text-[#5C5952] dark:text-[#ADA89F]'
             }`}
           >
             قفسه
@@ -286,7 +288,9 @@ export const GroceryScreen: React.FC<{
             type="button"
             onClick={() => setGroupBy('recipe')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold transition ${
-              groupBy === 'recipe' ? 'bg-[#292B25] text-white shadow-xs' : 'text-[#5C5952]'
+              groupBy === 'recipe'
+                ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] shadow-xs'
+                : 'text-[#5C5952] dark:text-[#ADA89F]'
             }`}
           >
             غذا
@@ -299,7 +303,7 @@ export const GroceryScreen: React.FC<{
           className={`px-3.5 py-2 rounded-full text-xs font-extrabold transition ${
             hideChecked
               ? 'coral-glass-pill text-white'
-              : 'liquid-glass text-[#5C5952]'
+              : 'liquid-glass text-[#5C5952] dark:text-[#C8C3BA]'
           }`}
         >
           {hideChecked ? 'نمایش همه' : 'فقط مانده‌ها'}
@@ -323,14 +327,14 @@ export const GroceryScreen: React.FC<{
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
               data-testid="grocery-analytics-sheet"
-              className="w-full sm:max-w-lg max-h-[85dvh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] flex flex-col shadow-2xl border border-white overflow-hidden"
+              className="w-full sm:max-w-lg max-h-[85dvh] bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] flex flex-col shadow-2xl border border-white dark:border-white/10 overflow-hidden"
             >
-              <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-[#EFE4D8]">
+              <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-[#EFE4D8] dark:border-white/10">
                 <div className="flex items-center gap-2.5">
-                  <span className="w-9 h-9 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center">
+                  <span className="w-9 h-9 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center">
                     <IconChartBar size={19} />
                   </span>
-                  <h3 className="font-display font-black text-xl text-[#292B25]">
+                  <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                     نمودار خرید هفته
                   </h3>
                 </div>
@@ -338,7 +342,7 @@ export const GroceryScreen: React.FC<{
                   type="button"
                   onClick={() => setAnalyticsOpen(false)}
                   aria-label="بستن"
-                  className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                  className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                 >
                   <IconClose size={17} />
                 </button>
@@ -348,20 +352,20 @@ export const GroceryScreen: React.FC<{
                 {/* Summary Tiles */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="liquid-glass-card rounded-[22px] p-3.5 space-y-1">
-                    <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#75746E]">
-                      <IconMarketBasket size={14} className="text-[#F04438]" />
+                    <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">
+                      <IconMarketBasket size={14} className="text-[#F04438] dark:text-[#FF7E75]" />
                       کل خرید سوپرمارکت
                     </div>
-                    <div className="font-display font-black text-base text-[#292B25] tabular-nums-fa">
+                    <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
                       {formatToman(costSummary.shelfCheckoutCostToman)}
                     </div>
                   </div>
-                  <div className="rounded-[22px] bg-[#EEF5E9] border border-[#5E8B42]/20 p-3.5 space-y-1">
-                    <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#4C6E35]">
+                  <div className="rounded-[22px] bg-[#EEF5E9] dark:bg-[#232D1F] border border-[#5E8B42]/20 dark:border-[#8EC06E]/25 p-3.5 space-y-1">
+                    <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#4C6E35] dark:text-[#98C87A]">
                       <IconSnowflake size={14} />
                       ذخیره برای هفته بعد
                     </div>
-                    <div className="font-display font-black text-base text-[#4C6E35] tabular-nums-fa">
+                    <div className="font-display font-black text-base text-[#4C6E35] dark:text-[#98C87A] tabular-nums-fa">
                       {formatToman(costSummary.leftoverFridgeValueToman)}
                     </div>
                   </div>
@@ -370,10 +374,10 @@ export const GroceryScreen: React.FC<{
                 {/* Aisle Spend Breakdown Horizontal Bar Chart */}
                 <div className="liquid-glass-card rounded-[26px] p-4 space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-display font-black text-sm text-[#292B25]">
+                    <span className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                       سهم هر قفسه از هزینه
                     </span>
-                    <span className="text-[11px] font-bold text-[#75746E] tabular-nums-fa">
+                    <span className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                       {toFaDigits(toBuyItems.length)} قلم
                     </span>
                   </div>
@@ -384,17 +388,17 @@ export const GroceryScreen: React.FC<{
                       return (
                         <div key={row.aisle} className="space-y-1.5">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-extrabold text-[#292B25]">
+                            <span className="font-extrabold text-[#292B25] dark:text-[#F5EFE8]">
                               {row.label}
-                              <span className="text-[10px] text-[#8C867E] font-bold mr-1.5 tabular-nums-fa">
+                              <span className="text-[10px] text-[#8C867E] dark:text-[#9A958C] font-bold mr-1.5 tabular-nums-fa">
                                 ({toFaDigits(row.count)})
                               </span>
                             </span>
-                            <span className="font-extrabold text-[#292B25] tabular-nums-fa">
+                            <span className="font-extrabold text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
                               {formatToman(row.cost)}
                             </span>
                           </div>
-                          <div className="h-2.5 bg-[#EFE4D8] rounded-full overflow-hidden">
+                          <div className="h-2.5 bg-[#EFE4D8] dark:bg-[#2A2D26] rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${pct}%` }}
@@ -430,7 +434,7 @@ export const GroceryScreen: React.FC<{
       {/* GROCERY LIST WITH TRANSPARENT 3D INGREDIENT ICONS */}
       {toBuyItems.length === 0 ? (
         <div className="liquid-glass-card rounded-[28px] p-8 text-center space-y-3">
-          <div className="font-display font-black text-lg text-[#292B25]">
+          <div className="font-display font-black text-lg text-[#292B25] dark:text-[#F5EFE8]">
             همه در خانه موجودند
           </div>
           <button
@@ -443,13 +447,13 @@ export const GroceryScreen: React.FC<{
         </div>
       ) : visibleItems.length === 0 ? (
         <div className="liquid-glass-card rounded-[28px] p-7 text-center space-y-2.5">
-          <div className="font-display font-black text-lg text-[#68734E]">
+          <div className="font-display font-black text-lg text-[#68734E] dark:text-[#98C87A]">
             همهٔ اقلام تیک خوردند!
           </div>
           <button
             type="button"
             onClick={() => setHideChecked(false)}
-            className="px-4 py-2 rounded-full bg-[#292B25] text-white text-xs font-extrabold"
+            className="px-4 py-2 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] text-xs font-extrabold"
           >
             نمایش لیست کامل
           </button>
@@ -459,15 +463,15 @@ export const GroceryScreen: React.FC<{
           {groupedByAisle.map((group) => (
             <section key={group.aisle} className="liquid-glass-card rounded-[26px] p-4 space-y-1.5">
               <div className="flex items-center justify-between pb-1.5">
-                <h2 className="font-display font-black text-base text-[#292B25]">
+                <h2 className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">
                   {group.label}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F3E9DE] text-[11px] font-extrabold text-[#5C5952] tabular-nums-fa">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[11px] font-extrabold text-[#5C5952] dark:text-[#C8C3BA] tabular-nums-fa">
                   {toFaDigits(group.items.length)} قلم
                 </span>
               </div>
 
-              <div className="divide-y divide-[#F0E6DA]">
+              <div className="divide-y divide-[#F0E6DA] dark:divide-white/8">
                 {group.items.map((item) => (
                   <GroceryItemRow
                     key={item.ingredientId}
@@ -491,14 +495,14 @@ export const GroceryScreen: React.FC<{
           {groupedByRecipe.map((group) => (
             <section key={group.title} className="liquid-glass-card rounded-[26px] p-4 space-y-1.5">
               <div className="flex items-center justify-between pb-1.5">
-                <h2 className="font-display font-black text-base text-[#292B25]">
+                <h2 className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">
                   {group.title}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F3E9DE] text-[11px] font-extrabold text-[#5C5952] tabular-nums-fa">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[11px] font-extrabold text-[#5C5952] dark:text-[#C8C3BA] tabular-nums-fa">
                   {toFaDigits(group.items.length)} قلم
                 </span>
               </div>
-              <div className="divide-y divide-[#F0E6DA]">
+              <div className="divide-y divide-[#F0E6DA] dark:divide-white/8">
                 {group.items.map((item) => (
                   <GroceryItemRow
                     key={`${group.title}-${item.ingredientId}`}
@@ -607,7 +611,7 @@ const GroceryItemRow: React.FC<{
           className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition active:scale-90 ${
             item.checked
               ? 'bg-[#68734E] text-white'
-              : 'border-2 border-[#D4C7B8] bg-white'
+              : 'border-2 border-[#D4C7B8] dark:border-white/25 bg-white dark:bg-[#252721]'
           }`}
         >
           {item.checked && <IconCheck size={13} />}
@@ -626,23 +630,23 @@ const GroceryItemRow: React.FC<{
           className="min-w-0 text-right flex-1 space-y-0.5"
         >
           <div
-            className={`font-extrabold text-[13.5px] text-[#292B25] leading-snug ${
+            className={`font-extrabold text-[13.5px] text-[#292B25] dark:text-[#F5EFE8] leading-snug ${
               item.checked ? 'line-through' : ''
             }`}
           >
             {item.name}
           </div>
           <div className="flex flex-wrap items-center gap-x-1.5 text-[11.5px] tabular-nums-fa">
-            <span className="font-bold text-[#5C5952]">
+            <span className="font-bold text-[#5C5952] dark:text-[#ADA89F]">
               {toFaDigits(item.isManual ? item.formattedAmount : item.packLabel)}
             </span>
-            <span className="text-[#C8BFB3]">·</span>
-            <span className="font-display font-black text-[#292B25]">
+            <span className="text-[#C8BFB3] dark:text-white/25">·</span>
+            <span className="font-display font-black text-[#292B25] dark:text-[#F5EFE8]">
               {formatToman(item.shelfCostToman)}
             </span>
           </div>
           {!item.isManual && item.consumptionCostToman < item.shelfCostToman * 0.85 && (
-            <div className="text-[10.5px] font-bold text-[#8C867E] tabular-nums-fa">
+            <div className="text-[10.5px] font-bold text-[#8C867E] dark:text-[#9A958C] tabular-nums-fa">
               مصرف هفته: {toFaDigits(item.formattedAmount)} ({formatToman(item.consumptionCostToman)})
             </div>
           )}
@@ -656,7 +660,7 @@ const GroceryItemRow: React.FC<{
             whileTap={{ scale: 0.92 }}
             onClick={onMoveToPantry}
             data-testid={`have-at-home-${item.ingredientId}`}
-            className="h-8 px-2.5 rounded-full bg-[#EEF2E6] hover:bg-[#E1E9D2] text-[#4C5736] text-[11px] font-extrabold flex items-center gap-1 transition"
+            className="h-8 px-2.5 rounded-full bg-[#EEF2E6] dark:bg-[#263122] hover:bg-[#E1E9D2] dark:hover:bg-[#2F3D29] text-[#4C5736] dark:text-[#A4D187] text-[11px] font-extrabold flex items-center gap-1 transition"
           >
             <IconPantryShelf size={13} />
             <span>دارم</span>
@@ -667,7 +671,7 @@ const GroceryItemRow: React.FC<{
             type="button"
             onClick={onDeleteManual}
             aria-label="حذف"
-            className="w-8 h-8 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center"
           >
             <IconTrash size={14} />
           </button>

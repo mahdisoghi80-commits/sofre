@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAppState } from '../context/AppStateContext';
 import { formatTimer, toFaDigits } from '../utils/format';
@@ -35,9 +35,16 @@ export const CookModeScreen: React.FC = () => {
   const [remainingSec, setRemainingSec] = useState<number>(0);
   const [totalTimerSec, setTotalTimerSec] = useState<number>(0);
   const [timerRunning, setTimerRunning] = useState(false);
+  const stageScrollRef = useRef<HTMLDivElement | null>(null);
 
   const currentStep = recipe?.steps[stepIdx];
   const initialTimerSec = currentStep?.timerSeconds ?? 0;
+
+  useLayoutEffect(() => {
+    if (stageScrollRef.current) {
+      stageScrollRef.current.scrollTop = 0;
+    }
+  }, [stepIdx, cookModeRecipeId]);
 
   useEffect(() => {
     setRemainingSec(initialTimerSec);
@@ -78,10 +85,10 @@ export const CookModeScreen: React.FC = () => {
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       data-testid="cook-mode-screen"
-      className="fixed inset-0 z-50 bg-[#FBF5EF] flex flex-col overflow-hidden"
+      className="fixed inset-0 z-50 bg-[#FBF5EF] dark:bg-[#161714] flex flex-col overflow-hidden"
     >
       {/* LOCKED COMPACT TOP HEADER */}
-      <header className="shrink-0 px-4 pt-3 pb-3 safe-top bg-[#FBF5EF]/95 border-b border-[#EFE4D8]">
+      <header className="shrink-0 px-4 pt-3 pb-3 safe-top bg-[#FBF5EF]/95 dark:bg-[#161714]/95 border-b border-[#EFE4D8] dark:border-white/10">
         <div className="max-w-xl mx-auto space-y-3">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -93,10 +100,10 @@ export const CookModeScreen: React.FC = () => {
                 loading="eager"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-display font-black text-base text-[#292B25] truncate leading-tight">
+                <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8] truncate leading-tight">
                   {recipe.title}
                 </div>
-                <div className="text-[11px] font-bold text-[#75746E] tabular-nums-fa mt-0.5 flex items-center gap-1.5">
+                <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa mt-0.5 flex items-center gap-1.5">
                   <span>
                     مرحله {toFaDigits(stepIdx + 1)} از {toFaDigits(recipe.steps.length)}
                   </span>
@@ -111,7 +118,7 @@ export const CookModeScreen: React.FC = () => {
               onClick={closeCookMode}
               aria-label="خروج از حالت پخت"
               data-testid="cook-mode-close-btn"
-              className="w-10 h-10 rounded-full bg-white text-[#292B25] border border-[#EAE0D5] flex items-center justify-center shrink-0 active:scale-90 transition"
+              className="w-10 h-10 rounded-full bg-white dark:bg-[#252721] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10 flex items-center justify-center shrink-0 active:scale-90 transition"
             >
               <IconClose size={18} />
             </button>
@@ -138,8 +145,8 @@ export const CookModeScreen: React.FC = () => {
                       isCurrent
                         ? 'bg-gradient-to-l from-[#FF6A5C] to-[#F04438]'
                         : passed
-                          ? 'bg-[#68734E]'
-                          : 'bg-[#E9DFD4]'
+                          ? 'bg-[#68734E] dark:bg-[#82A663]'
+                          : 'bg-[#E9DFD4] dark:bg-[#2A2D26]'
                     }`}
                   />
                 </button>
@@ -150,7 +157,10 @@ export const CookModeScreen: React.FC = () => {
       </header>
 
       {/* MAIN SCROLLABLE STAGE — Safe centering via my-auto (ZERO top clipping on mobile!) */}
-      <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 flex flex-col">
+      <div
+        ref={stageScrollRef}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 flex flex-col"
+      >
         <div className="max-w-xl w-full mx-auto my-auto space-y-4">
           <AnimatePresence mode="wait">
             <motion.div
@@ -168,14 +178,14 @@ export const CookModeScreen: React.FC = () => {
                     <span>گام {toFaDigits(stepIdx + 1)}</span>
                   </span>
                   {initialTimerSec > 0 && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#F3E9DE] text-[#5C5952] text-[11px] font-extrabold tabular-nums-fa">
-                      <IconTimer size={14} className="text-[#F04438]" />
+                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#5C5952] dark:text-[#C8C3BA] text-[11px] font-extrabold tabular-nums-fa">
+                      <IconTimer size={14} className="text-[#F04438] dark:text-[#FF7E75]" />
                       <span>{toFaDigits(Math.max(1, Math.round(initialTimerSec / 60)))} دقیقه</span>
                     </span>
                   )}
                 </div>
 
-                <p className="font-display font-bold text-[20px] sm:text-[24px] leading-[1.9] text-[#292B25] break-words">
+                <p className="font-display font-bold text-[20px] sm:text-[24px] leading-[1.9] text-[#292B25] dark:text-[#F5EFE8] break-words">
                   {segments.map((seg, i) =>
                     seg.isHighlight ? (
                       <span key={i} className="cook-qty-pill">
@@ -188,7 +198,7 @@ export const CookModeScreen: React.FC = () => {
                 </p>
 
                 {currentStep.tip && (
-                  <div className="rounded-2xl bg-[#EEF2E6] border border-[#68734E]/20 px-4 py-3 text-[13px] font-bold text-[#3F4A2B] leading-relaxed">
+                  <div className="rounded-2xl bg-[#EEF2E6] dark:bg-[#232D1F] border border-[#68734E]/20 dark:border-[#8EC06E]/25 px-4 py-3 text-[13px] font-bold text-[#3F4A2B] dark:text-[#A4D187] leading-relaxed">
                     {currentStep.tip}
                   </div>
                 )}
@@ -198,7 +208,7 @@ export const CookModeScreen: React.FC = () => {
               {initialTimerSec > 0 && (
                 <div
                   data-testid="cook-mode-timer-card"
-                  className="rounded-[28px] bg-[#232520] text-white p-5 shadow-[0_14px_30px_rgba(35,37,32,0.22)] space-y-4"
+                  className="rounded-[28px] bg-[#232520] dark:bg-[#20221D] dark:border dark:border-white/10 text-white p-5 shadow-[0_14px_30px_rgba(35,37,32,0.22)] space-y-4"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5 min-w-0">
@@ -313,7 +323,7 @@ export const CookModeScreen: React.FC = () => {
       </div>
 
       {/* LOCKED CIRCULAR NAVIGATION FOOTER */}
-      <footer className="shrink-0 px-4 py-3.5 safe-bottom bg-[#FBF5EF]/95 border-t border-[#EFE4D8]">
+      <footer className="shrink-0 px-4 py-3.5 safe-bottom bg-[#FBF5EF]/95 dark:bg-[#161714]/95 border-t border-[#EFE4D8] dark:border-white/10">
         <div className="max-w-xl mx-auto flex items-center gap-3">
           <button
             type="button"
@@ -323,7 +333,7 @@ export const CookModeScreen: React.FC = () => {
               setStepIdx((i) => Math.max(0, i - 1));
             }}
             aria-label="مرحله قبل"
-            className="w-14 h-14 rounded-full bg-white border border-[#E6DACD] text-[#292B25] flex items-center justify-center disabled:opacity-35 shrink-0 active:scale-90 transition"
+            className="w-14 h-14 rounded-full bg-white dark:bg-[#252721] border border-[#E6DACD] dark:border-white/10 text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center disabled:opacity-35 shrink-0 active:scale-90 transition"
           >
             <IconArrowRight size={22} />
           </button>

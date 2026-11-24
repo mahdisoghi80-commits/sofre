@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React from 'react';
 import {
   ArrowCounterClockwise,
   ArrowLeft,
@@ -71,25 +71,76 @@ export interface IconProps {
   className?: string;
 }
 
-/** Bespoke Sofreh Logo Emblem (warm saffron bowl + steam) */
-export const SofrehLogoMark: React.FC<{ className?: string }> = ({ className = 'w-9 h-9' }) => {
-  const uid = useId().replace(/:/g, '');
-  const gradId = `sofrehLogoGrad-${uid}`;
+/**
+ * Official Sofreh Brand Emblem (folded Persian Termeh cloth extracted from brand guidelines).
+ * Automatically adapts between Light and Dark mode without altering the Persian "سفره" logotype.
+ */
+export const SofrehLogoMark: React.FC<{
+  className?: string;
+  variant?: 'tile' | 'hero' | 'mark' | 'on-coral';
+}> = ({ className = 'w-9 h-9', variant = 'tile' }) => {
+  if (variant === 'hero') {
+    return (
+      <span
+        className={`inline-flex items-center justify-center shrink-0 select-none overflow-hidden rounded-[22px] ring-1 ring-black/5 dark:ring-white/10 ${className}`}
+      >
+        <img
+          src="/assets/brand/logo-tile-photo.png"
+          alt="لوگوی سفره"
+          decoding="async"
+          className="w-full h-full object-cover scale-[1.06] dark:hidden"
+        />
+        <img
+          src="/assets/brand/logo-tile-dark-cream.png"
+          alt="لوگوی سفره"
+          decoding="async"
+          className="w-full h-full object-cover scale-[1.06] hidden dark:block"
+        />
+      </span>
+    );
+  }
+
+  if (variant === 'on-coral') {
+    return (
+      <img
+        src="/assets/brand/logo-mark-cream.png"
+        alt="لوگوی سفره"
+        decoding="async"
+        className={`object-contain shrink-0 select-none ${className}`}
+      />
+    );
+  }
+
+  if (variant === 'mark') {
+    return (
+      <span className={`inline-flex items-center justify-center shrink-0 select-none ${className}`}>
+        <img
+          src="/assets/brand/logo-mark-coral.png"
+          alt="لوگوی سفره"
+          decoding="async"
+          className="w-full h-full object-contain dark:brightness-110"
+        />
+      </span>
+    );
+  }
+
   return (
-    <svg viewBox="0 0 40 40" fill="none" className={className} aria-label="لوگوی سفره">
-      <defs>
-        <linearGradient id={gradId} x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FF6B5B" />
-          <stop offset="1" stopColor="#DF3326" />
-        </linearGradient>
-      </defs>
-      <rect width="40" height="40" rx="20" fill={`url(#${gradId})`} />
-      <path d="M11 22.5C11 27.6 15 31 20 31C25 31 29 27.6 29 22.5H11Z" fill="#FFFBF7" />
-      <path d="M9.5 22.5H30.5" stroke="#FFFBF7" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M16 17.8C16 15.8 17.5 15.2 17.5 13.4" stroke="#FFFBF7" strokeWidth="2.1" strokeLinecap="round" />
-      <path d="M20.2 16.8C20.2 14.4 22 13.6 22 11.4" stroke="#FFFBF7" strokeWidth="2.1" strokeLinecap="round" />
-      <path d="M24.2 18C24.2 16.2 25.5 15.6 25.5 14" stroke="#FFFBF7" strokeWidth="2.1" strokeLinecap="round" />
-    </svg>
+    <span
+      className={`inline-flex items-center justify-center shrink-0 select-none overflow-hidden rounded-[10px] ring-1 ring-black/5 dark:ring-white/12 ${className}`}
+    >
+      <img
+        src="/assets/brand/logo-tile-coral.png"
+        alt="لوگوی سفره"
+        decoding="async"
+        className="w-full h-full object-cover scale-[1.08] dark:hidden"
+      />
+      <img
+        src="/assets/brand/logo-tile-dark-coral.png"
+        alt="لوگوی سفره"
+        decoding="async"
+        className="w-full h-full object-cover scale-[1.08] hidden dark:block"
+      />
+    </span>
   );
 };
 
@@ -112,7 +163,7 @@ export const Icon3D: React.FC<{
   loading = 'lazy',
 }) => (
   <div
-    className={`relative overflow-hidden shrink-0 bg-[#F7F1E8] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.85),0_4px_10px_rgba(92,52,28,0.08)] flex items-center justify-center ${sizeClass} ${roundedClass} ${className}`}
+    className={`relative overflow-hidden shrink-0 bg-[#F7F1E8] dark:bg-[#292B25] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.85),0_4px_10px_rgba(92,52,28,0.08)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08),0_4px_12px_rgba(0,0,0,0.35)] flex items-center justify-center ${sizeClass} ${roundedClass} ${className}`}
   >
     <img
       src={src}
@@ -451,42 +502,42 @@ export interface MealSlotTheme {
 export const MEAL_SLOT_THEMES: Record<MealSlotType, MealSlotTheme> = {
   breakfast: {
     accentHex: '#D98A1C',
-    cardBg: 'bg-[#FBF0DA]',
+    cardBg: 'bg-[#FBF0DA] dark:bg-[#2B251B] dark:border dark:border-[#E39A27]/15',
     cardBorder: 'border-transparent',
     accentStrip: 'bg-[#E39A27]',
-    badgeBg: 'bg-[#FDEFD5]',
-    badgeText: 'text-[#A66308]',
-    iconBg: 'bg-[#FBE7C2]',
-    iconText: 'text-[#C6790E]',
+    badgeBg: 'bg-[#FDEFD5] dark:bg-[#342B1E]',
+    badgeText: 'text-[#A66308] dark:text-[#F3B955]',
+    iconBg: 'bg-[#FBE7C2] dark:bg-[#3A3020]',
+    iconText: 'text-[#C6790E] dark:text-[#F3B955]',
     activePill:
       'bg-gradient-to-br from-[#EEAD3B] to-[#D48315] text-white shadow-[0_8px_20px_rgba(212,131,21,0.28)]',
-    inactiveIconBg: 'bg-[#FBF0DA] text-[#C6790E]',
+    inactiveIconBg: 'bg-[#FBF0DA] dark:bg-[#2B251B] text-[#C6790E] dark:text-[#F3B955]',
   },
   lunch: {
     accentHex: '#E84A3C',
-    cardBg: 'bg-[#FCEBE6]',
+    cardBg: 'bg-[#FCEBE6] dark:bg-[#2C211F] dark:border dark:border-[#F04438]/15',
     cardBorder: 'border-transparent',
     accentStrip: 'bg-[#F04438]',
-    badgeBg: 'bg-[#FDE2DC]',
-    badgeText: 'text-[#C23024]',
-    iconBg: 'bg-[#FBDAD3]',
-    iconText: 'text-[#E03D31]',
+    badgeBg: 'bg-[#FDE2DC] dark:bg-[#372523]',
+    badgeText: 'text-[#C23024] dark:text-[#FF857B]',
+    iconBg: 'bg-[#FBDAD3] dark:bg-[#3D2725]',
+    iconText: 'text-[#E03D31] dark:text-[#FF857B]',
     activePill:
       'bg-gradient-to-br from-[#FF6556] to-[#E63B2E] text-white shadow-[0_8px_20px_rgba(230,59,46,0.28)]',
-    inactiveIconBg: 'bg-[#FCE6E1] text-[#E03D31]',
+    inactiveIconBg: 'bg-[#FCE6E1] dark:bg-[#2C211F] text-[#E03D31] dark:text-[#FF857B]',
   },
   dinner: {
     accentHex: '#545B8C',
-    cardBg: 'bg-[#ECEEF8]',
+    cardBg: 'bg-[#ECEEF8] dark:bg-[#21232E] dark:border dark:border-[#7B84BD]/18',
     cardBorder: 'border-transparent',
     accentStrip: 'bg-[#5A6298]',
-    badgeBg: 'bg-[#E4E7F5]',
-    badgeText: 'text-[#3F4674]',
-    iconBg: 'bg-[#DDE1F3]',
-    iconText: 'text-[#4C5488]',
+    badgeBg: 'bg-[#E4E7F5] dark:bg-[#2A2D3B]',
+    badgeText: 'text-[#3F4674] dark:text-[#A9B2E8]',
+    iconBg: 'bg-[#DDE1F3] dark:bg-[#2E3242]',
+    iconText: 'text-[#4C5488] dark:text-[#A9B2E8]',
     activePill:
       'bg-gradient-to-br from-[#6871AB] to-[#4A5284] text-white shadow-[0_8px_20px_rgba(74,82,132,0.28)]',
-    inactiveIconBg: 'bg-[#E9ECF7] text-[#4C5488]',
+    inactiveIconBg: 'bg-[#E9ECF7] dark:bg-[#21232E] text-[#4C5488] dark:text-[#A9B2E8]',
   },
 };
 

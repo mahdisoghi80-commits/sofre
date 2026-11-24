@@ -139,27 +139,27 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
             transition={{ type: 'spring', stiffness: 360, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
             data-testid={`plan-insight-sheet-${activeSheet}`}
-            className="w-full sm:max-w-lg max-h-[88dvh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] flex flex-col shadow-2xl border border-white overflow-hidden"
+            className="w-full sm:max-w-lg max-h-[88dvh] bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] flex flex-col shadow-2xl border border-white dark:border-white/10 overflow-hidden"
           >
             {/* Sticky Sheet Header */}
-            <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-[#EFE4D8] bg-[#FBF5EF]/95">
+            <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-[#EFE4D8] dark:border-white/10 bg-[#FBF5EF]/95 dark:bg-[#1E201B]/95">
               <div className="flex items-center gap-2.5">
                 {activeSheet === 'budget' && (
-                  <span className="w-9 h-9 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center">
+                  <span className="w-9 h-9 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center">
                     <IconWallet size={19} />
                   </span>
                 )}
                 {activeSheet === 'macros' && (
-                  <span className="w-9 h-9 rounded-full bg-[#EEF5E9] text-[#5E8B42] flex items-center justify-center">
+                  <span className="w-9 h-9 rounded-full bg-[#EEF5E9] dark:bg-[#232D1F] text-[#5E8B42] dark:text-[#98C87A] flex items-center justify-center">
                     <IconMacroProtein size={19} />
                   </span>
                 )}
                 {activeSheet === 'savings' && (
-                  <span className="w-9 h-9 rounded-full bg-[#EEF5E9] text-[#5E8B42] flex items-center justify-center">
+                  <span className="w-9 h-9 rounded-full bg-[#EEF5E9] dark:bg-[#232D1F] text-[#5E8B42] dark:text-[#98C87A] flex items-center justify-center">
                     <IconPiggyBank size={19} />
                   </span>
                 )}
-                <h3 className="font-display font-black text-xl text-[#292B25]">
+                <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                   {activeSheet === 'budget'
                     ? 'جزئیات بودجه هفته'
                     : activeSheet === 'macros'
@@ -172,7 +172,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                 type="button"
                 onClick={onClose}
                 aria-label="بستن"
-                className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
               >
                 <IconClose size={17} />
               </button>
@@ -186,16 +186,16 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                   {/* Hero Status Pill */}
                   <div className="liquid-glass-card rounded-[26px] p-4 flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-[11px] font-bold text-[#75746E]">هزینهٔ غذای این هفته</div>
-                      <div className="font-display font-black text-2xl text-[#292B25] tabular-nums-fa mt-0.5">
+                      <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">هزینهٔ غذای این هفته</div>
+                      <div className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa mt-0.5">
                         {formatToman(costSummary.consumptionCostToman)}
                       </div>
                     </div>
                     <div
                       className={`px-3.5 py-2 rounded-2xl text-left tabular-nums-fa ${
                         isOverBudget
-                          ? 'bg-[#FFF0ED] text-[#C42F26]'
-                          : 'bg-[#EEF5E9] text-[#4C6E35]'
+                          ? 'bg-[#FFF0ED] dark:bg-[#3A2220] text-[#C42F26] dark:text-[#FF857B]'
+                          : 'bg-[#EEF5E9] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A]'
                       }`}
                     >
                       <div className="font-display font-black text-sm">
@@ -211,11 +211,11 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                   {/* Interactive 7-Day Cost Bar Chart */}
                   <div className="liquid-glass-card rounded-[26px] p-4 space-y-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-display font-black text-sm text-[#292B25]">
+                      <span className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         خرج روز به روز{' '}
-                        <span className="text-[10px] font-bold text-[#8C867E]">(هزار تومان)</span>
+                        <span className="text-[10px] font-bold text-[#8C867E] dark:text-[#9A958C]">(هزار تومان)</span>
                       </span>
-                      <span className="text-[11px] font-extrabold text-[#F04438] tabular-nums-fa">
+                      <span className="text-[11px] font-extrabold text-[#F04438] dark:text-[#FF7E75] tabular-nums-fa">
                         {DAY_NAMES_FULL[selectedDay]}: {formatToman(activeDayStat.cost)}
                       </span>
                     </div>
@@ -238,7 +238,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             onClick={() => setSelectedDay(d.dayIdx)}
                             className="flex-1 h-full flex flex-col items-center justify-end gap-1.5 group"
                           >
-                            <span className="text-[10px] font-extrabold text-[#75746E] tabular-nums-fa">
+                            <span className="text-[10px] font-extrabold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                               {d.cost > 0 ? toFaDigits(Math.round(d.cost / 1000)) : '−'}
                             </span>
                             <div className="w-full max-w-[26px] flex-1 flex items-end">
@@ -250,14 +250,14 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                                   isSelected
                                     ? 'bg-gradient-to-t from-[#F04438] to-[#FF7B6B] shadow-sm'
                                     : d.cost > dailyBudgetGuide
-                                      ? 'bg-[#E8B4A9]'
-                                      : 'bg-[#E5D8C8] group-hover:bg-[#D8C5B0]'
+                                      ? 'bg-[#E8B4A9] dark:bg-[#5E3A36]'
+                                      : 'bg-[#E5D8C8] dark:bg-[#3A3D34] group-hover:bg-[#D8C5B0] dark:group-hover:bg-[#494D42]'
                                 }`}
                               />
                             </div>
                             <span
                               className={`text-[11px] font-black ${
-                                isSelected ? 'text-[#F04438]' : 'text-[#75746E]'
+                                isSelected ? 'text-[#F04438] dark:text-[#FF7E75]' : 'text-[#75746E] dark:text-[#ADA89F]'
                               }`}
                             >
                               {DAY_NAMES_SHORT[d.dayIdx]}
@@ -271,16 +271,16 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                   {/* Clean 2-Part Visual Waterfall: Supermarket = Used This Week + Saved for Next Week */}
                   <div className="liquid-glass-card rounded-[26px] p-4 space-y-3">
                     <div className="flex items-center justify-between text-xs font-extrabold">
-                      <span className="inline-flex items-center gap-1.5 text-[#292B25]">
-                        <IconMarketBasket size={15} className="text-[#C87955]" />
+                      <span className="inline-flex items-center gap-1.5 text-[#292B25] dark:text-[#F5EFE8]">
+                        <IconMarketBasket size={15} className="text-[#C87955] dark:text-[#E59B78]" />
                         کل خرید سوپرمارکت
                       </span>
-                      <span className="tabular-nums-fa text-[#292B25]">
+                      <span className="tabular-nums-fa text-[#292B25] dark:text-[#F5EFE8]">
                         {formatToman(shelfTotal)}
                       </span>
                     </div>
 
-                    <div className="h-3.5 rounded-full bg-[#EFE4D8] overflow-hidden flex gap-0.5 p-0.5">
+                    <div className="h-3.5 rounded-full bg-[#EFE4D8] dark:bg-[#2A2D26] overflow-hidden flex gap-0.5 p-0.5">
                       <div
                         className="h-full rounded-full bg-[#F04438]"
                         style={{ width: `${consumedPct}%` }}
@@ -294,21 +294,21 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                     </div>
 
                     <div className="grid grid-cols-2 gap-2.5 text-xs">
-                      <div className="rounded-2xl bg-[#FFF4F1] p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-[#C23024]">
+                      <div className="rounded-2xl bg-[#FFF4F1] dark:bg-[#362220] p-3">
+                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-[#C23024] dark:text-[#FF857B]">
                           <span className="w-2 h-2 rounded-full bg-[#F04438]" />
                           مصرف این هفته از خرید
                         </div>
-                        <div className="font-display font-black text-sm text-[#292B25] tabular-nums-fa mt-1">
+                        <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa mt-1">
                           {formatToman(usedFromShelf)}
                         </div>
                       </div>
-                      <div className="rounded-2xl bg-[#EEF5E9] p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-[#4C6E35]">
+                      <div className="rounded-2xl bg-[#EEF5E9] dark:bg-[#232D1F] p-3">
+                        <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-[#4C6E35] dark:text-[#98C87A]">
                           <IconSnowflake size={12} />
                           ذخیره برای هفته بعد
                         </div>
-                        <div className="font-display font-black text-sm text-[#4C6E35] tabular-nums-fa mt-1">
+                        <div className="font-display font-black text-sm text-[#4C6E35] dark:text-[#98C87A] tabular-nums-fa mt-1">
                           {formatToman(leftoverFromShelf)}
                         </div>
                       </div>
@@ -317,7 +317,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
 
                   {/* Interactive Rotary Budget Dial right inside the sheet */}
                   <div className="space-y-2">
-                    <div className="font-display font-black text-sm text-[#292B25] px-1">
+                    <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] px-1">
                       تنظیم سقف بودجه
                     </div>
                     <BudgetDial
@@ -335,7 +335,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                       onClose();
                       setActiveTab('shop');
                     }}
-                    className="w-full h-12 rounded-full bg-[#292B25] text-white font-display font-black text-sm flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] font-display font-black text-sm flex items-center justify-center gap-2"
                   >
                     <span>رفتن به لیست خرید</span>
                     <IconArrowLeft size={16} />
@@ -354,7 +354,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                       className={`py-2 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition ${
                         macroMetric === 'protein'
                           ? 'bg-[#5E8B42] text-white shadow-sm'
-                          : 'text-[#5C5952]'
+                          : 'text-[#5C5952] dark:text-[#ADA89F]'
                       }`}
                     >
                       <IconMacroProtein size={15} />
@@ -366,7 +366,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                       className={`py-2 rounded-full text-xs font-extrabold flex items-center justify-center gap-1.5 transition ${
                         macroMetric === 'calories'
                           ? 'coral-glass-pill text-white'
-                          : 'text-[#5C5952]'
+                          : 'text-[#5C5952] dark:text-[#ADA89F]'
                       }`}
                     >
                       <IconFlame size={15} />
@@ -377,10 +377,10 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                   {/* 7-Day Nutrition Bar Chart */}
                   <div className="liquid-glass-card rounded-[26px] p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-display font-black text-sm text-[#292B25]">
+                      <span className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         {DAY_NAMES_FULL[selectedDay]}
                       </span>
-                      <span className="text-xs font-extrabold tabular-nums-fa text-[#292B25]">
+                      <span className="text-xs font-extrabold tabular-nums-fa text-[#292B25] dark:text-[#F5EFE8]">
                         {macroMetric === 'protein'
                           ? `${toFaDigits(activeDayStat.protein)} از ${toFaDigits(prefs.dailyProteinTarget)} گرم`
                           : `${toFaDigits(activeDayStat.cal)} از ${toFaDigits(prefs.dailyCalorieTarget)} کالری`}
@@ -406,7 +406,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             onClick={() => setSelectedDay(d.dayIdx)}
                             className="flex-1 h-full flex flex-col items-center justify-end gap-1.5"
                           >
-                            <span className="text-[9px] font-extrabold text-[#75746E] tabular-nums-fa">
+                            <span className="text-[9px] font-extrabold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                               {val > 0 ? toFaDigits(val) : '−'}
                             </span>
                             <div className="w-full max-w-[26px] flex-1 flex items-end">
@@ -420,14 +420,14 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                                       ? 'bg-[#5E8B42]'
                                       : 'bg-[#F04438]'
                                     : macroMetric === 'protein'
-                                      ? 'bg-[#D6E4CA]'
-                                      : 'bg-[#F2CEC8]'
+                                      ? 'bg-[#D6E4CA] dark:bg-[#324229]'
+                                      : 'bg-[#F2CEC8] dark:bg-[#4D2E2B]'
                                 }`}
                               />
                             </div>
                             <span
                               className={`text-[11px] font-black ${
-                                isSelected ? 'text-[#292B25]' : 'text-[#75746E]'
+                                isSelected ? 'text-[#292B25] dark:text-[#F5EFE8]' : 'text-[#75746E] dark:text-[#ADA89F]'
                               }`}
                             >
                               {DAY_NAMES_SHORT[d.dayIdx]}
@@ -440,7 +440,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
 
                   {/* Per-Meal Macro Breakdown for Active Day */}
                   <div className="space-y-2.5">
-                    <div className="font-display font-black text-sm text-[#292B25] px-1">
+                    <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] px-1">
                       سهم هر وعده در {DAY_NAMES_FULL[selectedDay]}
                     </div>
                     {activeDayStat.meals.map((meal) => {
@@ -471,24 +471,24 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                                 <MealSlotIcon slot={meal.slot} size={11} />
                                 {MEAL_SLOT_LABELS[meal.slot]}
                               </span>
-                              <span className="font-extrabold text-sm text-[#292B25] truncate">
+                              <span className="font-extrabold text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">
                                 {r.title}
                               </span>
                             </div>
                             <div className="flex items-center gap-3 mt-1.5 text-[11px] font-extrabold tabular-nums-fa">
-                              <span className="inline-flex items-center gap-1 text-[#5E8B42]">
+                              <span className="inline-flex items-center gap-1 text-[#5E8B42] dark:text-[#98C87A]">
                                 <IconMacroProtein size={12} />
                                 {toFaDigits(r.proteinG)}گ
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[#D98218]">
+                              <span className="inline-flex items-center gap-1 text-[#D98218] dark:text-[#F3B955]">
                                 <IconMacroCarbs size={12} />
                                 {toFaDigits(r.carbsG)}گ
                               </span>
-                              <span className="inline-flex items-center gap-1 text-[#3B82F6]">
+                              <span className="inline-flex items-center gap-1 text-[#3B82F6] dark:text-[#60A5FA]">
                                 <IconMacroFat size={12} />
                                 {toFaDigits(r.fatG)}گ
                               </span>
-                              <span className="text-[#75746E] mr-auto">
+                              <span className="text-[#75746E] dark:text-[#ADA89F] mr-auto">
                                 {toFaDigits(r.caloriesPerServing)} کالری
                               </span>
                             </div>
@@ -501,7 +501,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                   {/* Quick Daily Target Adjusters */}
                   <div className="liquid-glass-card rounded-[24px] p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-[#292B25]">هدف پروتئین روزانه</span>
+                      <span className="text-xs font-extrabold text-[#292B25] dark:text-[#F5EFE8]">هدف پروتئین روزانه</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -512,11 +512,11 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             )
                           }
                           aria-label="کاهش پروتئین"
-                          className="w-8 h-8 rounded-full bg-[#F3E9DE] text-[#292B25] flex items-center justify-center"
+                          className="w-8 h-8 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center"
                         >
                           <IconMinus size={14} />
                         </button>
-                        <span className="font-display font-black text-sm text-[#5E8B42] w-14 text-center tabular-nums-fa">
+                        <span className="font-display font-black text-sm text-[#5E8B42] dark:text-[#98C87A] w-14 text-center tabular-nums-fa">
                           {toFaDigits(prefs.dailyProteinTarget)} گرم
                         </span>
                         <button
@@ -535,8 +535,8 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-[#EFE4D8]">
-                      <span className="text-xs font-extrabold text-[#292B25]">هدف کالری روزانه</span>
+                    <div className="flex items-center justify-between pt-3 border-t border-[#EFE4D8] dark:border-white/10">
+                      <span className="text-xs font-extrabold text-[#292B25] dark:text-[#F5EFE8]">هدف کالری روزانه</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -547,11 +547,11 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             )
                           }
                           aria-label="کاهش کالری"
-                          className="w-8 h-8 rounded-full bg-[#F3E9DE] text-[#292B25] flex items-center justify-center"
+                          className="w-8 h-8 rounded-full bg-[#F3E9DE] dark:bg-[#2A2D26] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center"
                         >
                           <IconMinus size={14} />
                         </button>
-                        <span className="font-display font-black text-sm text-[#F04438] w-14 text-center tabular-nums-fa">
+                        <span className="font-display font-black text-sm text-[#F04438] dark:text-[#FF7E75] w-14 text-center tabular-nums-fa">
                           {toFaDigits(prefs.dailyCalorieTarget)}
                         </span>
                         <button
@@ -593,7 +593,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
 
                   <div className="space-y-2.5">
                     {weeklyInsights.sharedPerishables.length === 0 ? (
-                      <div className="liquid-glass-card rounded-[24px] p-6 text-center text-sm font-bold text-[#75746E]">
+                      <div className="liquid-glass-card rounded-[24px] p-6 text-center text-sm font-bold text-[#75746E] dark:text-[#ADA89F]">
                         با اضافه کردن وعده‌های بیشتر، همپوشانی مواد تازه اینجا نمایش داده می‌شود.
                       </div>
                     ) : (
@@ -604,7 +604,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             key={ing.code}
                             className="liquid-glass-card rounded-[22px] p-3.5 flex items-start gap-3"
                           >
-                            <div className="w-12 h-12 rounded-[16px] bg-[#EEF5E9] flex items-center justify-center shrink-0">
+                            <div className="w-12 h-12 rounded-[16px] bg-[#EEF5E9] dark:bg-[#232D1F] flex items-center justify-center shrink-0">
                               <IngredientIcon3D
                                 src={getIngredientIconPath(ing.code, ing.name)}
                                 alt={ing.name}
@@ -613,10 +613,10 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                             </div>
                             <div className="min-w-0 flex-1 space-y-1.5">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="font-display font-black text-sm text-[#292B25]">
+                                <span className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                                   {ing.name}
                                 </span>
-                                <span className="px-2.5 py-0.5 rounded-full bg-[#EEF5E9] text-[#4C6E35] text-[10px] font-extrabold tabular-nums-fa shrink-0">
+                                <span className="px-2.5 py-0.5 rounded-full bg-[#EEF5E9] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A] text-[10px] font-extrabold tabular-nums-fa shrink-0">
                                   در {toFaDigits(Math.max(2, usedIn.length))} وعده
                                 </span>
                               </div>
@@ -625,7 +625,7 @@ export const PlanInsightSheets: React.FC<PlanInsightSheetsProps> = ({
                                   {usedIn.slice(0, 4).map((title) => (
                                     <span
                                       key={title}
-                                      className="px-2 py-0.5 rounded-full bg-[#F6EFE7] text-[10px] font-bold text-[#5C5952]"
+                                      className="px-2 py-0.5 rounded-full bg-[#F6EFE7] dark:bg-[#2A2D26] text-[10px] font-bold text-[#5C5952] dark:text-[#C8C3BA]"
                                     >
                                       {title}
                                     </span>

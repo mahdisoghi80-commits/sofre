@@ -35,6 +35,7 @@ import {
   hapticSuccess,
   loadPersistedString,
   savePersistedString,
+  syncNativeStatusBar,
 } from '../utils/native';
 import {
   fetchLivePrices,
@@ -103,6 +104,7 @@ const DEFAULT_PREFS: UserPreferences = {
   reminderTime: '۱۷:۳۰',
   householdCode: 'SFR-404',
   isPro: false,
+  theme: 'light',
 };
 
 interface PersistedSnapshot {
@@ -309,27 +311,27 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, [autostart]);
 
-  // Load cached live Iranian grocery prices immediately, then refresh in background
-  const refreshLivePrices = useCallback(
-    async (force = false) => {
-      setIsSyncingPrices(true);
-      try {
-        const fresh = await fetchLivePrices(force);
-        if (fresh) {
-          setLivePrices(fresh);
-          if (force) {
-            hapticSuccess();
-            showToast('قیمت‌های روز بازار به‌روزرسانی شد');
-          }
-        } else if (force) {
-          showToast('دریافت قیمت جدید انجام نشد؛ قیمت‌های ذخیره فعال است');
-        }
-      } finally {
-        setIsSyncingPrices(false);
+  // Sync root dark class & native Android/iOS status bar icon colors whenever theme changes
+  useEffect(() => {
+    const isDark = prefs.theme === 'dark';
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', isDark);
+    }
+    syncNativeStatusBar(isDark);
+  }, [prefs.theme]);
+
+  // Silently sync live grocery prices in the background (no user-facing source or manual refresh UI)
+  const refreshLivePrices = useCallback(async (force = false) => {
+    setIsSyncingPrices(true);
+    try {
+      const fresh = await fetchLivePrices(force);
+      if (fresh) {
+        setLivePrices(fresh);
       }
-    },
-    [showToast]
-  );
+    } finally {
+      setIsSyncingPrices(false);
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -1091,7 +1093,7 @@ export const AppStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const resetOwnerOverrides = useCallback(() => {
     hapticMedium();
     setOwnerOverrides(EMPTY_OWNER_OVERRIDES);
-    showToast('قیمت‌های دستی حذف شد و قیمت روز بازار فعال است');
+    showToast('تنظیمات به حالت پیش‌فرض برگشت');
   }, [showToast]);
 
   const value: AppStateContextValue = {

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { AnimatePresence, motion } from 'motion/react';
 import { AppStateProvider, useAppState } from './context/AppStateContext';
+import { BootScreen } from './components/BootScreen';
 import { OnboardingFlow } from './components/OnboardingFlow';
 import { PlanScreen } from './components/PlanScreen';
 import { GroceryScreen } from './components/GroceryScreen';
@@ -13,6 +14,7 @@ import { RecipeDetailScreen } from './components/RecipeDetailScreen';
 import { CookModeScreen } from './components/CookModeScreen';
 import { ChefChatSheet } from './components/ChefChatSheet';
 import { SubscriptionSheet } from './components/SubscriptionSheet';
+import { scrollToTopInstant } from './utils/native';
 import type { Recipe } from './types/sofreh';
 import {
   ActionSheetsAndToast,
@@ -23,6 +25,7 @@ import {
 
 const SofrehShell: React.FC = () => {
   const {
+    hydrated,
     onboarded,
     activeTab,
     selectedRecipeId,
@@ -31,6 +34,11 @@ const SofrehShell: React.FC = () => {
     handleBackNavigation,
     showToast,
   } = useAppState();
+
+  const [bootMinElapsed, setBootMinElapsed] = useState(false);
+  const forceBootPreview =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('boot') === '1';
 
   const [activeSheet, setActiveSheet] = useState<ActiveSheetType>(null);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
@@ -41,6 +49,30 @@ const SofrehShell: React.FC = () => {
   }>({ open: false, recipe: null });
 
   const lastBackExitAttemptRef = useRef<number>(0);
+
+  // Brief deliberate boot splash beat so cold app launch feels smooth and intentional
+  useEffect(() => {
+    const timer = window.setTimeout(() => setBootMinElapsed(true), 700);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  // Prevent browser/WebView from restoring stale scroll offsets across views
+  useEffect(() => {
+    try {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    } catch {
+      // Ignore in restricted contexts
+    }
+  }, []);
+
+  // Always open every tab, recipe detail, or onboarding transition from the very top
+  useLayoutEffect(() => {
+    scrollToTopInstant();
+    const raf = window.requestAnimationFrame(scrollToTopInstant);
+    return () => window.cancelAnimationFrame(raf);
+  }, [activeTab, selectedRecipeId, onboarded]);
 
   const openChefChat = useCallback((recipe?: Recipe | null, servings?: number) => {
     setChefChatState({ open: true, recipe: recipe ?? null, servings });
@@ -109,12 +141,25 @@ const SofrehShell: React.FC = () => {
     };
   }, [handleBackNavigation, showToast]);
 
+  const showBoot = !hydrated || !bootMinElapsed || forceBootPreview;
+
+  if (!hydrated) {
+    return <BootScreen />;
+  }
+
   if (!onboarded) {
-    return <OnboardingFlow />;
+    return (
+      <>
+        <OnboardingFlow />
+        <AnimatePresence>{showBoot && <BootScreen key="boot-screen" />}</AnimatePresence>
+      </>
+    );
   }
 
   return (
-    <div className="min-h-dvh w-full ambient-canvas text-[#292B25] flex">
+    <div className="min-h-dvh w-full ambient-canvas text-[#292B25] dark:text-[#F5EFE8] flex">
+      <AnimatePresence>{showBoot && <BootScreen key="boot-screen" />}</AnimatePresence>
+
       {/* Desktop RTL Liquid Glass Sidebar */}
       <DesktopSidebar
         onOpenSheet={setActiveSheet}
@@ -130,7 +175,7 @@ const SofrehShell: React.FC = () => {
             : 'flex-1 min-w-0 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-32 lg:pb-12'
         }
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" onExitComplete={scrollToTopInstant}>
           {selectedRecipeId ? (
             <RecipeDetailScreen
               key={`recipe-${selectedRecipeId}`}

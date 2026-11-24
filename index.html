@@ -12,10 +12,32 @@
     <meta property="og:description" content="برنامه‌ریزی هفته غذایی، کنترل بودجه به تومان، لیست خرید یکپارچه و حالت آشپزی گام‌به‌گام." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/png" href="/assets/brand/logo-tile-coral.png" />
+    <link rel="apple-touch-icon" href="/assets/brand/logo-tile-coral.png" />
     <link rel="stylesheet" href="/assets/fonts/fonts.css" />
+    <script>
+      (function () {
+        try {
+          var isDark = localStorage.getItem('sofreh_theme') === 'dark';
+          if (!isDark) {
+            var raw = localStorage.getItem('sofreh_app_state_v2');
+            if (raw && raw.indexOf('"theme":"dark"') !== -1) isDark = true;
+          }
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#161714');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#FBF5EF] text-[#292B25] antialiased selection:bg-[#F04438]/15 selection:text-[#C42F26]">
-    <div id="root"></div>
+  <body class="bg-[#FBF5EF] dark:bg-[#161714] text-[#292B25] dark:text-[#F5EFE8] antialiased selection:bg-[#F04438]/15 selection:text-[#C42F26]">
+    <div id="root">
+      <div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+        <img src="/assets/brand/logo-mark-coral.png" alt="سفره" width="96" height="96" style="width:96px;height:96px;object-fit:contain;" />
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -43,7 +43,7 @@ export const MacroRing: React.FC<MacroRingProps> = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#F3E8DF"
+          className="stroke-[#F3E8DF] dark:stroke-[#2A2D26]"
           strokeWidth={strokeWidth}
         />
         <motion.circle
@@ -61,11 +61,11 @@ export const MacroRing: React.FC<MacroRingProps> = ({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <IconFlame size={15} className="text-[#F04438] mb-0.5" />
-        <span className="font-display text-lg font-black text-[#292B25] leading-none tabular-nums-fa">
+        <IconFlame size={15} className="text-[#F04438] dark:text-[#FF7E75] mb-0.5" />
+        <span className="font-display text-lg font-black text-[#292B25] dark:text-[#F5EFE8] leading-none tabular-nums-fa">
           {toPersianDigits(Math.round(calories))}
         </span>
-        <span className="text-[10px] font-bold text-[#8A847C] mt-0.5 tabular-nums-fa">
+        <span className="text-[10px] font-bold text-[#8A847C] dark:text-[#ADA89F] mt-0.5 tabular-nums-fa">
           از {toPersianDigits(Math.round(targetCalories))}
         </span>
       </div>

@@ -171,9 +171,9 @@ export const CookbookScreen: React.FC<{
   return (
     <div className="space-y-4">
       {/* CLEAN STICKY HEADER WITH SEARCH + SORT + FILTER */}
-      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 backdrop-blur-md border-b border-white/60 safe-top space-y-2.5">
+      <header className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 dark:bg-[#161714]/90 backdrop-blur-md border-b border-white/60 dark:border-white/10 safe-top space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="font-display font-black text-2xl text-[#292B25]">
+          <h1 className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8]">
             دستورها
           </h1>
 
@@ -183,7 +183,9 @@ export const CookbookScreen: React.FC<{
                 type="button"
                 onClick={() => setMode('explore')}
                 className={`px-3 py-1 rounded-full text-xs font-extrabold transition ${
-                  mode === 'explore' ? 'bg-[#292B25] text-white' : 'text-[#5C5952]'
+                  mode === 'explore'
+                    ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                    : 'text-[#5C5952] dark:text-[#ADA89F]'
                 }`}
               >
                 همه
@@ -192,7 +194,9 @@ export const CookbookScreen: React.FC<{
                 type="button"
                 onClick={() => setMode('saved')}
                 className={`px-3 py-1 rounded-full text-xs font-extrabold transition ${
-                  mode === 'saved' ? 'bg-[#292B25] text-white' : 'text-[#5C5952]'
+                  mode === 'saved'
+                    ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                    : 'text-[#5C5952] dark:text-[#ADA89F]'
                 }`}
               >
                 ذخیره‌ها
@@ -218,7 +222,7 @@ export const CookbookScreen: React.FC<{
             <div className="relative">
               <IconSearch
                 size={16}
-                className="text-[#75746E] absolute right-3.5 top-1/2 -translate-y-1/2"
+                className="text-[#75746E] dark:text-[#ADA89F] absolute right-3.5 top-1/2 -translate-y-1/2"
               />
               <input
                 type="text"
@@ -228,7 +232,7 @@ export const CookbookScreen: React.FC<{
                   setVisibleCount(PAGE_SIZE);
                 }}
                 placeholder="جستجوی غذا یا ماده اولیه…"
-                className="w-full h-10 pr-10 pl-3 rounded-full bg-white border border-[#E6DACD] text-xs font-bold focus:outline-none focus:border-[#F04438]"
+                className="w-full h-10 pr-10 pl-3 rounded-full bg-white dark:bg-[#252721] border border-[#E6DACD] dark:border-white/10 text-xs font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
               />
             </div>
 
@@ -244,8 +248,8 @@ export const CookbookScreen: React.FC<{
                   data-testid="cookbook-sort-btn"
                   className={`h-9 px-3.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition ${
                     sortBy !== 'recommended'
-                      ? 'bg-[#292B25] text-white'
-                      : 'liquid-glass text-[#292B25]'
+                      ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                      : 'liquid-glass text-[#292B25] dark:text-[#F5EFE8]'
                   }`}
                 >
                   <IconSort size={15} />
@@ -263,7 +267,7 @@ export const CookbookScreen: React.FC<{
                   className={`relative h-9 px-3.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 transition ${
                     activeFilterCount > 0
                       ? 'coral-glass-pill text-white'
-                      : 'liquid-glass text-[#292B25]'
+                      : 'liquid-glass text-[#292B25] dark:text-[#F5EFE8]'
                   }`}
                 >
                   <IconFilter size={15} />
@@ -276,7 +280,7 @@ export const CookbookScreen: React.FC<{
                 </motion.button>
               </div>
 
-              <span className="text-[11px] font-extrabold text-[#75746E] tabular-nums-fa shrink-0">
+              <span className="text-[11px] font-extrabold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa shrink-0">
                 {toFaDigits(filteredRecipes.length)} غذا
               </span>
             </div>
@@ -353,7 +357,7 @@ export const CookbookScreen: React.FC<{
           {/* VISUAL PHOTO-FIRST EDITORIAL TILE GRID (2-col mobile, 3-col desktop, featured spotlight tile!) */}
           {visibleRecipes.length === 0 ? (
             <div className="liquid-glass-card rounded-[28px] p-8 text-center space-y-3">
-              <div className="font-display font-black text-base text-[#292B25]">
+              <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">
                 غذایی با این فیلتر پیدا نشد
               </div>
               <button
@@ -391,7 +395,7 @@ export const CookbookScreen: React.FC<{
               <button
                 type="button"
                 onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                className="px-6 py-3 rounded-full liquid-glass font-extrabold text-xs text-[#292B25] hover:bg-white transition"
+                className="px-6 py-3 rounded-full liquid-glass font-extrabold text-xs text-[#292B25] dark:text-[#F5EFE8] hover:bg-white dark:hover:bg-[#2A2C25] transition"
               >
                 نمایش بیشتر ({toFaDigits(filteredRecipes.length - visibleCount)})
               </button>
@@ -415,7 +419,7 @@ export const CookbookScreen: React.FC<{
               value={newBookName}
               onChange={(e) => setNewBookName(e.target.value)}
               placeholder="نام دفترچهٔ جدید…"
-              className="flex-1 h-9 bg-transparent text-xs font-bold focus:outline-none"
+              className="flex-1 h-9 bg-transparent text-xs font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none"
             />
             <button
               type="submit"
@@ -433,13 +437,13 @@ export const CookbookScreen: React.FC<{
             return (
               <section key={cb.id} className="liquid-glass-card rounded-[26px] p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-display font-black text-lg text-[#292B25]">{cb.name}</h3>
-                  <span className="text-xs font-bold text-[#75746E] tabular-nums-fa">
+                  <h3 className="font-display font-black text-lg text-[#292B25] dark:text-[#F5EFE8]">{cb.name}</h3>
+                  <span className="text-xs font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                     {toFaDigits(cbRecipes.length)}
                   </span>
                 </div>
                 {cbRecipes.length === 0 ? (
-                  <p className="text-xs text-[#75746E]">هنوز غذایی ذخیره نشده است.</p>
+                  <p className="text-xs text-[#75746E] dark:text-[#ADA89F]">هنوز غذایی ذخیره نشده است.</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2.5">
                     {cbRecipes.map((r) => (
@@ -477,15 +481,15 @@ export const CookbookScreen: React.FC<{
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
               data-testid="cookbook-sort-sheet"
-              className="w-full sm:max-w-md bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] p-5 space-y-3.5 shadow-2xl border border-white"
+              className="w-full sm:max-w-md bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] p-5 space-y-3.5 shadow-2xl border border-white dark:border-white/10"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-black text-xl text-[#292B25]">مرتب‌سازی</h3>
+                <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">مرتب‌سازی</h3>
                 <button
                   type="button"
                   onClick={() => setSortSheetOpen(false)}
                   aria-label="بستن"
-                  className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                  className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                 >
                   <IconClose size={17} />
                 </button>
@@ -506,8 +510,8 @@ export const CookbookScreen: React.FC<{
                       }}
                       className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between text-right transition ${
                         active
-                          ? 'bg-[#292B25] text-white'
-                          : 'bg-white text-[#292B25] border border-[#EAE0D5]'
+                          ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                          : 'bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10'
                       }`}
                     >
                       <div className="font-display font-black text-sm">{opt.label}</div>
@@ -542,15 +546,15 @@ export const CookbookScreen: React.FC<{
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
               data-testid="cookbook-filter-sheet"
-              className="w-full sm:max-w-lg max-h-[84dvh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col gap-5 shadow-2xl border border-white overflow-y-auto"
+              className="w-full sm:max-w-lg max-h-[84dvh] bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col gap-5 shadow-2xl border border-white dark:border-white/10 overflow-y-auto"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-black text-xl text-[#292B25]">فیلتر دستورها</h3>
+                <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">فیلتر دستورها</h3>
                 <button
                   type="button"
                   onClick={() => setFilterSheetOpen(false)}
                   aria-label="بستن فیلتر"
-                  className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                  className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                 >
                   <IconClose size={17} />
                 </button>
@@ -558,7 +562,7 @@ export const CookbookScreen: React.FC<{
 
               {/* Cuisine Section */}
               <div className="space-y-2.5">
-                <div className="text-xs font-extrabold text-[#75746E]">آشپزی</div>
+                <div className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F]">آشپزی</div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {CUISINE_FILTERS.map((c) => {
                     const active = selectedCuisine === c;
@@ -572,8 +576,8 @@ export const CookbookScreen: React.FC<{
                         }}
                         className={`py-2.5 px-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition ${
                           active
-                            ? 'bg-[#292B25] text-white'
-                            : 'bg-white text-[#292B25] border border-[#EAE0D5]'
+                            ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                            : 'bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10'
                         }`}
                       >
                         {c !== 'همه' && getCuisineFlag(c)}
@@ -586,7 +590,7 @@ export const CookbookScreen: React.FC<{
 
               {/* Max Cook Time */}
               <div className="space-y-2.5">
-                <div className="text-xs font-extrabold text-[#75746E]">حداکثر زمان پخت</div>
+                <div className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F]">حداکثر زمان پخت</div>
                 <div className="grid grid-cols-4 gap-2">
                   {TIME_OPTIONS.map((t) => {
                     const active = maxMinutes === t.value;
@@ -600,8 +604,8 @@ export const CookbookScreen: React.FC<{
                         }}
                         className={`py-2.5 rounded-2xl text-xs font-extrabold transition ${
                           active
-                            ? 'bg-[#292B25] text-white'
-                            : 'bg-white text-[#292B25] border border-[#EAE0D5]'
+                            ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                            : 'bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10'
                         }`}
                       >
                         {t.label}
@@ -613,7 +617,7 @@ export const CookbookScreen: React.FC<{
 
               {/* Meal Slot Section */}
               <div className="space-y-2.5">
-                <div className="text-xs font-extrabold text-[#75746E]">وعده</div>
+                <div className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F]">وعده</div>
                 <div className="grid grid-cols-4 gap-2">
                   {(['همه', 'breakfast', 'lunch', 'dinner'] as const).map((slot) => {
                     const active = selectedMealSlot === slot;
@@ -627,8 +631,8 @@ export const CookbookScreen: React.FC<{
                         }}
                         className={`py-2.5 rounded-2xl text-xs font-extrabold transition ${
                           active
-                            ? 'bg-[#292B25] text-white'
-                            : 'bg-white text-[#292B25] border border-[#EAE0D5]'
+                            ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                            : 'bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10'
                         }`}
                       >
                         {slot === 'همه' ? 'همه' : MEAL_SLOT_LABELS[slot]}
@@ -648,13 +652,13 @@ export const CookbookScreen: React.FC<{
                 className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between text-xs font-extrabold transition ${
                   onlyPantryFriendly
                     ? 'bg-[#68734E] text-white'
-                    : 'bg-white text-[#292B25] border border-[#EAE0D5]'
+                    : 'bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] border border-[#EAE0D5] dark:border-white/10'
                 }`}
               >
                 <span>مناسب موجودی یخچال</span>
                 <span
                   className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                    onlyPantryFriendly ? 'bg-white text-[#68734E]' : 'bg-[#F3E9DE]'
+                    onlyPantryFriendly ? 'bg-white text-[#68734E]' : 'bg-[#F3E9DE] dark:bg-[#32352E]'
                   }`}
                 >
                   {onlyPantryFriendly && <IconCheck size={13} />}
@@ -663,7 +667,7 @@ export const CookbookScreen: React.FC<{
 
               {/* Style / Speed / Diet Labels */}
               <div className="space-y-2.5">
-                <div className="text-xs font-extrabold text-[#75746E]">برچسب و ویژگی</div>
+                <div className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F]">برچسب و ویژگی</div>
                 <div className="flex flex-wrap gap-2">
                   {SMART_LABEL_FILTERS.map((lbl) => {
                     const active = selectedLabel === lbl;
@@ -678,7 +682,7 @@ export const CookbookScreen: React.FC<{
                         className={`px-3.5 py-2 rounded-full text-xs font-extrabold transition ${
                           active
                             ? 'coral-glass-pill text-white'
-                            : 'bg-white text-[#5C5952] border border-[#EAE0D5]'
+                            : 'bg-white dark:bg-[#262822] text-[#5C5952] dark:text-[#C8C3BA] border border-[#EAE0D5] dark:border-white/10'
                         }`}
                       >
                         {lbl}
@@ -693,7 +697,7 @@ export const CookbookScreen: React.FC<{
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="h-12 px-5 rounded-full bg-white text-[#292B25] font-extrabold text-xs border border-[#E6DACD]"
+                    className="h-12 px-5 rounded-full bg-white dark:bg-[#262822] text-[#292B25] dark:text-[#F5EFE8] font-extrabold text-xs border border-[#E6DACD] dark:border-white/10"
                   >
                     حذف فیلترها
                   </button>
@@ -805,7 +809,7 @@ const RecipePhotoTile: React.FC<{
     >
       {/* Photo Stage with Seamless Bottom Fade */}
       <div
-        className={`relative w-full overflow-hidden bg-[#EFE4D8] ${
+        className={`relative w-full overflow-hidden bg-[#EFE4D8] dark:bg-[#252721] ${
           featured ? 'h-44 sm:h-52' : 'h-32 sm:h-36'
         }`}
       >
@@ -819,19 +823,15 @@ const RecipePhotoTile: React.FC<{
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'linear-gradient(to bottom, rgba(20,18,16,0.18) 0%, rgba(20,18,16,0) 45%, rgba(255,253,251,0.92) 100%)',
-          }}
+          className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/20 via-transparent to-[#FFFDFB]/95 dark:to-[#1E201B]/95"
         />
 
         {/* Top-Right Flat Rectangular Flag + Category */}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-          <span className="px-2 py-1 rounded-full bg-white/88 backdrop-blur-sm shadow-sm flex items-center gap-1.5">
+          <span className="px-2 py-1 rounded-full bg-white/88 dark:bg-[#1E201B]/88 backdrop-blur-sm shadow-sm flex items-center gap-1.5">
             {getCuisineFlag(recipe.cuisine)}
             {featured && (
-              <span className="text-[10px] font-extrabold text-[#292B25]">
+              <span className="text-[10px] font-extrabold text-[#292B25] dark:text-[#F5EFE8]">
                 {recipe.category}
               </span>
             )}
@@ -841,7 +841,7 @@ const RecipePhotoTile: React.FC<{
         {/* Top-Left Saved Badge / Price */}
         <div className="absolute top-2.5 left-2.5 flex items-center gap-1">
           {isSaved && (
-            <span className="w-7 h-7 rounded-full bg-white/90 text-[#F04438] flex items-center justify-center shadow-sm">
+            <span className="w-7 h-7 rounded-full bg-white/90 dark:bg-[#1E201B]/90 text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center shadow-sm">
               <IconBookmark size={14} filled />
             </span>
           )}
@@ -854,7 +854,7 @@ const RecipePhotoTile: React.FC<{
             alt={recipe.title}
             sizeClass={featured ? 'w-12 h-12' : 'w-10 h-10'}
             roundedClass="rounded-[13px]"
-            className="ring-2 ring-white"
+            className="ring-2 ring-white dark:ring-[#1E201B]"
           />
         </div>
       </div>
@@ -863,31 +863,31 @@ const RecipePhotoTile: React.FC<{
       <div className="p-3 pt-2 flex-1 flex flex-col justify-between gap-2">
         <div>
           <h3
-            className={`font-display font-black text-[#292B25] leading-snug line-clamp-1 ${
+            className={`font-display font-black text-[#292B25] dark:text-[#F5EFE8] leading-snug line-clamp-1 ${
               featured ? 'text-lg' : 'text-[14px]'
             }`}
           >
             {recipe.title}
           </h3>
           {featured && (
-            <p className="text-xs font-bold text-[#75746E] line-clamp-1 mt-0.5">
+            <p className="text-xs font-bold text-[#75746E] dark:text-[#ADA89F] line-clamp-1 mt-0.5">
               {recipe.subtitle}
             </p>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-[#F2E9DF] text-[10.5px] font-extrabold tabular-nums-fa">
-          <div className="flex items-center gap-2 text-[#75746E]">
+        <div className="flex items-center justify-between gap-1.5 pt-1 border-t border-[#F2E9DF] dark:border-white/10 text-[10.5px] font-extrabold tabular-nums-fa">
+          <div className="flex items-center gap-2 text-[#75746E] dark:text-[#ADA89F]">
             <span className="inline-flex items-center gap-0.5">
-              <IconClock size={12} className="text-[#C87955]" />
+              <IconClock size={12} className="text-[#C87955] dark:text-[#E59B78]" />
               {toFaDigits(totalMin)}د
             </span>
             <span className="inline-flex items-center gap-0.5">
-              <IconFlame size={12} className="text-[#F04438]" />
+              <IconFlame size={12} className="text-[#F04438] dark:text-[#FF7E75]" />
               {toFaDigits(recipe.caloriesPerServing)}
             </span>
           </div>
-          <span className="text-[#292B25] shrink-0">
+          <span className="text-[#292B25] dark:text-[#F5EFE8] shrink-0">
             {toFaDigits(Math.round(recipe.costPerServingToman / 1000))} هـ ت
           </span>
         </div>

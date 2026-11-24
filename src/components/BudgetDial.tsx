@@ -177,8 +177,7 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
             cx={CX}
             cy={CY}
             r={82}
-            fill="rgba(255,255,255,0.82)"
-            stroke="rgba(255,255,255,0.98)"
+            className="fill-white/85 dark:fill-[#22241F] stroke-white dark:stroke-white/10"
             strokeWidth="2"
           />
 
@@ -190,7 +189,7 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
               y1={t.p1.y}
               x2={t.p2.x}
               y2={t.p2.y}
-              stroke={t.active ? '#F04438' : '#D9CEC2'}
+              className={t.active ? 'stroke-[#F04438]' : 'stroke-[#D9CEC2] dark:stroke-[#3D4037]'}
               strokeWidth={t.isMajor ? 2.2 : 1.3}
               strokeLinecap="round"
               opacity={t.active ? 0.95 : 0.65}
@@ -201,7 +200,7 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
           <path
             d={describeArc(CX, CY, RADIUS, START_ANGLE, END_ANGLE)}
             fill="none"
-            stroke="#EAE0D5"
+            className="stroke-[#EAE0D5] dark:stroke-[#2D3028]"
             strokeWidth="13"
             strokeLinecap="round"
           />
@@ -224,21 +223,21 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
           </g>
 
           {/* Min / Max corner indicators */}
-          <text x="44" y="242" textAnchor="middle" fill="#8A857C" fontSize="11" fontWeight="700">
+          <text x="44" y="242" textAnchor="middle" className="fill-[#8A857C] dark:fill-[#ADA89F]" fontSize="11" fontWeight="700">
             {formatCompactBudget(effectiveMin)}
           </text>
-          <text x="236" y="242" textAnchor="middle" fill="#8A857C" fontSize="11" fontWeight="700">
+          <text x="236" y="242" textAnchor="middle" className="fill-[#8A857C] dark:fill-[#ADA89F]" fontSize="11" fontWeight="700">
             {formatCompactBudget(effectiveMax)}
           </text>
         </svg>
 
         {/* Centered Live Budget Value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-2 px-12 text-center">
-          <div className="font-display font-black text-[23px] leading-tight text-[#292B25] tabular-nums-fa">
+          <div className="font-display font-black text-[23px] leading-tight text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
             {millionText}
           </div>
-          <div className="text-[11px] font-extrabold text-[#F04438] mt-1">تومان در هفته</div>
-          <div className="text-[10px] font-bold text-[#75746E] mt-1.5 tabular-nums-fa">
+          <div className="text-[11px] font-extrabold text-[#F04438] dark:text-[#FF7E75] mt-1">تومان در هفته</div>
+          <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F] mt-1.5 tabular-nums-fa">
             هر پرس ≈ {formatToman(perServing)}
           </div>
         </div>
@@ -253,12 +252,12 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
             onChange(Math.max(effectiveMin, clamped - step));
           }}
           aria-label="کاهش بودجه"
-          className="w-11 h-11 rounded-full liquid-glass text-[#292B25] flex items-center justify-center shadow-sm"
+          className="w-11 h-11 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
         >
           <IconMinus size={18} />
         </motion.button>
 
-        <span className="text-xs font-extrabold text-[#9E9B94] tabular-nums-fa min-w-[72px] text-center">
+        <span className="text-xs font-extrabold text-[#9E9B94] dark:text-[#ADA89F] tabular-nums-fa min-w-[72px] text-center">
           {formatCompactBudget(step)}
         </span>
 
@@ -289,7 +288,7 @@ export const BudgetDial: React.FC<BudgetDialProps> = ({
               className={`py-2 rounded-full text-[11px] font-extrabold transition text-center whitespace-nowrap ${
                 active
                   ? 'coral-glass-pill text-white'
-                  : 'bg-white/85 text-[#5C5952] border border-[#E8DDD0]'
+                  : 'bg-white/85 dark:bg-[#262822] text-[#5C5952] dark:text-[#C8C3BA] border border-[#E8DDD0] dark:border-white/10'
               }`}
             >
               {p.label}

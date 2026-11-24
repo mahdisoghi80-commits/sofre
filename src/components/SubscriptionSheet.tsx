@@ -58,7 +58,7 @@ export const SubscriptionSheet: React.FC<{
             transition={{ type: 'spring', stiffness: 360, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
             data-testid="subscription-sheet"
-            className="w-full sm:max-w-md bg-[#FBF5EF] rounded-t-[34px] sm:rounded-[34px] p-5 space-y-5 shadow-2xl border border-white"
+            className="w-full sm:max-w-md bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[34px] sm:rounded-[34px] p-5 space-y-5 shadow-2xl border border-white dark:border-white/10"
           >
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -67,11 +67,11 @@ export const SubscriptionSheet: React.FC<{
                   <IconCrown size={20} />
                 </span>
                 <div>
-                  <h3 className="font-display font-black text-xl text-[#292B25] leading-tight">
+                  <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8] leading-tight">
                     سفره پلاس
                   </h3>
                   {prefs.isPro && (
-                    <span className="text-[11px] font-extrabold text-[#5E8B42]">
+                    <span className="text-[11px] font-extrabold text-[#5E8B42] dark:text-[#98C87A]">
                       اشتراک فعال
                     </span>
                   )}
@@ -81,7 +81,7 @@ export const SubscriptionSheet: React.FC<{
                 type="button"
                 onClick={onClose}
                 aria-label="بستن"
-                className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
               >
                 <IconClose size={17} />
               </button>
@@ -92,12 +92,12 @@ export const SubscriptionSheet: React.FC<{
               {PERKS.map((perk) => (
                 <div
                   key={perk.label}
-                  className="rounded-[20px] bg-white p-3 flex items-center gap-2.5 border border-[#EFE4D8]"
+                  className="rounded-[20px] bg-white dark:bg-[#262822] p-3 flex items-center gap-2.5 border border-[#EFE4D8] dark:border-white/10"
                 >
-                  <span className="w-8 h-8 rounded-full bg-[#FFF2EE] text-[#F04438] flex items-center justify-center shrink-0">
+                  <span className="w-8 h-8 rounded-full bg-[#FFF2EE] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center shrink-0">
                     {perk.icon}
                   </span>
-                  <span className="text-xs font-extrabold text-[#292B25] leading-snug">
+                  <span className="text-xs font-extrabold text-[#292B25] dark:text-[#F5EFE8] leading-snug">
                     {perk.label}
                   </span>
                 </div>
@@ -114,18 +114,18 @@ export const SubscriptionSheet: React.FC<{
                 }}
                 className={`relative rounded-[24px] p-4 text-right transition-all border-2 ${
                   selectedPlan === 'yearly'
-                    ? 'bg-white border-[#F04438] shadow-[0_10px_24px_rgba(240,68,56,0.14)]'
-                    : 'bg-white/75 border-transparent'
+                    ? 'bg-white dark:bg-[#262822] border-[#F04438] shadow-[0_10px_24px_rgba(240,68,56,0.14)]'
+                    : 'bg-white/75 dark:bg-[#22241F]/85 border-transparent'
                 }`}
               >
-                <span className="inline-block px-2 py-0.5 rounded-full bg-[#EEF2E6] text-[#4C6E35] text-[10px] font-extrabold mb-2">
+                <span className="inline-block px-2 py-0.5 rounded-full bg-[#EEF2E6] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A] text-[10px] font-extrabold mb-2">
                   ۴۵٪ تخفیف
                 </span>
-                <div className="font-display font-black text-base text-[#292B25]">سالانه</div>
-                <div className="font-display font-black text-xl text-[#F04438] mt-1 tabular-nums-fa">
+                <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">سالانه</div>
+                <div className="font-display font-black text-xl text-[#F04438] dark:text-[#FF7E75] mt-1 tabular-nums-fa">
                   ۹۹ هزار
                 </div>
-                <div className="text-[10px] font-bold text-[#75746E]">ماهانه · پرداخت سالانه</div>
+                <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F]">ماهانه · پرداخت سالانه</div>
               </button>
 
               <button
@@ -136,15 +136,15 @@ export const SubscriptionSheet: React.FC<{
                 }}
                 className={`rounded-[24px] p-4 text-right transition-all border-2 flex flex-col justify-end ${
                   selectedPlan === 'monthly'
-                    ? 'bg-white border-[#F04438] shadow-[0_10px_24px_rgba(240,68,56,0.14)]'
-                    : 'bg-white/75 border-transparent'
+                    ? 'bg-white dark:bg-[#262822] border-[#F04438] shadow-[0_10px_24px_rgba(240,68,56,0.14)]'
+                    : 'bg-white/75 dark:bg-[#22241F]/85 border-transparent'
                 }`}
               >
-                <div className="font-display font-black text-base text-[#292B25]">ماهانه</div>
-                <div className="font-display font-black text-xl text-[#292B25] mt-1 tabular-nums-fa">
+                <div className="font-display font-black text-base text-[#292B25] dark:text-[#F5EFE8]">ماهانه</div>
+                <div className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8] mt-1 tabular-nums-fa">
                   ۱۷۹ هزار
                 </div>
-                <div className="text-[10px] font-bold text-[#75746E]">تومان در ماه</div>
+                <div className="text-[10px] font-bold text-[#75746E] dark:text-[#ADA89F]">تومان در ماه</div>
               </button>
             </div>
 

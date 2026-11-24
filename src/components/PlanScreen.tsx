@@ -225,12 +225,12 @@ export const PlanScreen: React.FC<{
       {/* APPLE-CLEAN HEADER: Brand + Single Buy Subscription CTA */}
       <header
         data-testid="plan-sticky-header"
-        className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 backdrop-blur-md border-b border-white/60 safe-top"
+        className="sticky top-0 z-30 -mx-4 px-4 py-2.5 bg-[#FBF5EF]/90 dark:bg-[#161714]/90 backdrop-blur-md border-b border-white/60 dark:border-white/10 safe-top"
       >
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <SofrehLogoMark className="w-9 h-9 shrink-0 shadow-sm" />
-            <h1 className="font-display font-black text-2xl text-[#292B25] tracking-tight">
+          <div className="flex items-center gap-2">
+            <SofrehLogoMark variant="mark" className="w-10 h-10 shrink-0" />
+            <h1 className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8] tracking-tight">
               سفره
             </h1>
           </div>
@@ -245,13 +245,13 @@ export const PlanScreen: React.FC<{
             data-testid="plan-buy-subscription-btn"
             className={`h-9 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-extrabold whitespace-nowrap shrink-0 transition shadow-sm ${
               prefs.isPro
-                ? 'bg-[#EEF2E6] text-[#4C6E35] border border-[#5E8B42]/20'
-                : 'bg-[#292B25] text-white hover:bg-black'
+                ? 'bg-[#EEF2E6] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A] border border-[#5E8B42]/20 dark:border-[#8EC06E]/30'
+                : 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] hover:bg-black dark:hover:bg-white'
             }`}
           >
             <IconCrown
               size={15}
-              className={prefs.isPro ? 'text-[#5E8B42]' : 'text-[#F8C146]'}
+              className={prefs.isPro ? 'text-[#5E8B42] dark:text-[#98C87A]' : 'text-[#F8C146] dark:text-[#D98A1C]'}
             />
             <span>{prefs.isPro ? 'سفره پلاس' : 'خرید اشتراک'}</span>
           </motion.button>
@@ -280,7 +280,7 @@ export const PlanScreen: React.FC<{
               )}
               <span
                 className={`relative z-10 font-display font-black text-sm ${
-                  active ? 'text-white' : 'text-[#292B25]'
+                  active ? 'text-white' : 'text-[#292B25] dark:text-[#F5EFE8]'
                 }`}
               >
                 {shortName}
@@ -311,7 +311,7 @@ export const PlanScreen: React.FC<{
           <div className="flex items-center justify-between">
             <h2
               data-testid="plan-active-day-title"
-              className="font-display font-black text-lg text-[#292B25]"
+              className="font-display font-black text-lg text-[#292B25] dark:text-[#F5EFE8]"
             >
               {DAY_NAMES_FULL[selectedDay]}
             </h2>
@@ -378,8 +378,8 @@ export const PlanScreen: React.FC<{
               data-testid="plan-prep-alert-card"
               className={`w-full rounded-[26px] p-3.5 flex items-center justify-between gap-3 text-right transition border ${
                 donePrepIds[tomorrowSoaking.recipeId]
-                  ? 'bg-[#EEF2E6]/70 border-[#5E8B42]/25'
-                  : 'bg-[#292B25] text-white border-[#292B25] shadow-[0_10px_24px_rgba(41,43,37,0.16)]'
+                  ? 'bg-[#EEF2E6]/70 dark:bg-[#232D1F] border-[#5E8B42]/25 dark:border-[#8EC06E]/30'
+                  : 'bg-[#292B25] dark:bg-[#252721] text-white border-[#292B25] dark:border-white/12 shadow-[0_10px_24px_rgba(41,43,37,0.16)]'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -400,7 +400,7 @@ export const PlanScreen: React.FC<{
                   <div
                     className={`text-[10px] font-extrabold ${
                       donePrepIds[tomorrowSoaking.recipeId]
-                        ? 'text-[#5E8B42]'
+                        ? 'text-[#5E8B42] dark:text-[#98C87A]'
                         : 'text-[#FFD66B]'
                     }`}
                   >
@@ -408,14 +408,14 @@ export const PlanScreen: React.FC<{
                   </div>
                   <div
                     className={`font-display font-black text-sm truncate ${
-                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#292B25]' : 'text-white'
+                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#292B25] dark:text-[#F5EFE8]' : 'text-white'
                     }`}
                   >
                     {tomorrowSoaking.legumes.join(' · ')}
                   </div>
                   <div
                     className={`text-[11px] font-bold truncate ${
-                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#75746E]' : 'text-white/65'
+                      donePrepIds[tomorrowSoaking.recipeId] ? 'text-[#75746E] dark:text-[#ADA89F]' : 'text-white/65'
                     }`}
                   >
                     {DAY_NAMES_FULL[tomorrowSoaking.dayIndex]} · {tomorrowSoaking.recipeTitle}
@@ -449,12 +449,12 @@ export const PlanScreen: React.FC<{
               className="w-full liquid-glass-card rounded-[26px] px-4 py-3.5 flex items-center justify-between gap-3 text-right hover:border-[#5E8B42]/40 transition"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <span className="w-11 h-11 rounded-[16px] bg-[#EEF2E6] text-[#5E8B42] flex items-center justify-center shrink-0">
+                <span className="w-11 h-11 rounded-[16px] bg-[#EEF2E6] dark:bg-[#253020] text-[#5E8B42] dark:text-[#8EC06E] flex items-center justify-center shrink-0">
                   <IconPiggyBank size={22} />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[11px] font-bold text-[#75746E]">صرفه‌جویی هفته</div>
-                  <div className="font-display font-black text-lg text-[#4C6E35] tabular-nums-fa leading-tight">
+                  <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">صرفه‌جویی هفته</div>
+                  <div className="font-display font-black text-lg text-[#4C6E35] dark:text-[#98C87A] tabular-nums-fa leading-tight">
                     {formatToman(weeklyInsights.estimatedWasteSavedToman)}
                   </div>
                 </div>
@@ -467,7 +467,7 @@ export const PlanScreen: React.FC<{
                     <span
                       key={ing.code}
                       title={ing.name}
-                      className="w-9 h-9 rounded-full bg-[#FBF5EF] border-2 border-white shadow-sm flex items-center justify-center"
+                      className="w-9 h-9 rounded-full bg-[#FBF5EF] dark:bg-[#2A2D26] border-2 border-white dark:border-[#20221D] shadow-sm flex items-center justify-center"
                     >
                       <IngredientIcon3D
                         src={getIngredientIconPath(ing.code, ing.name)}
@@ -477,7 +477,7 @@ export const PlanScreen: React.FC<{
                     </span>
                   ))}
                 </div>
-                <IconCaretLeft size={16} className="text-[#9B958C]" />
+                <IconCaretLeft size={16} className="text-[#9B958C] dark:text-[#8E8A82]" />
               </div>
             </motion.button>
           )}
@@ -494,10 +494,10 @@ export const PlanScreen: React.FC<{
             className="w-full text-right liquid-glass-card rounded-[28px] p-5 space-y-3 hover:border-[#5E8B42]/35 transition"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-[#75746E]">
+              <span className="text-xs font-extrabold text-[#75746E] dark:text-[#ADA89F]">
                 ارزش غذایی {DAY_NAMES_FULL[selectedDay]}
               </span>
-              <span className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#5E8B42]">
+              <span className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#5E8B42] dark:text-[#8EC06E]">
                 <span>نمودار هفته</span>
                 <IconCaretLeft size={14} />
               </span>
@@ -518,37 +518,37 @@ export const PlanScreen: React.FC<{
                     val: dayMacros.protein,
                     target: prefs.dailyProteinTarget,
                     color: '#5E8B42',
-                    track: 'bg-[#E9EFE1]',
-                    icon: <IconMacroProtein size={14} className="text-[#5E8B42]" />,
+                    track: 'bg-[#E9EFE1] dark:bg-[#2A2E26]',
+                    icon: <IconMacroProtein size={14} className="text-[#5E8B42] dark:text-[#8EC06E]" />,
                   },
                   {
                     label: 'کربوهیدرات',
                     val: dayMacros.carbs,
                     target: targetCarbs,
                     color: '#E59326',
-                    track: 'bg-[#F8EFE2]',
-                    icon: <IconMacroCarbs size={14} className="text-[#E59326]" />,
+                    track: 'bg-[#F8EFE2] dark:bg-[#2E2A22]',
+                    icon: <IconMacroCarbs size={14} className="text-[#E59326] dark:text-[#F3B955]" />,
                   },
                   {
                     label: 'چربی',
                     val: dayMacros.fat,
                     target: targetFat,
                     color: '#3B82F6',
-                    track: 'bg-[#E9F0FC]',
-                    icon: <IconMacroFat size={14} className="text-[#3B82F6]" />,
+                    track: 'bg-[#E9F0FC] dark:bg-[#232A36]',
+                    icon: <IconMacroFat size={14} className="text-[#3B82F6] dark:text-[#60A5FA]" />,
                   },
                 ].map((m) => {
                   const pct = Math.min(100, Math.round((m.val / Math.max(1, m.target)) * 100));
                   return (
                     <div key={m.label} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="inline-flex items-center gap-1.5 font-extrabold text-[#292B25]">
+                        <span className="inline-flex items-center gap-1.5 font-extrabold text-[#292B25] dark:text-[#F5EFE8]">
                           {m.icon}
                           <span>{m.label}</span>
                         </span>
-                        <span className="font-extrabold text-[#292B25] tabular-nums-fa">
+                        <span className="font-extrabold text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
                           {toFaDigits(m.val)}
-                          <span className="text-[#8A847C] font-bold text-[10px]">
+                          <span className="text-[#8A847C] dark:text-[#9A958C] font-bold text-[10px]">
                             {' '}از {toFaDigits(m.target)} گرم
                           </span>
                         </span>
@@ -580,12 +580,12 @@ export const PlanScreen: React.FC<{
             {/* Single Crystal-Clear Headline + Status Chip */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
-                <span className="w-11 h-11 rounded-[16px] bg-[#FFF0ED] text-[#F04438] flex items-center justify-center shrink-0">
+                <span className="w-11 h-11 rounded-[16px] bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center shrink-0">
                   <IconWallet size={21} />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[11px] font-bold text-[#75746E]">هزینهٔ غذای هفته</div>
-                  <div className="font-display font-black text-[22px] leading-tight text-[#292B25] tabular-nums-fa">
+                  <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">هزینهٔ غذای هفته</div>
+                  <div className="font-display font-black text-[22px] leading-tight text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
                     {formatToman(costSummary.consumptionCostToman)}
                   </div>
                 </div>
@@ -594,8 +594,8 @@ export const PlanScreen: React.FC<{
               <span
                 className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold tabular-nums-fa shrink-0 ${
                   isOverBudget
-                    ? 'bg-[#FFF0ED] text-[#C42F26]'
-                    : 'bg-[#EEF5E9] text-[#4C6E35]'
+                    ? 'bg-[#FFF0ED] dark:bg-[#3A2220] text-[#C42F26] dark:text-[#FF857B]'
+                    : 'bg-[#EEF5E9] dark:bg-[#232D1F] text-[#4C6E35] dark:text-[#98C87A]'
                 }`}
               >
                 {isOverBudget
@@ -607,7 +607,7 @@ export const PlanScreen: React.FC<{
             {/* Visual 7-Day Daily Spend Mini Bar Chart */}
             <div className="relative h-20 pt-2 px-1 flex items-end justify-between gap-2">
               <div
-                className="absolute inset-x-1 border-t border-dashed border-[#C87955]/45 pointer-events-none"
+                className="absolute inset-x-1 border-t border-dashed border-[#C87955]/45 dark:border-[#C87955]/55 pointer-events-none"
                 style={{
                   bottom: `${Math.min(86, Math.max(22, Math.round((dailyBudgetGuide / maxDailySpend) * 100)))}%`,
                 }}
@@ -624,14 +624,14 @@ export const PlanScreen: React.FC<{
                           isSelected
                             ? 'bg-gradient-to-t from-[#F04438] to-[#FF7666] shadow-[0_3px_10px_rgba(240,68,56,0.3)]'
                             : amt > 0
-                              ? 'bg-[#E5D7C8]'
-                              : 'bg-[#F0E6DA]'
+                              ? 'bg-[#E5D7C8] dark:bg-[#3A3D34]'
+                              : 'bg-[#F0E6DA] dark:bg-[#2A2D26]'
                         }`}
                       />
                     </div>
                     <span
                       className={`text-[10px] font-black leading-none ${
-                        isSelected ? 'text-[#F04438]' : 'text-[#8C867E]'
+                        isSelected ? 'text-[#F04438] dark:text-[#FF7E75]' : 'text-[#8C867E] dark:text-[#9A958C]'
                       }`}
                     >
                       {DAY_NAMES_SHORT[idx]}
@@ -642,11 +642,11 @@ export const PlanScreen: React.FC<{
             </div>
 
             {/* Clean Footer Affordance */}
-            <div className="pt-2.5 border-t border-[#EFE4D8] flex items-center justify-between text-xs">
-              <span className="font-bold text-[#75746E] tabular-nums-fa">
-                سقف بودجه: <strong className="text-[#292B25]">{formatToman(costSummary.weeklyBudgetToman)}</strong>
+            <div className="pt-2.5 border-t border-[#EFE4D8] dark:border-white/10 flex items-center justify-between text-xs">
+              <span className="font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
+                سقف بودجه: <strong className="text-[#292B25] dark:text-[#F5EFE8]">{formatToman(costSummary.weeklyBudgetToman)}</strong>
               </span>
-              <span className="inline-flex items-center gap-0.5 font-extrabold text-[#F04438]">
+              <span className="inline-flex items-center gap-0.5 font-extrabold text-[#F04438] dark:text-[#FF7E75]">
                 <span>جزئیات و تنظیم</span>
                 <IconCaretLeft size={14} />
               </span>
@@ -688,17 +688,17 @@ export const PlanScreen: React.FC<{
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full sm:max-w-lg max-h-[80dvh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col shadow-2xl border border-white"
+              className="w-full sm:max-w-lg max-h-[80dvh] bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col shadow-2xl border border-white dark:border-white/10"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display font-black text-xl text-[#292B25]">
+                <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                   جایگزین {MEAL_SLOT_LABELS[swappingMeal.slot]}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setSwappingMeal(null)}
                   aria-label="بستن"
-                  className="w-9 h-9 rounded-full bg-white text-[#292B25] flex items-center justify-center shadow-sm"
+                  className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                 >
                   <IconClose size={17} />
                 </button>
@@ -713,7 +713,7 @@ export const PlanScreen: React.FC<{
                       swapMeal(swappingMeal.id, cand.recipe.id, cand.matchReasons);
                       setSwappingMeal(null);
                     }}
-                    className="w-full bg-white rounded-2xl p-3 flex items-center gap-3 text-right hover:border-[#F04438] border border-transparent shadow-sm transition"
+                    className="w-full bg-white dark:bg-[#262822] rounded-2xl p-3 flex items-center gap-3 text-right hover:border-[#F04438] border border-transparent dark:border-white/8 shadow-sm transition"
                   >
                     <Icon3D
                       src={cand.recipe.icon}
@@ -726,11 +726,11 @@ export const PlanScreen: React.FC<{
                         <span className="inline-flex items-center">
                           {getCuisineFlag(cand.recipe.cuisine)}
                         </span>
-                        <span className="font-extrabold text-sm text-[#292B25] truncate">
+                        <span className="font-extrabold text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">
                           {cand.recipe.title}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2.5 mt-1 text-[11px] font-bold text-[#75746E] tabular-nums-fa">
+                      <div className="flex items-center gap-2.5 mt-1 text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                         <span>{toFaDigits(cand.recipe.prepMinutes + cand.recipe.cookMinutes)}د</span>
                         <span>{toFaDigits(cand.recipe.caloriesPerServing)} کالری</span>
                         {cand.recipe.requiredAppliances.slice(0, 2).map((app) => (
@@ -741,8 +741,8 @@ export const PlanScreen: React.FC<{
                     <div
                       className={`text-xs font-extrabold tabular-nums-fa shrink-0 ${
                         cand.deltaConsumptionCostToman <= 0
-                          ? 'text-[#5E8B42]'
-                          : 'text-[#C87955]'
+                          ? 'text-[#5E8B42] dark:text-[#98C87A]'
+                          : 'text-[#C87955] dark:text-[#E59B78]'
                       }`}
                     >
                       {cand.deltaConsumptionCostToman <= 0 ? '−' : '+'}
@@ -892,7 +892,7 @@ const PlanMealCard: React.FC<{
 
                 {recipe.requiredAppliances.length > 0 && (
                   <div
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/75 text-[#6E6A63] shrink-0"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/75 dark:bg-black/35 text-[#6E6A63] dark:text-[#C8C3BA] shrink-0"
                     data-testid={`meal-appliances-${meal.slot}`}
                   >
                     {recipe.requiredAppliances.slice(0, 2).map((app) => (
@@ -915,7 +915,7 @@ const PlanMealCard: React.FC<{
                 )}
               </div>
 
-              <span className="text-xs font-extrabold text-[#292B25] tabular-nums-fa shrink-0">
+              <span className="text-xs font-extrabold text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa shrink-0">
                 {formatToman(cost)}
               </span>
             </div>
@@ -924,20 +924,20 @@ const PlanMealCard: React.FC<{
               type="button"
               onClick={handleTapOpen}
               data-testid="meal-card"
-              className="font-display font-black text-[17px] leading-snug text-[#292B25] hover:text-[#F04438] text-right block line-clamp-1 w-full transition-colors"
+              className="font-display font-black text-[17px] leading-snug text-[#292B25] dark:text-[#F5EFE8] hover:text-[#F04438] text-right block line-clamp-1 w-full transition-colors"
             >
               {recipe.title}
             </button>
 
             {/* Clean, Spacious Bottom Row: Time + Calories on Right, Swap + Cook on Left */}
             <div className="flex items-center justify-between gap-2 pt-0.5">
-              <div className="flex items-center gap-3 text-xs font-bold text-[#75746E] tabular-nums-fa">
+              <div className="flex items-center gap-3 text-xs font-bold text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                 <span className="inline-flex items-center gap-1">
                   <IconClock size={14} className={slotTheme.iconText} />
                   {toFaDigits(totalMin)}د
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <IconFlame size={14} className="text-[#F04438]" />
+                  <IconFlame size={14} className="text-[#F04438] dark:text-[#FF7E75]" />
                   {toFaDigits(recipe.caloriesPerServing)}
                 </span>
               </div>
@@ -951,7 +951,7 @@ const PlanMealCard: React.FC<{
                     onSwap();
                   }}
                   aria-label="تعویض غذا"
-                  className="w-9 h-9 rounded-full bg-white/85 hover:bg-white text-[#292B25] flex items-center justify-center shadow-xs"
+                  className="w-9 h-9 rounded-full bg-white/85 dark:bg-[#2F322B] hover:bg-white dark:hover:bg-[#3A3D35] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-xs"
                 >
                   <IconSwap size={15} />
                 </motion.button>

@@ -1,54 +1,19 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 
 /**
- * Hosted Sofreh backend URL used inside native Capacitor builds (Android APK / iOS)
- * so Gemini AI features (/api/scan-fridge, /api/import-recipe) run safely server-side
- * while keeping GEMINI_API_KEY strictly on the server.
+ * Public HTTPS backend URL baked into native Capacitor builds (Android APK / iOS)
+ * via VITE_API_BASE_URL (or default Vercel deployment) so Gemini AI features
+ * (/api/chef-chat, /api/scan-fridge, /api/import-recipe) work automatically
+ * with zero user configuration while keeping GEMINI_API_KEY strictly server-side.
  */
-const DEFAULT_NATIVE_API_BASE_URL =
-  'https://ais-pre-7jrqyptvpc2wsuizxf4wxo-112056476918.europe-west2.run.app';
-
-const CUSTOM_API_BASE_KEY = 'sofreh_custom_api_base_url';
-
-export function getCustomApiBaseUrl(): string {
-  try {
-    return (window.localStorage.getItem(CUSTOM_API_BASE_KEY) ?? '').trim();
-  } catch {
-    return '';
-  }
-}
-
-export function setCustomApiBaseUrl(url: string): void {
-  try {
-    const clean = url.trim().replace(/\/+$/, '');
-    if (clean) {
-      window.localStorage.setItem(CUSTOM_API_BASE_KEY, clean);
-    } else {
-      window.localStorage.removeItem(CUSTOM_API_BASE_KEY);
-    }
-  } catch {
-    // Ignore storage errors
-  }
-}
+const DEFAULT_NATIVE_API_BASE_URL = 'https://sofre.vercel.app';
 
 function isValidHttpUrl(value: string): boolean {
   return /^https?:\/\/[^\s]+$/i.test(value);
 }
 
-export function getActiveNativeApiBaseUrl(): string {
-  const custom = getCustomApiBaseUrl();
-  if (isValidHttpUrl(custom)) return custom.replace(/\/+$/, '');
-  const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? '';
-  if (isValidHttpUrl(envBase)) return envBase.replace(/\/+$/, '');
-  return DEFAULT_NATIVE_API_BASE_URL;
-}
-
 export function resolveApiUrl(apiPath: string): string {
   const normalizedPath = apiPath.startsWith('/') ? apiPath : `/${apiPath}`;
-  const custom = getCustomApiBaseUrl();
-  if (isValidHttpUrl(custom)) {
-    return `${custom.replace(/\/+$/, '')}${normalizedPath}`;
-  }
 
   if (Capacitor.isNativePlatform()) {
     const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? '';
@@ -58,7 +23,7 @@ export function resolveApiUrl(apiPath: string): string {
     return `${DEFAULT_NATIVE_API_BASE_URL}${normalizedPath}`;
   }
 
-  // On web/preview, always hit same-origin Express /api/* routes directly
+  // On web/preview, always hit same-origin /api/* routes directly
   return normalizedPath;
 }
 
@@ -77,21 +42,40 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
     try {
       const resp = await CapacitorHttp.post({
         url,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         data: payload,
-        connectTimeout: 12_000,
+        connectTimeout: 14_000,
         readTimeout: timeoutMs,
       });
-      const parsed =
-        typeof resp.data === 'string'
-          ? (() => {
-              try {
-                return JSON.parse(resp.data) as TResponse;
-              } catch {
-                return {} as TResponse;
-              }
-            })()
-          : ((resp.data ?? {}) as TResponse);
+
+      let parsed = {} as TResponse;
+      let isJson = false;
+      if (typeof resp.data === 'string') {
+        const trimmed = resp.data.trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          try {
+            parsed = JSON.parse(trimmed) as TResponse;
+            isJson = true;
+          } catch {
+            isJson = false;
+          }
+        }
+      } else if (resp.data && typeof resp.data === 'object') {
+        parsed = resp.data as TResponse;
+        isJson = true;
+      }
+
+      if (!isJson) {
+        return {
+          ok: false,
+          status: resp.status || 502,
+          data: { error: 'پاسخ معتبری از سرویس هوش مصنوعی دریافت نشد.' } as TResponse,
+        };
+      }
+
       return {
         ok: resp.status >= 200 && resp.status < 300,
         status: resp.status,
@@ -99,7 +83,7 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
       };
     } catch {
       throw new Error(
-        'اتصال به سرور هوش مصنوعی برقرار نشد. اگر نسخهٔ تست را نصب کرده‌اید، از اتصال اینترنت/فیلترشکن یا منتشر شدن سرور مطمئن شوید؛ همچنین می‌توانید مواد را دستی وارد کنید.'
+        'ارتباط با سرویس هوش مصنوعی برقرار نشد. لطفاً اتصال اینترنت را بررسی کرده و دوباره تلاش کنید.'
       );
     }
   }
@@ -109,7 +93,10 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
   try {
     const resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
@@ -118,15 +105,19 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
     try {
       data = JSON.parse(rawText) as TResponse;
     } catch {
-      // Non-JSON response
+      return {
+        ok: false,
+        status: resp.status || 502,
+        data: { error: 'پاسخ معتبری از سرویس هوش مصنوعی دریافت نشد.' } as TResponse,
+      };
     }
     return { ok: resp.ok, status: resp.status, data };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
-      throw new Error('پاسخ سرور طولانی شد. لطفاً دوباره امتحان کنید.');
+      throw new Error('پاسخ سرویس هوش مصنوعی طولانی شد. لطفاً دوباره امتحان کنید.');
     }
     throw new Error(
-      'اتصال به سرور هوش مصنوعی برقرار نشد. اتصال اینترنت را بررسی کنید یا مواد را دستی اضافه کنید.'
+      'ارتباط با سرویس هوش مصنوعی برقرار نشد. لطفاً اتصال اینترنت را بررسی کنید.'
     );
   } finally {
     window.clearTimeout(timer);

@@ -26,7 +26,7 @@ function renderChatText(text: string): React.ReactNode {
   return parts.map((part, idx) => {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       return (
-        <strong key={idx} className="font-extrabold text-[#1E201B]">
+        <strong key={idx} className="font-extrabold text-[#1E201B] dark:text-[#FFF8F0]">
           {part.slice(2, -2)}
         </strong>
       );
@@ -201,19 +201,19 @@ export const ChefChatSheet: React.FC<{
             exit={{ y: '100%', opacity: 0.92 }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full md:max-w-[520px] h-[90dvh] md:h-[78dvh] max-h-[760px] rounded-t-[32px] md:rounded-[32px] ambient-canvas border border-white/80 shadow-[0_24px_60px_rgba(24,20,16,0.34)] flex flex-col overflow-hidden"
+            className="w-full md:max-w-[520px] h-[90dvh] md:h-[78dvh] max-h-[760px] rounded-t-[32px] md:rounded-[32px] ambient-canvas border border-white/80 dark:border-white/12 shadow-[0_24px_60px_rgba(24,20,16,0.34)] flex flex-col overflow-hidden"
           >
             {/* Selective Liquid Glass Header */}
-            <header className="liquid-glass-nav px-4 pt-3.5 pb-3 border-b border-white/75 flex items-center justify-between gap-2 shrink-0">
+            <header className="liquid-glass-nav px-4 pt-3.5 pb-3 border-b border-white/75 dark:border-white/10 flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-10 h-10 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
                   <ChefHat size={21} weight="fill" />
                 </div>
                 <div className="min-w-0">
-                  <h2 className="font-display text-[17px] font-black text-[#292B25] truncate leading-tight">
+                  <h2 className="font-display text-[17px] font-black text-[#292B25] dark:text-[#F5EFE8] truncate leading-tight">
                     سرآشپز هوشمند سفره
                   </h2>
-                  <p className="text-[11px] font-bold text-[#75746E] truncate">
+                  <p className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F] truncate">
                     {activeRecipe
                       ? `درباره: ${activeRecipe.title}`
                       : `آگاه به یخچال، بودجه و رژیم شما`}
@@ -222,7 +222,7 @@ export const ChefChatSheet: React.FC<{
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                <div className="p-0.5 rounded-full bg-[#EFE5D8] flex items-center">
+                <div className="p-0.5 rounded-full bg-[#EFE5D8] dark:bg-[#292B25] flex items-center">
                   <button
                     type="button"
                     onClick={() => {
@@ -231,8 +231,8 @@ export const ChefChatSheet: React.FC<{
                     }}
                     className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1 transition-all ${
                       mode === 'smart'
-                        ? 'bg-[#292B25] text-white shadow-sm'
-                        : 'text-[#66645E]'
+                        ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] shadow-sm'
+                        : 'text-[#66645E] dark:text-[#ADA89F]'
                     }`}
                   >
                     <Sparkle size={12} weight="fill" />
@@ -247,7 +247,7 @@ export const ChefChatSheet: React.FC<{
                     className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1 transition-all ${
                       mode === 'fast'
                         ? 'bg-[#F04438] text-white shadow-sm'
-                        : 'text-[#66645E]'
+                        : 'text-[#66645E] dark:text-[#ADA89F]'
                     }`}
                   >
                     <Lightning size={12} weight="fill" />
@@ -260,7 +260,7 @@ export const ChefChatSheet: React.FC<{
                     type="button"
                     onClick={resetChat}
                     aria-label="پاک کردن گفت‌وگو"
-                    className="w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-[#75746E] hover:text-[#D92D20] active:scale-95 transition-transform"
+                    className="w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-[#75746E] dark:text-[#ADA89F] hover:text-[#D92D20] active:scale-95 transition-transform"
                   >
                     <Trash size={16} weight="bold" />
                   </button>
@@ -270,7 +270,7 @@ export const ChefChatSheet: React.FC<{
                   type="button"
                   onClick={onClose}
                   aria-label="بستن سرآشپز هوشمند"
-                  className="w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-[#292B25] active:scale-95 transition-transform"
+                  className="w-9 h-9 rounded-full liquid-glass flex items-center justify-center text-[#292B25] dark:text-[#F5EFE8] active:scale-95 transition-transform"
                 >
                   <IconClose className="w-4 h-4" />
                 </button>
@@ -282,10 +282,10 @@ export const ChefChatSheet: React.FC<{
               {messages.length === 0 ? (
                 <div className="py-4 space-y-4">
                   <div className="liquid-glass-card rounded-[24px] p-4 space-y-2">
-                    <p className="text-[14px] font-extrabold text-[#292B25] leading-relaxed">
+                    <p className="text-[14px] font-extrabold text-[#292B25] dark:text-[#F5EFE8] leading-relaxed">
                       سلام! من سرآشپز اختصاصی سفره‌ام.
                     </p>
-                    <p className="text-[12.5px] font-medium text-[#6C6A64] leading-relaxed">
+                    <p className="text-[12.5px] font-medium text-[#6C6A64] dark:text-[#ADA89F] leading-relaxed">
                       {activeRecipe
                         ? `هر سوالی درباره «${activeRecipe.title}»، جایگزین مواد لازم، تغییر طعم یا نکات پختش داری بپرس.`
                         : 'می‌تونم بر اساس موجودی یخچال، بودجه، رژیم و ابزار آشپزخونه‌ات پیشنهاد غذا بدم، جایگزین مواد بگم یا فوت‌وفن آشپزی راهنمایی کنم.'}
@@ -293,7 +293,7 @@ export const ChefChatSheet: React.FC<{
                   </div>
 
                   <div className="space-y-2">
-                    <div className="text-[11px] font-extrabold text-[#8A877F] px-1">
+                    <div className="text-[11px] font-extrabold text-[#8A877F] dark:text-[#9A958C] px-1">
                       سوال‌های پیشنهادی
                     </div>
                     <div className="grid grid-cols-1 gap-2">
@@ -302,7 +302,7 @@ export const ChefChatSheet: React.FC<{
                           key={prompt}
                           type="button"
                           onClick={() => sendMessage(prompt)}
-                          className="text-right px-3.5 py-2.5 rounded-[18px] bg-white/95 border border-[#EDE2D4] text-[12.5px] font-bold text-[#292B25] hover:border-[#F04438]/40 active:scale-[0.99] transition-all shadow-[0_3px_10px_rgba(96,56,30,0.04)]"
+                          className="text-right px-3.5 py-2.5 rounded-[18px] bg-white/95 dark:bg-[#252721] border border-[#EDE2D4] dark:border-white/10 text-[12.5px] font-bold text-[#292B25] dark:text-[#F5EFE8] hover:border-[#F04438]/40 active:scale-[0.99] transition-all shadow-[0_3px_10px_rgba(96,56,30,0.04)]"
                         >
                           {prompt}
                         </button>
@@ -322,8 +322,8 @@ export const ChefChatSheet: React.FC<{
                         data-testid={isUser ? 'chef-chat-msg-user' : 'chef-chat-msg-model'}
                         className={`max-w-[86%] rounded-[22px] px-4 py-3 text-[13.5px] leading-[1.75] whitespace-pre-wrap break-words ${
                           isUser
-                            ? 'bg-[#292B25] text-white font-semibold rounded-tr-[6px] shadow-[0_6px_18px_rgba(41,43,37,0.18)]'
-                            : 'bg-white text-[#292B25] font-medium border border-[#EFE3D5] rounded-tl-[6px] shadow-[0_6px_18px_rgba(96,56,30,0.06)]'
+                            ? 'bg-[#292B25] dark:bg-[#F04438] text-white font-semibold rounded-tr-[6px] shadow-[0_6px_18px_rgba(41,43,37,0.18)]'
+                            : 'bg-white dark:bg-[#252721] text-[#292B25] dark:text-[#F5EFE8] font-medium border border-[#EFE3D5] dark:border-white/10 rounded-tl-[6px] shadow-[0_6px_18px_rgba(96,56,30,0.06)]'
                         }`}
                       >
                         {isUser ? msg.text : renderChatText(msg.text)}
@@ -335,7 +335,7 @@ export const ChefChatSheet: React.FC<{
 
               {loading && (
                 <div className="flex justify-end">
-                  <div className="bg-white border border-[#EFE3D5] rounded-[22px] rounded-tl-[6px] px-4 py-3 flex items-center gap-2 text-[12.5px] font-bold text-[#75746E] shadow-sm">
+                  <div className="bg-white dark:bg-[#252721] border border-[#EFE3D5] dark:border-white/10 rounded-[22px] rounded-tl-[6px] px-4 py-3 flex items-center gap-2 text-[12.5px] font-bold text-[#75746E] dark:text-[#ADA89F] shadow-sm">
                     <span className="inline-flex gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#F04438] animate-bounce [animation-delay:0ms]" />
                       <span className="w-1.5 h-1.5 rounded-full bg-[#E69A2B] animate-bounce [animation-delay:120ms]" />
@@ -347,12 +347,12 @@ export const ChefChatSheet: React.FC<{
               )}
 
               {error && (
-                <div className="rounded-[20px] bg-[#FFECEA] border border-[#F04438]/25 px-4 py-3 text-[12.5px] font-bold text-[#B42318] flex items-center justify-between gap-2">
+                <div className="rounded-[20px] bg-[#FFECEA] dark:bg-[#3A2220] border border-[#F04438]/25 px-4 py-3 text-[12.5px] font-bold text-[#B42318] dark:text-[#FF958C] flex items-center justify-between gap-2">
                   <span>{error}</span>
                   <button
                     type="button"
                     onClick={() => setError(null)}
-                    className="px-2.5 py-1 rounded-full bg-white text-[#B42318] text-[11px] font-extrabold shrink-0"
+                    className="px-2.5 py-1 rounded-full bg-white dark:bg-[#2A2C25] text-[#B42318] dark:text-[#FF958C] text-[11px] font-extrabold shrink-0"
                   >
                     بستن
                   </button>
@@ -368,7 +368,7 @@ export const ChefChatSheet: React.FC<{
                 e.preventDefault();
                 sendMessage();
               }}
-              className="liquid-glass-nav px-3.5 py-3 border-t border-white/80 flex items-center gap-2 shrink-0"
+              className="liquid-glass-nav px-3.5 py-3 border-t border-white/80 dark:border-white/10 flex items-center gap-2 shrink-0"
               style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
             >
               <input
@@ -380,7 +380,7 @@ export const ChefChatSheet: React.FC<{
                 aria-label="پیام به سرآشپز هوشمند"
                 data-testid="chef-chat-input"
                 disabled={loading}
-                className="flex-1 h-11 px-4 rounded-full bg-white/95 border border-[#E7DAC9] text-[13.5px] font-semibold text-[#292B25] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
+                className="flex-1 h-11 px-4 rounded-full bg-white/95 dark:bg-[#252721] border border-[#E7DAC9] dark:border-white/10 text-[13.5px] font-semibold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
               />
               <button
                 type="submit"

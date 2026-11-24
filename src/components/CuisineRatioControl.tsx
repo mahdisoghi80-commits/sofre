@@ -73,19 +73,19 @@ export const CuisineRatioControl: React.FC<CuisineRatioControlProps> = ({
           }}
           className={`rounded-[26px] ${compact ? 'p-3.5' : 'p-5'} flex flex-col items-center justify-center gap-2 text-center transition-all ${
             clamped >= 50
-              ? 'bg-white border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
-              : 'liquid-glass-card border border-white/90'
+              ? 'bg-white dark:bg-[#262822] border-2 border-[#F04438] shadow-[0_12px_28px_rgba(240,68,56,0.16)]'
+              : 'liquid-glass-card border border-white/90 dark:border-white/10'
           }`}
         >
           <CuisineFlag cuisine="ایرانی" size={compact ? 'md' : 'lg'} />
           <div
             className={`font-display font-black ${
               compact ? 'text-2xl' : 'text-[34px]'
-            } leading-none text-[#F04438] tabular-nums-fa`}
+            } leading-none text-[#F04438] dark:text-[#FF7E75] tabular-nums-fa`}
           >
             {toFaDigits(clamped)}٪
           </div>
-          <div className="font-display font-black text-[15px] text-[#292B25]">ایرانی</div>
+          <div className="font-display font-black text-[15px] text-[#292B25] dark:text-[#F5EFE8]">ایرانی</div>
         </motion.button>
 
         <motion.button
@@ -96,19 +96,19 @@ export const CuisineRatioControl: React.FC<CuisineRatioControlProps> = ({
           }}
           className={`rounded-[26px] ${compact ? 'p-3.5' : 'p-5'} flex flex-col items-center justify-center gap-2 text-center transition-all ${
             worldRatio > 50
-              ? 'bg-white border-2 border-[#5E8B42] shadow-[0_12px_28px_rgba(94,139,66,0.15)]'
-              : 'liquid-glass-card border border-white/90'
+              ? 'bg-white dark:bg-[#262822] border-2 border-[#5E8B42] shadow-[0_12px_28px_rgba(94,139,66,0.15)]'
+              : 'liquid-glass-card border border-white/90 dark:border-white/10'
           }`}
         >
           <CuisineFlag cuisine="جهانی" size={compact ? 'md' : 'lg'} />
           <div
             className={`font-display font-black ${
               compact ? 'text-2xl' : 'text-[34px]'
-            } leading-none text-[#5E8B42] tabular-nums-fa`}
+            } leading-none text-[#5E8B42] dark:text-[#98C87A] tabular-nums-fa`}
           >
             {toFaDigits(worldRatio)}٪
           </div>
-          <div className="font-display font-black text-[15px] text-[#292B25]">جهانی</div>
+          <div className="font-display font-black text-[15px] text-[#292B25] dark:text-[#F5EFE8]">جهانی</div>
         </motion.button>
       </div>
 
@@ -130,9 +130,9 @@ export const CuisineRatioControl: React.FC<CuisineRatioControlProps> = ({
           if (e.key === 'ArrowLeft') onChange(Math.min(100, clamped + 5));
           if (e.key === 'ArrowRight') onChange(Math.max(0, clamped - 5));
         }}
-        className="relative h-12 rounded-full liquid-glass-card border border-white/90 p-1.5 touch-none cursor-grab active:cursor-grabbing select-none"
+        className="relative h-12 rounded-full liquid-glass-card border border-white/90 dark:border-white/10 p-1.5 touch-none cursor-grab active:cursor-grabbing select-none"
       >
-        <div className="relative w-full h-full rounded-full overflow-hidden flex bg-[#EFE4D8]">
+        <div className="relative w-full h-full rounded-full overflow-hidden flex bg-[#EFE4D8] dark:bg-[#2A2D26]">
           {/* Right-anchored Persian fill (first in RTL flex) */}
           <motion.div
             className="h-full bg-gradient-to-l from-[#FF6A5C] to-[#F04438]"

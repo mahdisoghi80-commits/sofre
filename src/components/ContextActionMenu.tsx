@@ -155,10 +155,10 @@ export const ContextActionMenu: React.FC<{
             className="w-full max-w-[330px] space-y-2.5"
           >
             {/* Preview Pill Header */}
-            <div className="rounded-[24px] bg-white/95 backdrop-blur-xl px-4 py-3 shadow-[0_14px_36px_rgba(24,20,16,0.18)] flex items-center gap-3">
+            <div className="rounded-[24px] bg-white/95 dark:bg-[#22241F]/95 backdrop-blur-xl px-4 py-3 shadow-[0_14px_36px_rgba(24,20,16,0.18)] border border-transparent dark:border-white/10 flex items-center gap-3">
               {preview.iconSrc && (
                 preview.iconKind === 'ingredient3d' ? (
-                  <div className="w-11 h-11 rounded-[14px] bg-[#FBF5EF] flex items-center justify-center shrink-0">
+                  <div className="w-11 h-11 rounded-[14px] bg-[#FBF5EF] dark:bg-[#2A2D26] flex items-center justify-center shrink-0">
                     <IngredientIcon3D src={preview.iconSrc} alt={preview.title} sizeClass="w-8 h-8" />
                   </div>
                 ) : (
@@ -171,11 +171,11 @@ export const ContextActionMenu: React.FC<{
                 )
               )}
               <div className="min-w-0 flex-1 text-right">
-                <div className="font-display font-black text-sm text-[#292B25] truncate">
+                <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8] truncate">
                   {preview.title}
                 </div>
                 {preview.subtitle && (
-                  <div className="text-[11px] font-bold text-[#75746E] truncate mt-0.5 tabular-nums-fa">
+                  <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F] truncate mt-0.5 tabular-nums-fa">
                     {preview.subtitle}
                   </div>
                 )}
@@ -183,16 +183,16 @@ export const ContextActionMenu: React.FC<{
             </div>
 
             {/* Frosted Grouped Action List */}
-            <div className="rounded-[24px] bg-white/95 backdrop-blur-xl overflow-hidden shadow-[0_18px_46px_rgba(24,20,16,0.22)] divide-y divide-[#EFE6DC]">
+            <div className="rounded-[24px] bg-white/95 dark:bg-[#22241F]/95 backdrop-blur-xl overflow-hidden shadow-[0_18px_46px_rgba(24,20,16,0.22)] border border-transparent dark:border-white/10 divide-y divide-[#EFE6DC] dark:divide-white/8">
               {actions.map((action) => {
                 const toneClasses =
                   action.tone === 'danger'
-                    ? 'text-[#D92D20] hover:bg-[#FFF2F0]'
+                    ? 'text-[#D92D20] dark:text-[#FF857B] hover:bg-[#FFF2F0] dark:hover:bg-[#3A2220]'
                     : action.tone === 'positive'
-                      ? 'text-[#4C6E35] hover:bg-[#F1F7EC]'
+                      ? 'text-[#4C6E35] dark:text-[#98C87A] hover:bg-[#F1F7EC] dark:hover:bg-[#232D1F]'
                       : action.tone === 'accent'
-                        ? 'text-[#F04438] hover:bg-[#FFF4F2]'
-                        : 'text-[#292B25] hover:bg-[#F9F4EE]';
+                        ? 'text-[#F04438] dark:text-[#FF7E75] hover:bg-[#FFF4F2] dark:hover:bg-[#3A2220]'
+                        : 'text-[#292B25] dark:text-[#F5EFE8] hover:bg-[#F9F4EE] dark:hover:bg-white/6';
 
                 return (
                   <button
@@ -203,14 +203,14 @@ export const ContextActionMenu: React.FC<{
                       onClose();
                       action.onSelect();
                     }}
-                    className={`w-full px-4 py-3.5 flex items-center justify-between gap-3 text-right transition-colors active:bg-[#F3EAE0] ${toneClasses}`}
+                    className={`w-full px-4 py-3.5 flex items-center justify-between gap-3 text-right transition-colors active:bg-[#F3EAE0] dark:active:bg-white/10 ${toneClasses}`}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="font-display font-extrabold text-[13.5px] leading-snug">
                         {action.label}
                       </div>
                       {action.sublabel && (
-                        <div className="text-[10.5px] font-bold text-[#8A847C] mt-0.5">
+                        <div className="text-[10.5px] font-bold text-[#8A847C] dark:text-[#ADA89F] mt-0.5">
                           {action.sublabel}
                         </div>
                       )}

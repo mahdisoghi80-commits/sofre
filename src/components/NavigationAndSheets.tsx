@@ -61,11 +61,11 @@ export const DesktopSidebar: React.FC<{
   const { activeTab, setActiveTab, costSummary, prefs } = useAppState();
 
   return (
-    <aside className="hidden lg:flex flex-col w-[248px] shrink-0 sticky top-0 h-dvh p-4 border-l border-white/75 bg-white/48 backdrop-blur-2xl justify-between">
+    <aside className="hidden lg:flex flex-col w-[248px] shrink-0 sticky top-0 h-dvh p-4 border-l border-white/75 dark:border-white/10 bg-white/48 dark:bg-[#1A1C17]/85 backdrop-blur-2xl justify-between">
       <div className="space-y-6">
-        <div className="flex items-center gap-3 px-2 pt-2">
-          <SofrehLogoMark className="w-10 h-10 shrink-0 shadow-sm" />
-          <div className="font-display font-black text-2xl text-[#292B25] leading-none">
+        <div className="flex items-center gap-2.5 px-2 pt-2">
+          <SofrehLogoMark variant="mark" className="w-11 h-11 shrink-0" />
+          <div className="font-display font-black text-2xl text-[#292B25] dark:text-[#F5EFE8] leading-none">
             سفره
           </div>
         </div>
@@ -81,7 +81,7 @@ export const DesktopSidebar: React.FC<{
                 className={`w-full h-12 px-4 rounded-full flex items-center gap-3 text-sm font-extrabold transition-all ${
                   active
                     ? 'coral-glass-pill text-white'
-                    : 'text-[#5C5952] hover:bg-white/75 hover:text-[#292B25]'
+                    : 'text-[#5C5952] dark:text-[#ADA89F] hover:bg-white/75 dark:hover:bg-white/8 hover:text-[#292B25] dark:hover:text-[#F5EFE8]'
                 }`}
               >
                 {tab.renderIcon(active)}
@@ -95,7 +95,7 @@ export const DesktopSidebar: React.FC<{
           <button
             type="button"
             onClick={() => onOpenSheet({ type: 'quick_actions' })}
-            className="w-full h-11 rounded-full bg-[#292B25] text-white text-sm font-extrabold flex items-center justify-center gap-2 hover:bg-black transition shadow-lg"
+            className="w-full h-11 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] text-sm font-extrabold flex items-center justify-center gap-2 hover:bg-black dark:hover:bg-white transition shadow-lg"
           >
             <IconPlus size={18} />
             <span>افزودن سریع</span>
@@ -105,7 +105,7 @@ export const DesktopSidebar: React.FC<{
               type="button"
               onClick={onOpenChefChat}
               data-testid="sidebar-open-chef-chat"
-              className="w-full h-11 px-4 rounded-full liquid-glass text-[#292B25] text-xs font-extrabold flex items-center justify-center gap-2 hover:text-[#F04438] transition"
+              className="w-full h-11 px-4 rounded-full liquid-glass text-[#292B25] dark:text-[#F5EFE8] text-xs font-extrabold flex items-center justify-center gap-2 hover:text-[#F04438] transition"
             >
               <ChefHat size={17} weight="fill" className="text-[#F04438]" />
               <span>سرآشپز هوشمند</span>
@@ -118,7 +118,7 @@ export const DesktopSidebar: React.FC<{
               data-testid="sidebar-open-subscription"
               className={`w-full h-11 px-4 rounded-full text-xs font-extrabold flex items-center justify-center gap-2 transition ${
                 prefs.isPro
-                  ? 'bg-[#292B25] text-[#F5C563]'
+                  ? 'bg-[#292B25] dark:bg-[#2A2D26] text-[#F5C563]'
                   : 'coral-glass-pill text-white'
               }`}
             >
@@ -130,11 +130,11 @@ export const DesktopSidebar: React.FC<{
       </div>
 
       <div className="liquid-glass-card rounded-[24px] p-4 space-y-2">
-        <div className="text-[11px] font-bold text-[#75746E]">بودجهٔ هفته</div>
-        <div className="font-display font-black text-lg text-[#292B25] tabular-nums-fa">
+        <div className="text-[11px] font-bold text-[#75746E] dark:text-[#ADA89F]">بودجهٔ هفته</div>
+        <div className="font-display font-black text-lg text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa">
           {formatToman(costSummary.consumptionCostToman)}
         </div>
-        <div className="h-1.5 bg-[#EFE4D8] rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[#EFE4D8] dark:bg-[#2A2D26] rounded-full overflow-hidden">
           <div
             className="h-full bg-[#F04438] rounded-full"
             style={{ width: `${Math.min(100, costSummary.budgetPercent)}%` }}
@@ -179,14 +179,14 @@ export const MobileBottomNav: React.FC<{
                 )}
                 <span
                   className={`relative z-10 ${
-                    active ? 'text-white' : 'text-[#5C5952]'
+                    active ? 'text-white' : 'text-[#5C5952] dark:text-[#ADA89F]'
                   }`}
                 >
                   {tab.renderIcon(active)}
                 </span>
                 <span
                   className={`relative z-10 text-[10px] font-extrabold ${
-                    active ? 'text-white' : 'text-[#5C5952]'
+                    active ? 'text-white' : 'text-[#5C5952] dark:text-[#ADA89F]'
                   }`}
                 >
                   {tab.label}
@@ -271,7 +271,7 @@ export const ActionSheetsAndToast: React.FC<{
       if (!resp.ok || !resp.data.recipe) {
         throw new Error(
           resp.data.error ||
-            'اتصال به سرور هوش مصنوعی برقرار نشد. مطمئن شوید نسخه سرور اپ منتشر شده است.'
+            'اتصال به سرویس هوش مصنوعی برقرار نشد. لطفاً دوباره امتحان کنید.'
         );
       }
       const created = addImportedRecipeRecord(resp.data.recipe);
@@ -334,20 +334,20 @@ export const ActionSheetsAndToast: React.FC<{
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 360, damping: 32 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full sm:max-w-lg max-h-[85dvh] bg-[#FBF5EF] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col shadow-2xl border border-white"
+              className="w-full sm:max-w-lg max-h-[85dvh] bg-[#FBF5EF] dark:bg-[#1E201B] rounded-t-[32px] sm:rounded-[32px] p-5 flex flex-col shadow-2xl border border-white dark:border-white/10"
             >
               {/* QUICK ACTIONS */}
               {activeSheet.type === 'quick_actions' && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-black text-xl text-[#292B25]">
+                    <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                       افزودن سریع
                     </h3>
                     <button
                       type="button"
                       onClick={() => setActiveSheet(null)}
                       aria-label="بستن"
-                      className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm"
+                      className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                     >
                       <IconClose size={17} />
                     </button>
@@ -358,10 +358,10 @@ export const ActionSheetsAndToast: React.FC<{
                       onClick={() => setActiveSheet({ type: 'add_meal', dayIndex: selectedDay })}
                       className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
                     >
-                      <span className="w-10 h-10 rounded-full bg-[#FFF0ED] text-[#F04438] flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-[#FFF0ED] dark:bg-[#3A2220] text-[#F04438] dark:text-[#FF7E75] flex items-center justify-center">
                         <IconCalendarPlus size={19} />
                       </span>
-                      <div className="font-display font-black text-sm text-[#292B25]">
+                      <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         افزودن وعده
                       </div>
                     </button>
@@ -370,10 +370,10 @@ export const ActionSheetsAndToast: React.FC<{
                       onClick={() => setActiveSheet({ type: 'add_grocery' })}
                       className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
                     >
-                      <span className="w-10 h-10 rounded-full bg-[#EEF2E6] text-[#68734E] flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-[#EEF2E6] dark:bg-[#232D1F] text-[#68734E] dark:text-[#98C87A] flex items-center justify-center">
                         <IconMarketBasket size={19} />
                       </span>
-                      <div className="font-display font-black text-sm text-[#292B25]">
+                      <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         افزودن قلم خرید
                       </div>
                     </button>
@@ -385,10 +385,10 @@ export const ActionSheetsAndToast: React.FC<{
                       }}
                       className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
                     >
-                      <span className="w-10 h-10 rounded-full bg-[#292B25] text-white flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714] flex items-center justify-center">
                         <IconFridgeLens size={19} />
                       </span>
-                      <div className="font-display font-black text-sm text-[#292B25]">
+                      <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         دوربین یخچال
                       </div>
                     </button>
@@ -397,10 +397,10 @@ export const ActionSheetsAndToast: React.FC<{
                       onClick={() => setActiveSheet({ type: 'import_recipe' })}
                       className="liquid-glass-card rounded-[24px] p-4 text-right space-y-2"
                     >
-                      <span className="w-10 h-10 rounded-full bg-[#FFF0ED] text-[#C87955] flex items-center justify-center">
+                      <span className="w-10 h-10 rounded-full bg-[#FFF0ED] dark:bg-[#352720] text-[#C87955] dark:text-[#E59B78] flex items-center justify-center">
                         <IconLinkMagic size={19} />
                       </span>
-                      <div className="font-display font-black text-sm text-[#292B25]">
+                      <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                         وارد کردن با لینک
                       </div>
                     </button>
@@ -417,7 +417,7 @@ export const ActionSheetsAndToast: React.FC<{
                         <span className="w-10 h-10 rounded-full coral-glass-pill text-white flex items-center justify-center shrink-0">
                           <ChefHat size={19} weight="fill" />
                         </span>
-                        <div className="font-display font-black text-sm text-[#292B25]">
+                        <div className="font-display font-black text-sm text-[#292B25] dark:text-[#F5EFE8]">
                           سرآشپز هوشمند
                         </div>
                       </button>
@@ -430,14 +430,14 @@ export const ActionSheetsAndToast: React.FC<{
               {activeSheet.type === 'add_meal' && (
                 <div className="flex flex-col max-h-[76dvh] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-black text-xl text-[#292B25]">
+                    <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                       وعده برای {DAY_NAMES_FULL[activeSheet.dayIndex]}
                     </h3>
                     <button
                       type="button"
                       onClick={() => setActiveSheet(null)}
                       aria-label="بستن"
-                      className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm"
+                      className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                     >
                       <IconClose size={17} />
                     </button>
@@ -467,14 +467,14 @@ export const ActionSheetsAndToast: React.FC<{
                   <div className="relative">
                     <IconSearch
                       size={16}
-                      className="text-[#75746E] absolute right-3.5 top-1/2 -translate-y-1/2"
+                      className="text-[#75746E] dark:text-[#ADA89F] absolute right-3.5 top-1/2 -translate-y-1/2"
                     />
                     <input
                       type="text"
                       value={mealSearch}
                       onChange={(e) => setMealSearch(e.target.value)}
                       placeholder="جستجوی غذا…"
-                      className="w-full h-11 pr-10 pl-3 rounded-full bg-white border border-[#E6DACD] text-xs font-bold focus:outline-none focus:border-[#F04438]"
+                      className="w-full h-11 pr-10 pl-3 rounded-full bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-xs font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
                     />
                   </div>
 
@@ -487,7 +487,7 @@ export const ActionSheetsAndToast: React.FC<{
                           addMealToPlan(activeSheet.dayIndex, mealSlot, r.id);
                           setActiveSheet(null);
                         }}
-                        className="w-full bg-white rounded-2xl p-2.5 flex items-center gap-3 text-right hover:border-[#F04438] border border-transparent shadow-sm"
+                        className="w-full bg-white dark:bg-[#262822] rounded-2xl p-2.5 flex items-center gap-3 text-right hover:border-[#F04438] border border-transparent dark:border-white/8 shadow-sm"
                       >
                         <Icon3D
                           src={r.icon}
@@ -496,11 +496,11 @@ export const ActionSheetsAndToast: React.FC<{
                           roundedClass="rounded-[14px]"
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="font-extrabold text-sm text-[#292B25] truncate flex items-center gap-1.5">
+                          <div className="font-extrabold text-sm text-[#292B25] dark:text-[#F5EFE8] truncate flex items-center gap-1.5">
                             <span>{getCuisineFlag(r.cuisine)}</span>
                             <span className="truncate">{r.title}</span>
                           </div>
-                          <div className="text-[11px] text-[#75746E] tabular-nums-fa">
+                          <div className="text-[11px] text-[#75746E] dark:text-[#ADA89F] tabular-nums-fa">
                             {toFaDigits(r.prepMinutes + r.cookMinutes)} دقیقه •{' '}
                             {formatToman(r.costPerServingToman)}
                           </div>
@@ -529,14 +529,14 @@ export const ActionSheetsAndToast: React.FC<{
                   className="space-y-4"
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-black text-xl text-[#292B25]">
+                    <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                       افزودن قلم خرید
                     </h3>
                     <button
                       type="button"
                       onClick={() => setActiveSheet(null)}
                       aria-label="بستن"
-                      className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm"
+                      className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                     >
                       <IconClose size={17} />
                     </button>
@@ -548,7 +548,7 @@ export const ActionSheetsAndToast: React.FC<{
                     value={groceryName}
                     onChange={(e) => setGroceryName(e.target.value)}
                     placeholder="نام کالا (مثلاً لیموترش تازه)"
-                    className="w-full h-11 px-4 rounded-2xl bg-white border border-[#E6DACD] text-sm font-bold focus:outline-none focus:border-[#F04438]"
+                    className="w-full h-11 px-4 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-sm font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
                   />
 
                   <div className="grid grid-cols-2 gap-2.5">
@@ -557,14 +557,14 @@ export const ActionSheetsAndToast: React.FC<{
                       value={groceryAmount}
                       onChange={(e) => setGroceryAmount(e.target.value)}
                       placeholder="مقدار"
-                      className="h-11 px-3.5 rounded-2xl bg-white border border-[#E6DACD] text-xs font-bold"
+                      className="h-11 px-3.5 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-xs font-bold text-[#292B25] dark:text-[#F5EFE8]"
                     />
                     <input
                       type="number"
                       value={groceryCost}
                       onChange={(e) => setGroceryCost(e.target.value)}
                       placeholder="قیمت (تومان)"
-                      className="h-11 px-3.5 rounded-2xl bg-white border border-[#E6DACD] text-xs font-bold tabular-nums-fa"
+                      className="h-11 px-3.5 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-xs font-bold text-[#292B25] dark:text-[#F5EFE8] tabular-nums-fa"
                     />
                   </div>
 
@@ -576,8 +576,8 @@ export const ActionSheetsAndToast: React.FC<{
                         onClick={() => setGroceryAisle(aisle)}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold ${
                           groceryAisle === aisle
-                            ? 'bg-[#292B25] text-white'
-                            : 'bg-white text-[#5C5952]'
+                            ? 'bg-[#292B25] dark:bg-[#F5EFE8] text-white dark:text-[#161714]'
+                            : 'bg-white dark:bg-[#262822] text-[#5C5952] dark:text-[#C8C3BA]'
                         }`}
                       >
                         {AISLE_LABELS[aisle]}
@@ -598,14 +598,14 @@ export const ActionSheetsAndToast: React.FC<{
               {activeSheet.type === 'import_recipe' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-display font-black text-xl text-[#292B25]">
+                    <h3 className="font-display font-black text-xl text-[#292B25] dark:text-[#F5EFE8]">
                       افزودن دستور جدید
                     </h3>
                     <button
                       type="button"
                       onClick={() => setActiveSheet(null)}
                       aria-label="بستن"
-                      className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm"
+                      className="w-9 h-9 rounded-full bg-white dark:bg-[#2A2C25] text-[#292B25] dark:text-[#F5EFE8] flex items-center justify-center shadow-sm"
                     >
                       <IconClose size={17} />
                     </button>
@@ -618,7 +618,7 @@ export const ActionSheetsAndToast: React.FC<{
                       className={`py-2 rounded-full text-xs font-extrabold transition ${
                         importMode === 'link'
                           ? 'coral-glass-pill text-white'
-                          : 'text-[#5C5952]'
+                          : 'text-[#5C5952] dark:text-[#ADA89F]'
                       }`}
                     >
                       لینک هوشمند
@@ -629,7 +629,7 @@ export const ActionSheetsAndToast: React.FC<{
                       className={`py-2 rounded-full text-xs font-extrabold transition ${
                         importMode === 'manual'
                           ? 'coral-glass-pill text-white'
-                          : 'text-[#5C5952]'
+                          : 'text-[#5C5952] dark:text-[#ADA89F]'
                       }`}
                     >
                       دستی
@@ -645,18 +645,18 @@ export const ActionSheetsAndToast: React.FC<{
                         onChange={(e) => setImportUrl(e.target.value)}
                         data-testid="ai-import-url-input"
                         placeholder="https://example.com/recipe/..."
-                        className="w-full h-12 px-4 rounded-2xl bg-white border border-[#E6DACD] text-sm font-bold text-left focus:outline-none focus:border-[#F04438]"
+                        className="w-full h-12 px-4 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-sm font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] text-left focus:outline-none focus:border-[#F04438]"
                       />
                       <textarea
                         rows={2}
                         value={importNotes}
                         onChange={(e) => setImportNotes(e.target.value)}
                         placeholder="متن دستور (اختیاری)…"
-                        className="w-full p-3.5 rounded-2xl bg-white border border-[#E6DACD] text-xs font-medium focus:outline-none focus:border-[#F04438]"
+                        className="w-full p-3.5 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-xs font-medium text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
                       />
 
                       {importError && (
-                        <div className="rounded-2xl bg-[#FFF0ED] text-[#B42318] px-3.5 py-2.5 text-xs font-bold flex items-center gap-2">
+                        <div className="rounded-2xl bg-[#FFF0ED] dark:bg-[#3A2220] text-[#B42318] dark:text-[#FF958C] px-3.5 py-2.5 text-xs font-bold flex items-center gap-2">
                           <IconAlert size={16} className="shrink-0" />
                           <span>{importError}</span>
                         </div>
@@ -698,14 +698,14 @@ export const ActionSheetsAndToast: React.FC<{
                         value={manualTitle}
                         onChange={(e) => setManualTitle(e.target.value)}
                         placeholder="نام غذا"
-                        className="w-full h-11 px-4 rounded-2xl bg-white border border-[#E6DACD] text-sm font-bold focus:outline-none focus:border-[#F04438]"
+                        className="w-full h-11 px-4 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-sm font-bold text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
                       />
                       <textarea
                         rows={3}
                         value={manualIngs}
                         onChange={(e) => setManualIngs(e.target.value)}
                         placeholder="مواد اولیه (با ویرگول جدا کن: مرغ، برنج، زعفران…)"
-                        className="w-full p-3.5 rounded-2xl bg-white border border-[#E6DACD] text-xs font-medium focus:outline-none focus:border-[#F04438]"
+                        className="w-full p-3.5 rounded-2xl bg-white dark:bg-[#262822] border border-[#E6DACD] dark:border-white/10 text-xs font-medium text-[#292B25] dark:text-[#F5EFE8] placeholder:text-[#9A968E] focus:outline-none focus:border-[#F04438]"
                       />
                       <button
                         type="submit"
