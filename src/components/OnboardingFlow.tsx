@@ -24,6 +24,7 @@ import { hapticLight, hapticMedium, hapticSuccess, scrollToTopInstant } from '..
 import { computeMinimumWeeklyBudget } from '../utils/planner';
 import { BudgetDial } from './BudgetDial';
 import { AndroidApkDownloadCard } from './AndroidApkDownloadCard';
+import { PWAInstallCard } from './PWAInstallCard';
 import { CuisineRatioControl } from './CuisineRatioControl';
 import { InteractiveKitchen2D } from './InteractiveKitchen2D';
 import {
@@ -317,6 +318,7 @@ export const OnboardingFlow: React.FC = () => {
           </motion.button>
 
           <AndroidApkDownloadCard variant="compact" />
+          <PWAInstallCard variant="compact" />
         </div>
       </div>
     );

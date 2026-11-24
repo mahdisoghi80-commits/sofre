@@ -15,6 +15,7 @@ import { BudgetDial } from './BudgetDial';
 import { CuisineRatioControl } from './CuisineRatioControl';
 import { InteractiveKitchen2D } from './InteractiveKitchen2D';
 import { AndroidApkDownloadCard } from './AndroidApkDownloadCard';
+import { PWAInstallCard } from './PWAInstallCard';
 import {
   DietStyleIcon,
   Icon3D,
@@ -548,6 +549,8 @@ export const ProfileScreen: React.FC<{
           </div>
         </div>
       </section>
+
+      <PWAInstallCard />
 
       {/* ROTARY BUDGET DIAL MODAL */}
       <AnimatePresence>
