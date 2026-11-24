@@ -27,6 +27,39 @@ export function resolveApiUrl(apiPath: string): string {
   return normalizedPath;
 }
 
+function normalizeApiError(rawError: unknown, status: number): string {
+  if (typeof rawError === 'string' && rawError.trim().length > 0) {
+    return rawError.trim();
+  }
+  if (rawError && typeof rawError === 'object') {
+    const errObj = rawError as { message?: unknown; code?: unknown };
+    if (typeof errObj.message === 'string' && errObj.message.trim().length > 0) {
+      const m = errObj.message.trim();
+      if (/server error|invocation|timeout|not found/i.test(m)) {
+        return `خطای سرور هوش مصنوعی (کد ${status || 500}). لطفاً کمی بعد دوباره تلاش کنید.`;
+      }
+      return m;
+    }
+  }
+  if (status === 404) {
+    return 'سرویس هوش مصنوعی در دسترس نیست (کد ۴۰۴).';
+  }
+  if (status >= 500) {
+    return `خطای سرور هوش مصنوعی (کد ${status}). لطفاً دوباره تلاش کنید.`;
+  }
+  return 'ارتباط با سرویس هوش مصنوعی برقرار نشد. لطفاً دوباره امتحان کنید.';
+}
+
+function sanitizeResponseData<TResponse>(data: TResponse, ok: boolean, status: number): TResponse {
+  if (ok) return data;
+  const obj = (data && typeof data === 'object' ? { ...(data as Record<string, unknown>) } : {}) as Record<
+    string,
+    unknown
+  >;
+  obj.error = normalizeApiError(obj.error, status);
+  return obj as TResponse;
+}
+
 /**
  * Unified JSON POST helper that uses Capacitor's native OkHttp bridge on Android/iOS
  * (avoiding WebView CORS/TLS issues) and standard fetch with clean timeouts on web.
@@ -76,10 +109,11 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
         };
       }
 
+      const ok = resp.status >= 200 && resp.status < 300;
       return {
-        ok: resp.status >= 200 && resp.status < 300,
+        ok,
         status: resp.status,
-        data: parsed,
+        data: sanitizeResponseData(parsed, ok, resp.status),
       };
     } catch {
       throw new Error(
@@ -111,7 +145,11 @@ export async function postApiJson<TResponse = Record<string, unknown>>(
         data: { error: 'پاسخ معتبری از سرویس هوش مصنوعی دریافت نشد.' } as TResponse,
       };
     }
-    return { ok: resp.ok, status: resp.status, data };
+    return {
+      ok: resp.ok,
+      status: resp.status,
+      data: sanitizeResponseData(data, resp.ok, resp.status),
+    };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') {
       throw new Error('پاسخ سرویس هوش مصنوعی طولانی شد. لطفاً دوباره امتحان کنید.');

@@ -1,15 +1,56 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { INGREDIENTS_MASTER, INGREDIENTS_MAP } from '../src/data/database/ingredients';
-import { applyCors, parseJsonBody, type ServerlessRequest, type ServerlessResponse } from './_cors';
+import { INGREDIENTS_MASTER, INGREDIENTS_MAP } from '../src/data/database/ingredients.js';
 
-const CANONICAL_GLOSSARY = INGREDIENTS_MASTER.map(
-  (i) => `${i.code}: ${i.nameFa} (${i.nameEn}) [${i.unit}]`
-).join('\n');
+interface ServerlessRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ServerlessResponse {
+  status: (code: number) => ServerlessResponse;
+  json: (data: unknown) => void;
+  end: () => void;
+  setHeader: (key: string, value: string) => void;
+}
 
 interface ScanFridgeBody {
   imageBase64?: string;
   mimeType?: string;
 }
+
+function applyCors(req: ServerlessRequest, res: ServerlessResponse): boolean {
+  const rawOrigin = req.headers.origin;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
+function parseJsonBody<T extends object>(req: ServerlessRequest): T {
+  if (!req.body) return {} as T;
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body) as T;
+    } catch {
+      return {} as T;
+    }
+  }
+  if (typeof req.body === 'object') {
+    return req.body as T;
+  }
+  return {} as T;
+}
+
+const CANONICAL_GLOSSARY = INGREDIENTS_MASTER.map(
+  (i) => `${i.code}: ${i.nameFa} (${i.nameEn}) [${i.unit}]`
+).join('\n');
 
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (applyCors(req, res)) return;
@@ -18,10 +59,10 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       return res.status(503).json({
-        error: 'سرویس تحلیل تصویر موقتاً در دسترس نیست. می‌توانید مواد را دستی اضافه کنید.',
+        error: 'کلید هوش مصنوعی روی سرور تنظیم نشده است. می‌توانید مواد را دستی اضافه کنید.',
       });
     }
 
@@ -61,43 +102,56 @@ Rules:
 Canonical ING_* Dictionary:
 ${CANONICAL_GLOSSARY}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            { inlineData: { data: cleanBase64, mimeType: safeMime } },
-            { text: prompt },
+    let rawText = '';
+    let lastErr: unknown = null;
+
+    for (const model of ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { inlineData: { data: cleanBase64, mimeType: safeMime } },
+                { text: prompt },
+              ],
+            },
           ],
-        },
-      ],
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            summaryFa: { type: Type.STRING },
-            detected: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  code: { type: Type.STRING },
-                  confidence: { type: Type.STRING },
-                  quantityHint: { type: Type.STRING },
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                summaryFa: { type: Type.STRING },
+                detected: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      code: { type: Type.STRING },
+                      confidence: { type: Type.STRING },
+                      quantityHint: { type: Type.STRING },
+                    },
+                    required: ['code', 'confidence'],
+                  },
                 },
-                required: ['code', 'confidence'],
               },
+              required: ['summaryFa', 'detected'],
             },
           },
-          required: ['summaryFa', 'detected'],
-        },
-      },
-    });
+        });
+        if (response.text) {
+          rawText = response.text;
+          break;
+        }
+      } catch (err) {
+        lastErr = err;
+      }
+    }
 
-    const rawText = response.text;
     if (!rawText) {
+      if (lastErr) throw lastErr;
       return res.status(502).json({
         error: 'پاسخی از سرویس هوش مصنوعی دریافت نشد. لطفاً دوباره امتحان کنید.',
       });

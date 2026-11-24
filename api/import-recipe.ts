@@ -1,14 +1,60 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { INGREDIENTS_MASTER, INGREDIENTS_MAP } from '../src/data/database/ingredients';
-import { DISH_PHOTOS } from '../src/data/database/photos';
+import { INGREDIENTS_MASTER, INGREDIENTS_MAP } from '../src/data/database/ingredients.js';
+import { DISH_PHOTOS } from '../src/data/database/photos.js';
 import type {
   CuisineType,
   MainProteinType,
   MealSlotType,
   RecipeCategory,
   RecipeMasterRecord,
-} from '../src/types/sofreh';
-import { applyCors, parseJsonBody, type ServerlessRequest, type ServerlessResponse } from './_cors';
+} from '../src/types/sofreh.js';
+
+interface ServerlessRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ServerlessResponse {
+  status: (code: number) => ServerlessResponse;
+  json: (data: unknown) => void;
+  end: () => void;
+  setHeader: (key: string, value: string) => void;
+}
+
+interface ImportRecipeBody {
+  url?: string;
+  notes?: string;
+}
+
+function applyCors(req: ServerlessRequest, res: ServerlessResponse): boolean {
+  const rawOrigin = req.headers.origin;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
+function parseJsonBody<T extends object>(req: ServerlessRequest): T {
+  if (!req.body) return {} as T;
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body) as T;
+    } catch {
+      return {} as T;
+    }
+  }
+  if (typeof req.body === 'object') {
+    return req.body as T;
+  }
+  return {} as T;
+}
 
 const CANONICAL_GLOSSARY = INGREDIENTS_MASTER.map(
   (i) => `${i.code}: ${i.nameFa} (${i.nameEn}) [${i.unit}]`
@@ -46,24 +92,6 @@ const VALID_PROTEINS: MainProteinType[] = [
   'dairy_cheese',
 ];
 
-const PHOTO_BY_CATEGORY: Record<RecipeCategory, string> = {
-  خورشت: DISH_PHOTOS.stew_red,
-  پلو: DISH_PHOTOS.rice_saffron,
-  'کباب و مرغ': DISH_PHOTOS.chicken_roast,
-  'آش و سوپ': DISH_PHOTOS.soup_bowl,
-  'کوکو و خوراک': DISH_PHOTOS.eggplant_dip,
-  'پاستا و ایتالیایی': DISH_PHOTOS.pasta_tomato,
-  'آسیایی و کاری': DISH_PHOTOS.stir_fry,
-  'مکزیکی و رپ': DISH_PHOTOS.tacos_mexican,
-  'کاسه سالم و سالاد': DISH_PHOTOS.salad_med,
-  'صبحانه و سریع': DISH_PHOTOS.omelette_pan,
-};
-
-interface ImportRecipeBody {
-  url?: string;
-  notes?: string;
-}
-
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') {
@@ -71,10 +99,10 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       return res.status(503).json({
-        error: 'سرویس هوش مصنوعی موقتاً در دسترس نیست.',
+        error: 'کلید هوش مصنوعی روی سرور تنظیم نشده است.',
       });
     }
 
@@ -117,72 +145,85 @@ User Notes: ${trimmedNotes || 'N/A'}
 Canonical ING_* Dictionary:
 ${CANONICAL_GLOSSARY}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-4-hydrogen',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            titleEn: { type: Type.STRING },
-            subtitle: { type: Type.STRING },
-            cuisine: { type: Type.STRING },
-            category: { type: Type.STRING },
-            mainProtein: { type: Type.STRING },
-            difficulty: { type: Type.STRING },
-            mealTypes: { type: Type.ARRAY, items: { type: Type.STRING } },
-            baseServings: { type: Type.NUMBER },
-            prepMinutes: { type: Type.NUMBER },
-            cookMinutes: { type: Type.NUMBER },
-            caloriesPerServing: { type: Type.NUMBER },
-            proteinG: { type: Type.NUMBER },
-            carbsG: { type: Type.NUMBER },
-            fatG: { type: Type.NUMBER },
-            fiberG: { type: Type.NUMBER },
-            ingredients: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  code: { type: Type.STRING },
-                  amount: { type: Type.NUMBER },
+    let rawText = '';
+    let lastErr: unknown = null;
+
+    for (const model of ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                titleEn: { type: Type.STRING },
+                subtitle: { type: Type.STRING },
+                cuisine: { type: Type.STRING },
+                category: { type: Type.STRING },
+                mainProtein: { type: Type.STRING },
+                difficulty: { type: Type.STRING },
+                mealTypes: { type: Type.ARRAY, items: { type: Type.STRING } },
+                baseServings: { type: Type.NUMBER },
+                prepMinutes: { type: Type.NUMBER },
+                cookMinutes: { type: Type.NUMBER },
+                caloriesPerServing: { type: Type.NUMBER },
+                proteinG: { type: Type.NUMBER },
+                carbsG: { type: Type.NUMBER },
+                fatG: { type: Type.NUMBER },
+                fiberG: { type: Type.NUMBER },
+                ingredients: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      code: { type: Type.STRING },
+                      amount: { type: Type.NUMBER },
+                    },
+                    required: ['code', 'amount'],
+                  },
                 },
-                required: ['code', 'amount'],
-              },
-            },
-            steps: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  template: { type: Type.STRING },
-                  timerSeconds: { type: Type.NUMBER },
-                  tip: { type: Type.STRING },
+                steps: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      template: { type: Type.STRING },
+                      timerSeconds: { type: Type.NUMBER },
+                      tip: { type: Type.STRING },
+                    },
+                    required: ['template'],
+                  },
                 },
-                required: ['template'],
               },
+              required: [
+                'title',
+                'subtitle',
+                'cuisine',
+                'category',
+                'ingredients',
+                'steps',
+                'caloriesPerServing',
+                'proteinG',
+                'carbsG',
+                'fatG',
+              ],
             },
           },
-          required: [
-            'title',
-            'subtitle',
-            'cuisine',
-            'category',
-            'ingredients',
-            'steps',
-            'caloriesPerServing',
-            'proteinG',
-            'carbsG',
-            'fatG',
-          ],
-        },
-      },
-    });
+        });
+        if (response.text) {
+          rawText = response.text;
+          break;
+        }
+      } catch (err) {
+        lastErr = err;
+      }
+    }
 
-    const rawText = response.text;
     if (!rawText) {
+      if (lastErr) throw lastErr;
       return res.status(502).json({
         error: 'استخراج دستور غذا انجام نشد. دوباره تلاش کنید.',
       });
@@ -214,24 +255,21 @@ ${CANONICAL_GLOSSARY}`;
       : 'بین‌المللی';
     const category: RecipeCategory = VALID_CATEGORIES.includes(data.category as RecipeCategory)
       ? (data.category as RecipeCategory)
-      : 'کوکو و خوراک';
-    const mainProtein: MainProteinType = VALID_PROTEINS.includes(data.mainProtein as MainProteinType)
+      : 'صبحانه و سریع';
+    const mainProtein: MainProteinType = VALID_PROTEINS.includes(
+      data.mainProtein as MainProteinType
+    )
       ? (data.mainProtein as MainProteinType)
-      : 'chicken';
-    const difficulty: 'آسان' | 'متوسط' | 'مجلسی' =
-      data.difficulty === 'متوسط' || data.difficulty === 'مجلسی' ? data.difficulty : 'آسان';
-
-    const validMeals = (data.mealTypes ?? []).filter(
+      : 'legume_plant';
+    const difficulty =
+      data.difficulty === 'آسان' || data.difficulty === 'مجلسی' ? data.difficulty : 'متوسط';
+    const mealTypes: MealSlotType[] = (data.mealTypes ?? []).filter(
       (m): m is MealSlotType => m === 'breakfast' || m === 'lunch' || m === 'dinner'
     );
+    if (mealTypes.length === 0) mealTypes.push('lunch', 'dinner');
 
-    const seenIngs = new Set<string>();
     const validIngredients = (data.ingredients ?? [])
-      .filter((i) => {
-        if (!i?.code || seenIngs.has(i.code) || !INGREDIENTS_MAP[i.code]) return false;
-        seenIngs.add(i.code);
-        return true;
-      })
+      .filter((i) => i && typeof i.code === 'string' && Boolean(INGREDIENTS_MAP[i.code]))
       .map((i) => ({
         code: i.code,
         amount: Math.max(1, Math.round(Number(i.amount) || 100)),
@@ -245,7 +283,9 @@ ${CANONICAL_GLOSSARY}`;
       );
     }
 
-    const validSteps = (data.steps ?? [])
+    const validSteps: Array<{ template: string; timerSeconds?: number; tip?: string }> = (
+      data.steps ?? []
+    )
       .filter((s) => typeof s?.template === 'string' && s.template.trim().length > 4)
       .map((s) => ({
         template: s.template.trim(),
@@ -260,7 +300,6 @@ ${CANONICAL_GLOSSARY}`;
       validSteps.push({
         template: 'مواد اولیه را آماده کرده و روی حرارت ملایم بپزید تا کاملاً جا بیفتد.',
         timerSeconds: 1200,
-        tip: undefined,
       });
     }
 
@@ -275,34 +314,38 @@ ${CANONICAL_GLOSSARY}`;
       subtitle: data.subtitle?.trim() || 'واردشده با هوش مصنوعی از لینک شما',
       cuisine,
       category,
-      mainProtein,
-      icon: '',
-      photoUrl: PHOTO_BY_CATEGORY[category] ?? DISH_PHOTOS.stew_red,
-      mealTypes: validMeals.length > 0 ? validMeals : ['lunch', 'dinner'],
-      baseServings: Math.max(1, Math.min(8, Math.round(data.baseServings ?? 2))),
-      prepMinutes: Math.max(5, Math.min(120, Math.round(data.prepMinutes ?? 15))),
-      cookMinutes: Math.max(5, Math.min(240, Math.round(data.cookMinutes ?? 30))),
-      caloriesPerServing: Math.max(120, Math.min(1400, Math.round(data.caloriesPerServing ?? 460))),
-      proteinG: Math.max(4, Math.min(120, Math.round(data.proteinG ?? 26))),
-      carbsG: Math.max(2, Math.min(160, Math.round(data.carbsG ?? 46))),
-      fatG: Math.max(2, Math.min(90, Math.round(data.fatG ?? 16))),
-      fiberG: Math.max(1, Math.min(40, Math.round(data.fiberG ?? 6))),
+      mealTypes,
+      icon: '/assets/icons/food/skillet.png',
+      photoUrl:
+        cuisine === 'ایرانی' ? DISH_PHOTOS.persian_morgh : DISH_PHOTOS.pasta_tomato,
+      baseServings: Math.max(1, Math.min(6, Math.round(Number(data.baseServings) || 2))),
+      prepMinutes: Math.max(5, Math.min(90, Math.round(Number(data.prepMinutes) || 15))),
+      cookMinutes: Math.max(5, Math.min(180, Math.round(Number(data.cookMinutes) || 25))),
+      caloriesPerServing: Math.max(
+        120,
+        Math.min(1200, Math.round(Number(data.caloriesPerServing) || 440))
+      ),
+      proteinG: Math.max(3, Math.min(90, Math.round(Number(data.proteinG) || 22))),
+      carbsG: Math.max(3, Math.min(130, Math.round(Number(data.carbsG) || 42))),
+      fatG: Math.max(2, Math.min(70, Math.round(Number(data.fatG) || 15))),
+      fiberG: Math.max(1, Math.min(30, Math.round(Number(data.fiberG) || 5))),
       difficulty,
+      mainProtein,
       diets: ['omnivore'],
       allergens: [],
       requiredAppliances: ['stovetop'],
-      baseLabels: ['شخصی'],
+      baseLabels: ['واردشده'],
+      searchAliases: [cleanTitle, data.titleEn?.trim() || cleanTitle],
       ingredients: validIngredients,
       steps: validSteps,
-      searchAliases: [cleanTitle, data.titleEn?.trim() || ''].filter(Boolean),
       isCustom: true,
     };
 
-    return res.status(200).json({ recipe: record, fetchedFromWeb: false });
+    return res.status(200).json({ recipe: record });
   } catch (err) {
     console.error('[api/import-recipe] error:', err);
     return res.status(500).json({
-      error: 'خطا در تحلیل دستور غذا. لطفاً دوباره امتحان کنید.',
+      error: 'استخراج دستور غذا با خطا مواجه شد. می‌توانید متن دستور را نیز پیست کنید.',
     });
   }
 }

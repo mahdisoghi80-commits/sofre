@@ -1,5 +1,17 @@
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-import { applyCors, parseJsonBody, type ServerlessRequest, type ServerlessResponse } from './_cors';
+
+interface ServerlessRequest {
+  method?: string;
+  headers: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ServerlessResponse {
+  status: (code: number) => ServerlessResponse;
+  json: (data: unknown) => void;
+  end: () => void;
+  setHeader: (key: string, value: string) => void;
+}
 
 interface ChefChatBody {
   message?: string;
@@ -24,6 +36,35 @@ interface ChefChatBody {
   };
 }
 
+function applyCors(req: ServerlessRequest, res: ServerlessResponse): boolean {
+  const rawOrigin = req.headers.origin;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return true;
+  }
+  return false;
+}
+
+function parseJsonBody<T extends object>(req: ServerlessRequest): T {
+  if (!req.body) return {} as T;
+  if (typeof req.body === 'string') {
+    try {
+      return JSON.parse(req.body) as T;
+    } catch {
+      return {} as T;
+    }
+  }
+  if (typeof req.body === 'object') {
+    return req.body as T;
+  }
+  return {} as T;
+}
+
 export default async function handler(req: ServerlessRequest, res: ServerlessResponse) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') {
@@ -31,10 +72,10 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
   }
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {
       return res.status(503).json({
-        error: 'سرویس هوش مصنوعی در حال آماده‌سازی است. لطفاً کمی بعد دوباره تلاش کنید.',
+        error: 'کلید هوش مصنوعی روی سرور تنظیم نشده است. لطفاً GEMINI_API_KEY را در تنظیمات Vercel بررسی کنید.',
       });
     }
 
@@ -132,6 +173,23 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
         }
       } catch (err) {
         lastErr = err;
+        // Retry same model cleanly without thinkingConfig in case the model rejects thinking parameters
+        try {
+          const fallbackChat = ai.chats.create({
+            model: candidateModel,
+            history: safeHistory,
+            config: { systemInstruction },
+          });
+          const fallbackResp = await fallbackChat.sendMessage({ message: trimmedMessage });
+          const fallbackText = fallbackResp.text?.trim();
+          if (fallbackText) {
+            reply = fallbackText;
+            usedModel = candidateModel;
+            break;
+          }
+        } catch (innerErr) {
+          lastErr = innerErr;
+        }
       }
     }
 
@@ -145,9 +203,11 @@ export default async function handler(req: ServerlessRequest, res: ServerlessRes
     return res.status(200).json({ reply, model: usedModel });
   } catch (err) {
     console.error('[api/chef-chat] error:', err);
-    const msg =
-      err instanceof Error && err.message.includes('RESOURCE_EXHAUSTED')
-        ? 'سقف درخواست هوش مصنوعی موقتاً پر شده است. لطفاً کمی بعد یا با حالت «پاسخ فوری» امتحان کنید.'
+    const errText = err instanceof Error ? err.message : String(err);
+    const msg = errText.includes('RESOURCE_EXHAUSTED')
+      ? 'سقف درخواست هوش مصنوعی موقتاً پر شده است. لطفاً کمی بعد یا با حالت «پاسخ فوری» امتحان کنید.'
+      : errText.includes('API_KEY_INVALID') || errText.includes('API key not valid')
+        ? 'کلید هوش مصنوعی معتبر نیست. لطفاً GEMINI_API_KEY را بررسی کنید.'
         : 'خطا در ارتباط با سرآشپز هوشمند. لطفاً دوباره تلاش کنید.';
     return res.status(500).json({ error: msg });
   }
